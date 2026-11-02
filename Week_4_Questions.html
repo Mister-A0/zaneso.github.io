@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Week 4 - Questions &amp; Exam Mode</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;800&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#090d16;--card:#111827;--hover:#162032;--text:#f8fafc;--muted:#94a3b8;--border:rgba(255,255,255,.1);--ok:#10b981;--bad:#f43f5e}
+[data-theme="light"]{--bg:#f8fafc;--card:#fff;--hover:#f1f5f9;--text:#0f172a;--muted:#475569;--border:rgba(0,0,0,.1)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;line-height:1.6;min-height:100vh;overflow-x:hidden}
+header{max-width:900px;margin:0 auto;padding:56px 24px 16px;position:relative}
+.badge{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;padding:4px 12px;border-radius:20px;background:rgba(16,185,129,.15);color:#10b981;border:1px solid rgba(16,185,129,.3)}
+h1{font-size:clamp(26px,6vw,38px);font-weight:800;margin:14px 0 8px;line-height:1.2}
+h1 span{background:linear-gradient(135deg,#f59e0b,#f43f5e);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.sub{color:var(--muted)}
+.top{position:absolute;top:20px;right:24px;display:flex;gap:8px}
+.top button,.top a{width:44px;height:44px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:10px;cursor:pointer;font-size:18px;text-decoration:none;display:flex;align-items:center;justify-content:center}
+.modes{max-width:900px;margin:0 auto;padding:8px 24px;display:flex;gap:10px;flex-wrap:wrap}
+.btn{font:inherit;font-weight:700;font-size:14px;padding:10px 18px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer}
+.btn.on,.btn.primary{background:#f59e0b;color:#111827;border-color:#f59e0b}
+main{max-width:900px;margin:0 auto;padding:8px 24px 56px}
+h2.part{font-family:'JetBrains Mono',monospace;font-size:13px;color:#f59e0b;text-transform:uppercase;letter-spacing:1px;margin:28px 0 10px}
+.q{background:var(--card);border:1px solid var(--border);border-top:3px solid var(--c,#f59e0b);border-radius:16px;padding:20px;margin-bottom:16px}
+.mcq{--c:#3b82f6}.tf{--c:#a855f7}.sa{--c:#f59e0b}.sc{--c:#06b6d4}
+.meta{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:800;color:var(--c);margin-bottom:8px}
+.qt{font-weight:600;margin-bottom:12px;overflow-wrap:anywhere}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer;background:var(--hover)}
+.opt input{margin-top:5px}
+.opt.right{border-color:var(--ok);background:rgba(16,185,129,.15)}
+.opt.wrong{border-color:var(--bad);background:rgba(244,63,94,.15)}
+.ans{margin-top:12px;padding:12px 14px;border-left:3px solid var(--ok);background:rgba(16,185,129,.08);border-radius:8px;font-size:14px}
+.ans p+p,.ans ul{margin-top:8px}.ans ul{padding-left:20px}
+.scn{background:var(--hover);border-radius:10px;padding:14px;margin-bottom:14px;font-size:14px;color:var(--muted)}
+.sub-h{font-weight:800;margin:6px 0}
+#bar{max-width:900px;margin:0 auto;padding:0 24px 8px}
+#result{display:none;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;font-weight:700}
+.hide{display:none!important}
+.timer{font-family:'JetBrains Mono',monospace;color:var(--muted);align-self:center}
+footer{text-align:center;padding:24px 16px;color:var(--muted);font-size:13px;border-top:1px solid var(--border)}
+@media(max-width:600px){header{padding:72px 16px 12px}.modes,main,#bar{padding-left:16px;padding-right:16px}.top{top:16px;right:16px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="top"><a href="index.html" aria-label="Home">&#8962;</a><button id="theme" aria-label="Toggle theme">&#9788;</button></div>
+  <span class="badge">Week 4 &middot; CCY4202</span>
+  <h1><span>Week 4</span> Questions</h1>
+  <p class="sub">Study Mode shows every question with its answer. Exam Mode quizzes you on the MCQ and True/False questions.</p>
+</header>
+<div class="modes">
+  <button class="btn on" id="bStudy">Study Mode</button>
+  <button class="btn" id="bExam">Exam Mode (MCQ + T/F)</button>
+  <span class="timer hide" id="timer"></span>
+</div>
+<div id="bar"></div>
+<main id="app"></main>
+<footer>&copy; Zaneso &mdash; Penetration Testing Course Notes</footer>
+<script>
+const D={"Q": [
+{"part": "Part 1 - Database & SQL Fundamentals", "n": "Q1", "type": "mcq", "label": "Q1 \u00b7 Multiple Choice (MCQ)", "tag": "SINGLE ANSWER", "q": "Which SQL statement correctly returns only the username and password columns from the users table?[cite: 3]", "opts": ["SELECT * FROM users WHERE column=username, password;", "SELECT username, password FROM users;", "SELECT username AND password FROM users;", "SELECT FROM users (username, password);"], "ans": 1, "ansText": "Correct: B - SELECT username, password FROM users;[cite: 3]"},
+{"part": "Part 1 - Database & SQL Fundamentals", "n": "Q2", "type": "tf", "label": "Q2 \u00b7 True or False", "tag": "BINARY", "q": "\"In a relational database, every table is required to have an auto-increment primary key column.\"[cite: 3]", "ans": false, "ansText": "FALSE. A primary key is required for relationships, but it does not have to be auto-increment-it just has to be unique per row.[cite: 3]"},
+{"part": "Part 1 - Database & SQL Fundamentals", "n": "Q3", "type": "sa", "label": "Q3 \u00b7 Short Answer", "tag": "FREE RESPONSE", "q": "State the three rules a UNION operator enforces between the two SELECT statements it combines.[cite: 3]", "ansText": "MODEL ANSWER \u00b7 3 RULES: (1) Both SELECTs must return the same number of columns; (2) corresponding columns must have similar (compatible) data types; (3) the columns must appear in the same order in both SELECTS.[cite: 3]"},
+{"part": "Part 2 - SQL Injection & In-Band", "n": "Q1", "type": "mcq", "label": "Q1 \u00b7 Multiple Choice (MCQ)", "tag": "SINGLE ANSWER", "q": "In the URL https://website.thm/blog?id=2;--, what does the ;-- actually do to the backend query?[cite: 4]", "opts": ["Encodes the ID parameter as the number 2", "Ends the SQL statement with ; and comments out everything after, bypassing the private=0 filter", "Restarts the SQL parser to begin a fresh query", "Escapes the next single quote character"], "ans": 1, "ansText": "Correct: B - the semicolon terminates the statement; the -- comments out the rest, removing the private=0 restriction.[cite: 4]"},
+{"part": "Part 2 - SQL Injection & In-Band", "n": "Q2", "type": "tf", "label": "Q2 \u00b7 True or False", "tag": "BINARY", "q": "Statement: Error-Based SQL Injection is useful because the database error messages reveal structural information such as table names, column names, and the DBMS version.[cite: 4]", "ans": true, "ansText": "TRUE. That is precisely why defenders disable verbose DB errors in production.[cite: 4]"},
+{"part": "Part 2 - SQL Injection & In-Band", "n": "Q3", "type": "sa", "label": "Q3 \u00b7 Short Answer", "tag": "FREE RESPONSE", "q": "In the Union-Based 6-step walkthrough, why do we change the article ID from 1 to 0 in Step 2 before running 0 UNION SELECT 1,2,3?[cite: 4]", "ansText": "Model answer: Article ID 1 returns a real blog row, which would visually overlay our injected columns in the application output. Changing the ID to 0 forces the first SELECT to return no rows, so the only data rendered is the result of our injected UNION SELECT - making it easy to read which column position holds the data we requested.[cite: 4]"},
+{"part": "Part 3 - Blind SQL Injection", "n": "Q1", "type": "mcq", "label": "Q1 \u00b7 Multiple Choice (MCQ)", "tag": "SINGLE ANSWER", "q": "Why does the payload OR 1=1;-- successfully bypass authentication when injected into the password field of a login form?[cite: 5]", "opts": ["It deletes the users table, allowing default credentials to take effect", "The 1=1 is always true and the OR makes the whole WHERE clause true, so the query returns a valid user row", "It encodes the password as the literal string '1=1'", "It triggers a database error that the application treats as a successful login"], "ans": 1, "ansText": "Correct: B - 1=1 is always true; combined with OR, the entire WHERE clause returns true, so the first user row is returned and the login succeeds.[cite: 5]"},
+{"part": "Part 3 - Blind SQL Injection", "n": "Q2", "type": "tf", "label": "Q2 \u00b7 True or False", "tag": "BINARY", "q": "Statement: In Boolean-Based Blind SQLi, the attacker reconstructs database names, table names, and column values character-by-character using the LIKE wildcard and a true/false response signal.[cite: 5]", "ans": true, "ansText": "TRUE. The signal may be a taken field, a redirected page, an HTTP status code, or any other binary indicator.[cite: 5]"},
+{"part": "Part 3 - Blind SQL Injection", "n": "Q3", "type": "sa", "label": "Q3 \u00b7 Short Answer", "tag": "FREE RESPONSE", "q": "When enumerating column names via Boolean-Based Blind SQLi, why does the attacker append AND COLUMN_NAME != 'id' (and similar clauses for each previously-found column) to each new probe?[cite: 5]", "ansText": "Model answer: Each LIKE query returns true for any column name matching the pattern - including ones already discovered. By excluding previously-found columns, the attacker ensures the next true response must come from a NEW column, allowing them to walk through all columns of the target table systematically.[cite: 5]"},
+{"part": "Part 4 - Time-Based Blind & Out-of-Band", "n": "Q1", "type": "mcq", "label": "Q1 \u00b7 Multiple Choice (MCQ)", "tag": "SINGLE ANSWER", "q": "When probing with admin123' UNION SELECT SLEEP(5), 2;--, the response takes ~5 seconds longer than a normal request. What does this confirm?[cite: 6]", "opts": ["The application is offline", "The injection succeeded AND the table has exactly 2 columns", "The application has 5 backend replicas", "The user admin123 does not exist"], "ans": 1, "ansText": "Correct: B SLEEP() only executes when the UNION SELECT is valid; the 5-second delay confirms both successful injection and a 2-column table.[cite: 6]"},
+{"part": "Part 4 - Time-Based Blind & Out-of-Band", "n": "Q2", "type": "tf", "label": "Q2 \u00b7 True or False", "tag": "BINARY", "q": "Statement: Out-of-Band SQL Injection uses a single communication channel for both attack delivery and result retrieval.[cite: 6]", "ans": false, "ansText": "FALSE. OOB uses TWO separate channels: one to launch the attack (e.g., a web request) and another to gather results (e.g., DNS or HTTP callbacks to an attacker-controlled server).[cite: 6]"},
+{"part": "Part 4 - Time-Based Blind & Out-of-Band", "n": "Q3", "type": "sa", "label": "Q3 \u00b7 Short Answer", "tag": "FREE RESPONSE", "q": "Give two reasons why Time-Based Blind SQLi is the technique of last resort, used only when In-Band and Boolean-Based Blind are not viable.[cite: 6]", "ansText": "Model answer: (1) It is extremely slow - each character probe costs at least SLEEP(x) seconds, so enumerating a full table can take hours; (2) network latency and server load can introduce jitter that produces false positives or false negatives, making the inferred result unreliable.[cite: 6]"},
+{"part": "Part 5 - Automating with SQLMap", "n": "Q1", "type": "mcq", "label": "Q1 \u00b7 Multiple Choice (MCQ)", "tag": "SINGLE ANSWER", "q": "Which SQLMap command sequence correctly lists the tables inside a database named sqli_one?[cite: 7]", "opts": ["sqlmap -u \"<url>\" --tables sqli_one", "sqlmap -u \"<url>\" -D sqli_one --tables", "sqlmap -u \"<url>\" -T sqli_one --tables", "sqlmap -u \"<url>\" --dbs -D sqli_one"], "ans": 1, "ansText": "Correct: B - -D <database> selects the database; --tables lists its tables.[cite: 7]"},
+{"part": "Part 5 - Automating with SQLMap", "n": "Q2", "type": "tf", "label": "Q2 \u00b7 True or False", "tag": "BINARY", "q": "\"SQLMap treats SQL Injection detection as a black box - it tries a fixed set of generic payloads without any awareness of the underlying exploitation technique.\"[cite: 7]", "ans": false, "ansText": "FALSE. SQLMap systematically attempts Error-Based, Union-Based, Boolean-Based Blind, and Time-Based Blind techniques - the same logic taught in Parts 2-4. Understanding the manual technique helps interpret SQLMap output.[cite: 7]"},
+{"part": "Part 5 - Automating with SQLMap", "n": "Q3", "type": "sa", "label": "Q3 \u00b7 Short Answer", "tag": "FREE RESPONSE", "q": "A student runs sqlmap -u \"<url>\" against a Blind SQLi target with default --level and --risk and concludes \"not vulnerable\" after 30 seconds. Name the most likely cause and the corrective action.[cite: 7]", "ansText": "Model answer: Default --level=1/--risk=1 may not include the time-based or boolean-based blind payloads needed for that specific target. Corrective action: re-run with --level=3 (or higher) and --risk=2 (or higher), and explicitly specify the DBMS with --dbms mysql if known, to broaden the payload set SQLMap will try.[cite: 7]"},
+{"part": "Part 6 - Remediation & Defensive Coding", "n": "Q1", "type": "mcq", "label": "Q1 \u00b7 Multiple Choice (MCQ)", "tag": "SINGLE ANSWER", "q": "Which remediation technique is considered the PRIMARY defense against SQL Injection?[cite: 8]", "opts": ["Escaping special characters with addslashes()", "Disabling verbose error messages in production", "Prepared statements (parameterized queries)", "Using HTTPS instead of HTTP for the database connection"], "ans": 2, "ansText": "Correct: C - Prepared statements separate query structure from user input, making structural injection impossible regardless of input content.[cite: 8]"},
+{"part": "Part 6 - Remediation & Defensive Coding", "n": "Q2", "type": "tf", "label": "Q2 \u00b7 True or False", "tag": "BINARY", "q": "\"Escaping user input with addslashes() provides the same level of protection as parameterized queries and can be used interchangeably.\"[cite: 8]", "ans": false, "ansText": "FALSE. Escaping is a fragile fallback - it can be bypassed with charset tricks (e.g., GBK multibyte injection). Parameterized queries are the primary defense; escaping is only used when prepared statements are unavailable.[cite: 8]"},
+{"part": "Part 6 - Remediation & Defensive Coding", "n": "Q3", "type": "sa", "label": "Q3 \u00b7 Short Answer", "tag": "FREE RESPONSE", "q": "Explain why input validation alone (allow-list filtering) is insufficient as the only defense against SQL Injection, even when correctly implemented.[cite: 8]", "ansText": "Model answer: Input validation restricts WHAT characters are allowed, but does not separate query structure from data. A validated-but-concatenated input can still alter query structure if the allow-list is incomplete (e.g., missed a parameter, or a parameter accepts free-text for legitimate reasons). Input validation should be used as a SECOND layer alongside prepared statements - never as the sole defense.[cite: 8]"}
+], "scen": {"title": "Closing Scenario \u2014 Apply Everything[cite: 9]", "text": "A student is testing a target application with two pages:\nPAGE A - Login form\nReturns a generic \"Invalid credentials\" message regardless of input. No SQL errors are ever displayed.\nPAGE B - Product search page\nWhen given a single apostrophe ('), returns a raw MySQL syntax error.[cite: 9]", "qs": [
+["Task A", "CATEGORIES", "Identify which SQLi category applies to each page.", "A1 \u2014 Categories", "Task A \u00b7 Blue", ["PAGE A (login, no errors, generic message) \u2192 BLIND SQLI. Likely Boolean-Based (login succeeds/fails = true/false). May need Time-Based if no other signal.", "PAGE B (raw MySQL error on ') \u2192 IN-BAND SQLI, Error-Based (and very likely Union-Based too).[cite: 9]"], []], 
+["Task B", "FIRST PAYLOADS", "Write the exact payload you would try FIRST against each page using the real techniques taught in this lecture.", "A2 \u2014 First Payloads", "Task B \u00b7 Purple", ["PAGE A: OR 1=1 in the password field. Transforms... WHERE username='' AND password='' OR 1=1, true \u2192 login bypass.", "PAGE B: ' UNION SELECT 1,2,3 (incrementing column count) \u2192 once it stops erroring, follow with ' UNION SELECT 1,2, database() to confirm and extract the DB name.[cite: 9]"], []], 
+["Task C", "SQLMAP ON PAGE B", "Describe how you would confirm/automate PAGE B's vulnerability using SQLMap with the correct flags.", "A3 \u2014 SQLMap Command Sequence", "Task C \u00b7 Amber", ["Step 1: sqlmap -u \"http://target.thm/search?id=1\" --batch --dbms=mysql", "Step 2: sqlmap -u \"http://target.thm/search?id=1\" --dbs", "Step 3: sqlmap -u \"http://target.thm/search?id=1\" -D <db_name> --tables", "Step 4: sqlmap -u \"http://target.thm/search?id=1\" -D <db_name> -T <table> --columns", "Step 5: sqlmap -u \"http://target.thm/search?id=1\" -D <db_name> -T <table> --dump", "If blind needed later: add --level=3 --risk=2 to widen the payload set.[cite: 9]"], []]
+]}};
+const r=document.documentElement,s=localStorage.getItem('theme');
+if(s)r.setAttribute('data-theme',s);
+document.getElementById('theme').onclick=()=>{const n=r.getAttribute('data-theme')==='dark'?'light':'dark';r.setAttribute('data-theme',n);localStorage.setItem('theme',n)};
+const app=document.getElementById('app'),bar=document.getElementById('bar'),timer=document.getElementById('timer');
+const L='ABCD';let tick=null;
+const esc=t=>t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function head(q){return `<div class="meta"><span>${esc(q.label)}</span><span>${esc(q.tag)}</span></div><div class="qt">${esc(q.q)}</div>`}
+function study(){
+  clearInterval(tick);timer.classList.add('hide');bar.innerHTML='';
+  let h='',part='';
+  D.Q.forEach(q=>{
+    if(q.part!==part){part=q.part;h+=`<h2 class="part">${part}</h2>`}
+    h+=`<div class="q ${q.type}">${head(q)}`;
+    if(q.type==='mcq')h+=q.opts.map((o,i)=>`<div class="opt ${i===q.ans?'right':''}"><b>${L[i]}.</b><span>${esc(o)}</span></div>`).join('');
+    h+=`<div class="ans">${esc(q.ansText)}</div></div>`;
+  });
+  h+=`<h2 class="part">Integrated Scenario</h2><div class="q sc"><div class="meta"><span>Mock Client Engagement</span><span>~10 min · exam-style</span></div><div class="qt">${esc(D.scen.title)}</div><div class="scn">${esc(D.scen.text)}</div>`;
+  D.scen.qs.forEach(x=>{
+    h+=`<div class="qt"><b>${x[0]} · ${x[1]}</b> — ${esc(x[2])}</div><div class="ans"><div class="sub-h">${esc(x[3])} (${x[4]})</div>`;
+    x[5].forEach(p=>h+=`<p>${esc(p)}</p>`);
+    if(x[6].length)h+=`<ul>${x[6].map(i=>`<li>${esc(i)}</li>`).join('')}</ul>`;
+    if(x[7])h+=`<p>${esc(x[7])}</p>`;
+    h+=`</div>`;
+  });
+  h+=`</div>`;
+  app.innerHTML=h;
+}
+let ex=[];
+function exam(){
+  clearInterval(tick);
+  ex=D.Q.filter(q=>q.type!=='sa');
+  bar.innerHTML='';
+  let h=`<div id="result"></div>`;
+  ex.forEach((q,k)=>{
+    h+=`<div class="q ${q.type}" id="e${k}"><div class="meta"><span>Question ${k+1} of ${ex.length}</span><span>${q.type==='mcq'?'Multiple Choice':'True or False'}</span></div><div class="qt">${esc(q.q)}</div>`;
+    const opts=q.type==='mcq'?q.opts.map((o,i)=>[i,L[i]+'. '+o]):[[1,'True'],[0,'False']];
+    h+=opts.map(([v,t])=>`<label class="opt"><input type="radio" name="q${k}" value="${v}"><span>${esc(t)}</span></label>`).join('');
+    h+=`<div class="ans hide"></div></div>`;
+  });
+  h+=`<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" id="sub">Submit Exam</button><button class="btn" id="rst">Restart</button></div>`;
+  app.innerHTML=h;
+  let t=0;timer.classList.remove('hide');timer.textContent='00:00';
+  tick=setInterval(()=>{t++;timer.textContent=String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0')},1000);
+  document.getElementById('rst').onclick=exam;
+  document.getElementById('sub').onclick=()=>{
+    clearInterval(tick);let sc=0;
+    ex.forEach((q,k)=>{
+      const box=document.getElementById('e'+k);
+      const c=box.querySelector('input:checked');
+      const correct=q.type==='mcq'?q.ans:(q.ans?1:0);
+      const val=c?+c.value:null;
+      if(val===correct)sc++;
+      box.querySelectorAll('label.opt').forEach(l=>{
+        const v=+l.querySelector('input').value;
+        if(v===correct)l.classList.add('right');
+        else if(v===val)l.classList.add('wrong');
+        l.querySelector('input').disabled=true;
+      });
+      const a=box.querySelector('.ans');a.classList.remove('hide');
+      a.innerHTML=(val===null?'<b>Not answered.</b> ':val===correct?'<b>Correct.</b> ':'<b>Incorrect.</b> ')+esc(q.ansText);
+    });
+    const res=document.getElementById('result');
+    res.style.display='block';
+    res.textContent=`Score: ${sc} / ${ex.length} (${Math.round(sc/ex.length*100)}%) · Time ${timer.textContent}`;
+    document.getElementById('sub').disabled=true;
+    window.scrollTo({top:0,behavior:'smooth'});
+  };
+}
+const bS=document.getElementById('bStudy'),bE=document.getElementById('bExam');
+bS.onclick=()=>{bS.classList.add('on');bE.classList.remove('on');study()};
+bE.onclick=()=>{bE.classList.add('on');bS.classList.remove('on');exam()};
+study();
+</script>
+</body>
+</html>

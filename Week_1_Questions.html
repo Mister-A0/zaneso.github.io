@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Week 1 - Questions &amp; Exam Mode</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;800&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#090d16;--card:#111827;--hover:#162032;--text:#f8fafc;--muted:#94a3b8;--border:rgba(255,255,255,.1);--ok:#10b981;--bad:#f43f5e}
+[data-theme="light"]{--bg:#f8fafc;--card:#fff;--hover:#f1f5f9;--text:#0f172a;--muted:#475569;--border:rgba(0,0,0,.1)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;line-height:1.6;min-height:100vh;overflow-x:hidden}
+header{max-width:900px;margin:0 auto;padding:56px 24px 16px;position:relative}
+.badge{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;padding:4px 12px;border-radius:20px;background:rgba(16,185,129,.15);color:#10b981;border:1px solid rgba(16,185,129,.3)}
+h1{font-size:clamp(26px,6vw,38px);font-weight:800;margin:14px 0 8px;line-height:1.2}
+h1 span{background:linear-gradient(135deg,#10b981,#06b6d4);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.sub{color:var(--muted)}
+.top{position:absolute;top:20px;right:24px;display:flex;gap:8px}
+.top button,.top a{width:44px;height:44px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:10px;cursor:pointer;font-size:18px;text-decoration:none;display:flex;align-items:center;justify-content:center}
+.modes{max-width:900px;margin:0 auto;padding:8px 24px;display:flex;gap:10px;flex-wrap:wrap}
+.btn{font:inherit;font-weight:700;font-size:14px;padding:10px 18px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer}
+.btn.on,.btn.primary{background:#10b981;color:#04130c;border-color:#10b981}
+main{max-width:900px;margin:0 auto;padding:8px 24px 56px}
+h2.part{font-family:'JetBrains Mono',monospace;font-size:13px;color:#10b981;text-transform:uppercase;letter-spacing:1px;margin:28px 0 10px}
+.q{background:var(--card);border:1px solid var(--border);border-top:3px solid var(--c,#10b981);border-radius:16px;padding:20px;margin-bottom:16px}
+.mcq{--c:#3b82f6}.tf{--c:#a855f7}.sa{--c:#f59e0b}.sc{--c:#06b6d4}
+.meta{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:800;color:var(--c);margin-bottom:8px}
+.qt{font-weight:600;margin-bottom:12px;overflow-wrap:anywhere}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer;background:var(--hover)}
+.opt input{margin-top:5px}
+.opt.right{border-color:var(--ok);background:rgba(16,185,129,.15)}
+.opt.wrong{border-color:var(--bad);background:rgba(244,63,94,.15)}
+.ans{margin-top:12px;padding:12px 14px;border-left:3px solid var(--ok);background:rgba(16,185,129,.08);border-radius:8px;font-size:14px}
+.ans p+p,.ans ul{margin-top:8px}.ans ul{padding-left:20px}
+.scn{background:var(--hover);border-radius:10px;padding:14px;margin-bottom:14px;font-size:14px;color:var(--muted)}
+.sub-h{font-weight:800;margin:6px 0}
+#bar{max-width:900px;margin:0 auto;padding:0 24px 8px}
+#result{display:none;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;font-weight:700}
+.hide{display:none!important}
+.timer{font-family:'JetBrains Mono',monospace;color:var(--muted);align-self:center}
+footer{text-align:center;padding:24px 16px;color:var(--muted);font-size:13px;border-top:1px solid var(--border)}
+@media(max-width:600px){header{padding:72px 16px 12px}.modes,main,#bar{padding-left:16px;padding-right:16px}.top{top:16px;right:16px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="top"><a href="index.html" aria-label="Home">&#8962;</a><button id="theme" aria-label="Toggle theme">&#9788;</button></div>
+  <span class="badge">Week 1 &middot; CCY4202</span>
+  <h1><span>Week 1</span> Questions</h1>
+  <p class="sub">Study Mode shows every question with its answer. Exam Mode quizzes you on the MCQ and True/False questions.</p>
+</header>
+<div class="modes">
+  <button class="btn on" id="bStudy">Study Mode</button>
+  <button class="btn" id="bExam">Exam Mode (MCQ + T/F)</button>
+  <span class="timer hide" id="timer"></span>
+</div>
+<div id="bar"></div>
+<main id="app"></main>
+<footer>&copy; Zaneso &mdash; Penetration Testing Course Notes</footer>
+<script>
+const D={"Q": [{"part": "Part 1", "n": "Q1", "type": "mcq", "label": "Q1 \u00b7 Multiple Choice (MCQ)", "tag": "BLUE \u00b7 SINGLE ANSWER", "q": "Which of the following BEST distinguishes ethical hacking from black-hat hacking?", "opts": ["The technical skill level of the practitioner", "The use of advanced tooling such as Metasploit", "The presence of written authorization, defined scope, and defensive intent", "Whether the activity is conducted from inside or outside the target network"], "ans": 2, "ansText": "Correct C \u2014 Authorization + Scope + Intent form the triad; the other options describe technique, not legality."}, {"part": "Part 1", "n": "Q2", "type": "tf", "label": "Q2 \u00b7 True or False", "tag": "PURPLE \u00b7 BINARY", "q": "\"A grey-hat hacker who discovers a vulnerability and publicly discloses it without prior authorization is acting lawfully as long as their intent was to help the vendor.\"", "ans": false, "ansText": "Answer FALSE \u2014 Intent does not cure unauthorized access. Courts have convicted grey-hats under CFAA even when motives were defensive (e.g., Auernheimer, 2012)."}, {"part": "Part 1", "n": "Q3", "type": "sa", "label": "Q3 \u00b7 Short Answer", "tag": "AMBER \u00b7 FREE RESPONSE", "q": "In one or two sentences, explain why a penetration test is considered a subset of ethical hacking rather than a synonym for it.", "ansText": "MODEL ANSWER \u00b7 Ethical hacking is the broader discipline of using attacker techniques for defensive purposes \u2014 it includes research, education, and threat modeling. Penetration testing is one formalized subset of ethical hacking that is bounded by a contract, an RoE, and a defined scope, and that produces a signed report."}, {"part": "Part 2", "n": "Q1", "type": "mcq", "label": "Q1 \u00b7 Multiple Choice (MCQ)", "tag": "SINGLE ANSWER", "q": "Which combination of attributes BEST captures why formal penetration testing methodologies exist?", "opts": ["To mandate a single toolset across the industry so certifications stay comparable.", "To enforce consistency, quality, repeatability, and defensibility across engagements and testers.", "To eliminate the need for tester judgment by replacing it with automated scanning.", "To prevent testers from using custom exploits during engagements."], "ans": 1, "ansText": "Correct: B \u2014 Methodologies exist so the work is consistent, repeatable, and defensible to clients and regulators; they do NOT replace tester judgment."}, {"part": "Part 2", "n": "Q2", "type": "tf", "label": "Q2 \u00b7 True or False", "tag": "BINARY", "q": "PCI DSS requires organizations that store, process, or transmit cardholder data to perform penetration testing at least annually and after any significant change to the cardholder data environment.", "ans": true, "ansText": "Answer: TRUE \u2014 PCI DSS Requirement 11.3 mandates annual pentesting plus post-change retesting of the CDE."}, {"part": "Part 2", "n": "Q3", "type": "sa", "label": "Q3 \u00b7 Short Answer", "tag": "2 SENTENCES", "q": "In two sentences, explain the difference in scope focus between OWASP Testing Guides and PTES.", "ansText": "MODEL ANSWER \u00b7 OWASP Testing Guides focus on application-layer security \u2014 primarily web and mobile applications \u2014 providing detailed test cases per vulnerability class. PTES is broader: it covers the full end-to-end penetration test from pre-engagement through reporting, regardless of whether the target is an application, a network, or a physical facility."}, {"part": "Part 3", "n": "Q1", "type": "mcq", "label": "Q1 \u00b7 Multiple Choice (MCQ)", "tag": "SINGLE ANSWER", "q": "A tester discovers a new internal subnet while pivoting during Phase 6 (Post-Exploitation) that was not enumerated in Phase 2. According to PTES, what is the correct action?", "opts": ["Exploit the new subnet immediately \u2014 momentum matters.", "Stop the engagement \u2014 methodology has been broken.", "Loop back to Phase 2 to enumerate the new subnet, then continue Phase 6 within RoE.", "Report the new subnet only in Phase 7."], "ans": 2, "ansText": "Correct: C \u2014 PTES is iterative; discovering a new subnet reopens Phase 2. The tester must verify the subnet is within RoE before continuing."}, {"part": "Part 3", "n": "Q2", "type": "tf", "label": "Q2 \u00b7 True or False", "tag": "BINARY", "q": "Reporting (Phase 7) begins after Phase 6 (Post-Exploitation) ends; note-taking during earlier phases is optional.", "ans": false, "ansText": "Answer: FALSE \u2014 note-taking and evidence collection begin in Phase 1 and run continuously. Phase 7 is the assembly of the report, not its start."}, {"part": "Part 3", "n": "Q3", "type": "sa", "label": "Q3 \u00b7 Short Answer", "tag": "2\u20133 SENTENCES", "q": "In two or three sentences, explain the difference between Black-box and White-box testing and one trade-off of each.", "ansText": "MODEL ANSWER \u00b7 Black-box testing simulates an external attacker with no prior knowledge of the target \u2014 most realistic but slow and may miss deep vulnerabilities. White-box testing gives the tester full knowledge (source code, architecture, credentials) \u2014 deepest coverage and fastest, but less realistic as an attacker-emulation. Grey-box sits between, trading some realism for efficiency."}, {"part": "Part 4", "n": "Q1", "type": "mcq", "label": "Q1 \u00b7 Multiple Choice (MCQ)", "tag": "Single correct", "q": "Which of the following is NOT a standard component of a Rules of Engagement (RoE) document?", "opts": ["Scope definition (in-scope and out-of-scope assets)", "Time windows for testing activity", "The tester's personal exploit development toolset", "Data handling requirements and destruction obligations"], "ans": 2, "ansText": "CORRECT: C \u2014 The RoE governs what the tester may do, not which tools they personally own. The other three are mandatory RoE components."}, {"part": "Part 4", "n": "Q2", "type": "tf", "label": "Q2 \u00b7 True or False", "tag": "Single answer", "q": "A bug bounty program's safe-harbor provision protects a researcher from prosecution for any vulnerability they discover on the program's target company, even if the finding is out of scope.", "ans": false, "ansText": "ANSWER: FALSE \u2014 Safe-harbor applies only within the program's defined scope and disclosure rules. Out-of-scope testing or non-coordinated disclosure removes the protection."}, {"part": "Part 4", "n": "Q3", "type": "sa", "label": "Q3 \u00b7 Short Answer", "tag": "2\u20133 sentences", "q": "In two or three sentences, explain why written authorization is non-negotiable under the CFAA, and what affirmative role the Authorization Letter plays.", "ansText": "MODEL \u00b7 Under 18 U.S.C. \u00a7 1030, \"without authorization\" (or \"exceeding authorized access\") is the threshold element of the most common CFAA charges. A signed Authorization Letter from the asset owner or their delegate is the affirmative defense: it establishes that the tester's access was authorized and within scope. Without that letter, the burden of proving authorization shifts to the tester, which is rarely defensible in court."}], "scen": {"title": "Scenario \u2014 \"NilePay\" External Web Pentest Request", "text": "NilePay is a fintech startup operating an external payment gateway at https://gateway.nilepay.example and a customer portal at https://portal.nilepay.example. Their Head of Engineering emails your firm: \"Please pentest our external web presence. Go ahead and start ASAP \u2014 find as many issues as you can. Our CISO will be the contact. We process EU customer payments.\" No contract, RoE, or scope list has been provided. The Head of Engineering asks you to begin the engagement the next morning. You notice gateway.nilepay.example also resolves to an internal-looking host 10.20.0.5 \u2014 likely a misconfigured DNS record exposing an internal staging host. You consider scanning it as part of the engagement. The customer portal runs a custom web app that handles EU residents' personal data, including names, addresses, and partial card numbers.", "qs": [["Q1", "PTES PHASE", "Identify the PTES phase that applies to the act of \"scanning 10.20.0.5 to see what services run on it.\" Explain why.", "A1 \u2014 PTES Phase Identification", "Q1 \u00b7 Blue", ["Scanning 10.20.0.5 to enumerate services is PTES Phase 2 \u2014 Intelligence Gathering (active reconnaissance). The activity is direct interaction with the target's systems to enumerate open ports and services, which is the textbook definition of active recon. It is NOT Phase 4 (Vulnerability Analysis) because no vulnerability identification is being attempted yet \u2014 only service enumeration. Critically, Phase 1 (Pre-Engagement Interactions) must be complete before Phase 2 begins: in this scenario Phase 1 has not occurred \u2014 no signed RoE exists \u2014 so even Phase 2 activity is unauthorized."], []], ["Q2", "ROE GAPS", "List three missing RoE components that MUST be present before any packet touches the target.", "A2 \u2014 Missing RoE Components", "Q2 \u00b7 Purple", ["Before any packet touches NilePay's infrastructure, the RoE must include at minimum:"], ["Scope Definition \u2014 explicitly listing in-scope hosts (gateway.nilepay.example and portal.nilepay.example) and explicitly listing 10.20.0.5 as either in-scope or (more likely, given it appears to be an internal host) out-of-scope.", "Time Windows \u2014 permitted testing hours and dates, with time zone, to avoid business disruption of the payment gateway.", "Authorization Artifacts \u2014 a signed Authorization Letter from NilePay's asset owner (CISO is named but authority to authorize testing must be confirmed) plus NDA and DPA references."], "Optional but expected: Prohibited Actions (e.g., no DoS, no credential brute-forcing of customer accounts) and an Escalation Path (24/7 POC chain in case the gateway is degraded)."], ["Q3", "LEGAL EXPOSURE", "Identify the two legal frameworks at risk if the tester proceeds without authorization, and explain one consequence each.", "A3 \u2014 Legal Frameworks at Risk", "Q3 \u00b7 Amber", ["Two frameworks are simultaneously engaged: (1) CFAA \u2014 18 U.S.C. \u00a7 1030 \u2014 because the tester would be accessing a protected computer without authorization (no signed Authorization Letter exists). A CFAA conviction can carry 1\u201310+ years depending on damage and intent. (2) GDPR \u2014 EU Regulation 2016/679 \u2014 because the customer portal processes EU residents' personal data. Unauthorized access to or processing of that data triggers Art. 5 (minimization) and Art. 33 (72-hour breach notification) obligations; penalties can reach 4% of global annual turnover. The tester is personally exposed under CFAA and may also be named in regulatory action under GDPR. The lesson: do not begin testing until a signed RoE and Authorization Letter are in hand."], []]]}};
+const r=document.documentElement,s=localStorage.getItem('theme');
+if(s)r.setAttribute('data-theme',s);
+document.getElementById('theme').onclick=()=>{const n=r.getAttribute('data-theme')==='dark'?'light':'dark';r.setAttribute('data-theme',n);localStorage.setItem('theme',n)};
+const app=document.getElementById('app'),bar=document.getElementById('bar'),timer=document.getElementById('timer');
+const L='ABCD';let tick=null;
+const esc=t=>t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function head(q){return `<div class="meta"><span>${esc(q.label)}</span><span>${esc(q.tag)}</span></div><div class="qt">${esc(q.q)}</div>`}
+function study(){
+  clearInterval(tick);timer.classList.add('hide');bar.innerHTML='';
+  let h='',part='';
+  D.Q.forEach(q=>{
+    if(q.part!==part){part=q.part;h+=`<h2 class="part">${part}</h2>`}
+    h+=`<div class="q ${q.type}">${head(q)}`;
+    if(q.type==='mcq')h+=q.opts.map((o,i)=>`<div class="opt ${i===q.ans?'right':''}"><b>${L[i]}.</b><span>${esc(o)}</span></div>`).join('');
+    h+=`<div class="ans">${esc(q.ansText)}</div></div>`;
+  });
+  h+=`<h2 class="part">Integrated Scenario</h2><div class="q sc"><div class="meta"><span>Mock Client Engagement</span><span>~10 min · exam-style</span></div><div class="qt">${esc(D.scen.title)}</div><div class="scn">${esc(D.scen.text)}</div>`;
+  D.scen.qs.forEach(x=>{
+    h+=`<div class="qt"><b>${x[0]} · ${x[1]}</b> — ${esc(x[2])}</div><div class="ans"><div class="sub-h">${esc(x[3])} (${x[4]})</div>`;
+    x[5].forEach(p=>h+=`<p>${esc(p)}</p>`);
+    if(x[6].length)h+=`<ul>${x[6].map(i=>`<li>${esc(i)}</li>`).join('')}</ul>`;
+    if(x[7])h+=`<p>${esc(x[7])}</p>`;
+    h+=`</div>`;
+  });
+  h+=`</div>`;
+  app.innerHTML=h;
+}
+let ex=[];
+function exam(){
+  clearInterval(tick);
+  ex=D.Q.filter(q=>q.type!=='sa');
+  bar.innerHTML='';
+  let h=`<div id="result"></div>`;
+  ex.forEach((q,k)=>{
+    h+=`<div class="q ${q.type}" id="e${k}"><div class="meta"><span>Question ${k+1} of ${ex.length}</span><span>${q.type==='mcq'?'Multiple Choice':'True or False'}</span></div><div class="qt">${esc(q.q)}</div>`;
+    const opts=q.type==='mcq'?q.opts.map((o,i)=>[i,L[i]+'. '+o]):[[1,'True'],[0,'False']];
+    h+=opts.map(([v,t])=>`<label class="opt"><input type="radio" name="q${k}" value="${v}"><span>${esc(t)}</span></label>`).join('');
+    h+=`<div class="ans hide"></div></div>`;
+  });
+  h+=`<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" id="sub">Submit Exam</button><button class="btn" id="rst">Restart</button></div>`;
+  app.innerHTML=h;
+  let t=0;timer.classList.remove('hide');timer.textContent='00:00';
+  tick=setInterval(()=>{t++;timer.textContent=String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0')},1000);
+  document.getElementById('rst').onclick=exam;
+  document.getElementById('sub').onclick=()=>{
+    clearInterval(tick);let sc=0;
+    ex.forEach((q,k)=>{
+      const box=document.getElementById('e'+k);
+      const c=box.querySelector('input:checked');
+      const correct=q.type==='mcq'?q.ans:(q.ans?1:0);
+      const val=c?+c.value:null;
+      if(val===correct)sc++;
+      box.querySelectorAll('label.opt').forEach(l=>{
+        const v=+l.querySelector('input').value;
+        if(v===correct)l.classList.add('right');
+        else if(v===val)l.classList.add('wrong');
+        l.querySelector('input').disabled=true;
+      });
+      const a=box.querySelector('.ans');a.classList.remove('hide');
+      a.innerHTML=(val===null?'<b>Not answered.</b> ':val===correct?'<b>Correct.</b> ':'<b>Incorrect.</b> ')+esc(q.ansText);
+    });
+    const res=document.getElementById('result');
+    res.style.display='block';
+    res.textContent=`Score: ${sc} / ${ex.length} (${Math.round(sc/ex.length*100)}%) · Time ${timer.textContent}`;
+    document.getElementById('sub').disabled=true;
+    window.scrollTo({top:0,behavior:'smooth'});
+  };
+}
+const bS=document.getElementById('bStudy'),bE=document.getElementById('bExam');
+bS.onclick=()=>{bS.classList.add('on');bE.classList.remove('on');study()};
+bE.onclick=()=>{bE.classList.add('on');bS.classList.remove('on');exam()};
+study();
+</script>
+</body>
+</html>

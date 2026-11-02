@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Penetration Testing Course - Lectures & Questions</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;800&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --card: #111827;
+      --hover: #162032;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --border: rgba(255, 255, 255, .1)
+    }
+
+    [data-theme="light"] {
+      --bg: #f8fafc;
+      --card: #fff;
+      --hover: #f1f5f9;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: rgba(0, 0, 0, .1)
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden
+    }
+
+    header {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 56px 24px 24px;
+      position: relative
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: rgba(16, 185, 129, .15);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, .3)
+    }
+
+    h1 {
+      font-size: clamp(26px, 6vw, 40px);
+      font-weight: 800;
+      margin: 14px 0 10px;
+      letter-spacing: -.6px;
+      line-height: 1.2
+    }
+
+    h1 span {
+      background: linear-gradient(135deg, #10b981, #06b6d4);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent
+    }
+
+    .sub {
+      color: var(--muted);
+      max-width: 700px
+    }
+
+    .author {
+      margin-top: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      color: var(--muted)
+    }
+
+    .author b {
+      color: #10b981
+    }
+
+    #theme {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      width: 44px;
+      height: 44px;
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 18px
+    }
+
+    .section-heading {
+      max-width: 1100px;
+      margin: 32px auto 0;
+      padding: 0 24px;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 16px 24px 40px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+      gap: 20px
+    }
+
+    .card {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--c);
+      border-radius: 16px;
+      padding: 24px;
+      text-decoration: none;
+      color: inherit;
+      transition: transform .2s, border-color .2s, background .2s;
+      -webkit-tap-highlight-color: transparent
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      background: var(--hover);
+      border-color: var(--c)
+    }
+
+    .wk {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--c);
+      text-transform: uppercase;
+      letter-spacing: 1px
+    }
+
+    .card h2 {
+      font-size: 20px;
+      line-height: 1.3;
+      overflow-wrap: anywhere
+    }
+
+    .card p {
+      color: var(--muted);
+      font-size: 14px;
+      flex: 1
+    }
+
+    .go {
+      color: var(--c);
+      font-weight: 700;
+      font-size: 14px
+    }
+
+    footer {
+      text-align: center;
+      padding: 24px 16px calc(24px + env(safe-area-inset-bottom));
+      color: var(--muted);
+      font-size: 13px;
+      border-top: 1px solid var(--border)
+    }
+
+    @media(max-width:600px) {
+      header {
+        padding: 72px 16px 12px
+      }
+
+      .sub {
+        font-size: 14px
+      }
+
+      .section-heading {
+        padding: 0 16px;
+        margin-top: 24px;
+        font-size: 20px
+      }
+
+      main {
+        padding: 12px 16px 32px;
+        grid-template-columns: 1fr;
+        gap: 14px
+      }
+
+      .card {
+        padding: 18px
+      }
+
+      .card h2 {
+        font-size: 18px
+      }
+
+      #theme {
+        top: 16px;
+        right: 16px
+      }
+    }
+
+    @media(hover:none) {
+      .card:hover {
+        transform: none
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <button id="theme" aria-label="Toggle theme">&#9788;</button>
+    <span class="badge">Lecture Summaries &amp; Revision Guides</span>
+    <h1><span>Penetration Testing</span> Course</h1>
+    <p class="sub">Choose a lecture or question bank below. Each page has a Home button to return here.</p>
+    <p class="author">Author: <b>Zaneso</b></p>
+  </header>
+
+  <h2 class="section-heading">Lecture Summaries</h2>
+  <main>
+    <a class="card" href="Week_1_Penetration_Testing_Detailed_Summary.html" style="--c:#10b981"><span class="wk">Week
+        1</span>
+      <h2>Penetration Testing Methodology</h2>
+      <p>PTES lifecycle, Rules of Engagement, legal frameworks and Kali Linux commands.</p><span class="go">Open lecture
+        &rarr;</span>
+    </a>
+    <a class="card" href="Week_2_Reconnaissance_and_Enumeration_Detailed_Summary.html" style="--c:#06b6d4"><span
+        class="wk">Week 2</span>
+      <h2>Reconnaissance & Enumeration</h2>
+      <p>Passive and active recon, scanning and service enumeration.</p><span class="go">Open lecture &rarr;</span>
+    </a>
+    <a class="card" href="Week3_Web_Enumeration_OWASP_Top10_Summary.html" style="--c:#a855f7"><span class="wk">Week
+        3</span>
+      <h2>Web Enumeration & OWASP Top 10</h2>
+      <p>Enumerating web apps and the OWASP Top 10 risk categories.</p><span class="go">Open lecture &rarr;</span>
+    </a>
+    <a class="card" href="Week4_SQL_Injection_Summary.html" style="--c:#f59e0b"><span class="wk">Week 4</span>
+      <h2>SQL Injection</h2>
+      <p>SQL injection fundamentals, detection and exploitation.</p><span class="go">Open lecture &rarr;</span>
+    </a>
+    <a class="card" href="Week_5_SQL_INJECTION.html" style="--c:#f43f5e"><span class="wk">Week 5</span>
+      <h2>XSS & CSRF</h2>
+      <p>Cross-Site Scripting (XSS) and Cross-Site Request Forgery (CSRF).</p><span class="go">Open lecture
+        &rarr;</span>
+    </a>
+    <a class="card" href="Week_6.html" style="--c:#3b82f6"><span class="wk">Week 6</span>
+      <h2>Week 6 Lecture</h2>
+      <p>Lecture summary and revision guide.</p><span class="go">Open lecture &rarr;</span>
+    </a>
+  </main>
+
+  <h2 class="section-heading">Practice Questions &amp; Exams From Lectures</h2>
+  <main>
+    <a class="card" href="Week_1_Questions.html" style="--c:#10b981"><span class="wk">Week 1 Questions</span>
+      <h2>Methodology Questions</h2>
+      <p>Practice MCQ, True/False, and short answers for Week 1.</p><span class="go">Open questions &rarr;</span>
+    </a>
+    <a class="card" href="Week_2_Questions.html" style="--c:#06b6d4"><span class="wk">Week 2 Questions</span>
+      <h2>Recon & Enum Questions</h2>
+      <p>Practice MCQ, True/False, and short answers for Week 2.</p><span class="go">Open questions &rarr;</span>
+    </a>
+    <a class="card" href="Week_3_Questions.html" style="--c:#a855f7"><span class="wk">Week 3 Questions</span>
+      <h2>Web Enum & OWASP Questions</h2>
+      <p>Practice MCQ, True/False, and short answers for Week 3.</p><span class="go">Open questions &rarr;</span>
+    </a>
+    <a class="card" href="Week_4_Questions.html" style="--c:#f59e0b"><span class="wk">Week 4 Questions</span>
+      <h2>SQL Injection Questions</h2>
+      <p>Practice MCQ, True/False, and short answers for Week 4.</p><span class="go">Open questions &rarr;</span>
+    </a>
+    <a class="card" href="Week_5_Questions.html" style="--c:#f43f5e"><span class="wk">Week 5 Questions</span>
+      <h2>XSS & CSRF Questions</h2>
+      <p>Practice MCQ, True/False, and short answers for Week 5.</p><span class="go">Open questions &rarr;</span>
+    </a>
+    <a class="card" href="Week_6_Questions.html" style="--c:#3b82f6"><span class="wk">Week 6 Questions</span>
+      <h2>Week 6 Questions</h2>
+      <p>Practice MCQ, True/False, and short answers for Week 6.</p><span class="go">Open questions &rarr;</span>
+    </a>
+  </main>
+
+  <h2 class="section-heading">Reference Material</h2>
+  <main>
+    <a class="card" href="KeyTerms.html" style="--c:#eab308">
+      <span class="wk">All Weeks</span>
+      <h2>Course Glossary</h2>
+      <p>Comprehensive terminology definitions and summaries for all course weeks.</p>
+      <span class="go">Open glossary &rarr;</span>
+    </a>
+  </main>
+
+  <footer>&copy; Zaneso &mdash; Penetration Testing Course Notes</footer>
+  <script>
+    const r = document.documentElement, s = localStorage.getItem('theme');
+    if (s) r.setAttribute('data-theme', s);
+    document.getElementById('theme').onclick = () => { const n = r.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; r.setAttribute('data-theme', n); localStorage.setItem('theme', n) };
+  </script>
+</body>
+
+</html>

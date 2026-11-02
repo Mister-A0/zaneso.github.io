@@ -1,0 +1,2447 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <title>Week 5: XSS and CSRF — Lecture Summary</title>
+    <meta name="description"
+        content="Comprehensive Week 5 study guide covering Cross-Site Scripting (XSS) and Cross-Site Request Forgery (CSRF).">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        /* EXACT CSS PRESERVED FROM WEEK 3 TEMPLATE */
+        :root {
+            --bg-page: #090d16;
+            --bg-surface: #0f172a;
+            --bg-card: #111827;
+            --bg-card-hover: #162032;
+            --bg-sidebar: #0b1120;
+            --bg-terminal: #070a12;
+            --bg-terminal-header: #111827;
+
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-card: rgba(255, 255, 255, 0.1);
+            --border-hover: rgba(2, 132, 199, 0.4);
+
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+
+            --accent-emerald: #10b981;
+            --accent-cyan: #06b6d4;
+            --accent-blue: #0284c7;
+            --accent-purple: #a855f7;
+            --accent-amber: #f59e0b;
+            --accent-orange: #f97316;
+            --accent-rose: #f43f5e;
+
+            --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --font-mono: 'JetBrains Mono', 'Fira Code', Menlo, Consolas, monospace;
+
+            --shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+        }
+
+        [data-theme="light"] {
+            --bg-page: #f8fafc;
+            --bg-surface: #ffffff;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f1f5f9;
+            --bg-sidebar: #f1f5f9;
+            --bg-terminal: #0f172a;
+            --bg-terminal-header: #1e293b;
+
+            --border-subtle: rgba(0, 0, 0, 0.08);
+            --border-card: rgba(0, 0, 0, 0.1);
+            --border-hover: rgba(2, 132, 199, 0.4);
+
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+
+            --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.07);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: 80px;
+        }
+
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            line-height: 1.7;
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+            transition: background-color 0.25s ease, color 0.25s ease;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-page);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-subtle);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-cyan);
+        }
+
+        #readingProgressBar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan), var(--accent-orange));
+            z-index: 1000;
+            transition: width 0.1s ease-out;
+        }
+
+        .app-navbar {
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            background: rgba(11, 17, 32, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-subtle);
+            transition: background-color 0.25s ease;
+        }
+
+        [data-theme="light"] .app-navbar {
+            background: rgba(255, 255, 255, 0.88);
+        }
+
+        .nav-container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .brand-icon-shield {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-orange));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 12px rgba(2, 132, 199, 0.3);
+            color: #fff;
+        }
+
+        .brand-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-title {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: -0.2px;
+            line-height: 1.2;
+        }
+
+        .brand-subtitle {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover {
+            color: var(--text-primary);
+            border-color: var(--accent-cyan);
+            background: var(--bg-card-hover);
+        }
+
+        .theme-toggle-btn,
+        .mobile-menu-btn {
+            padding: 8px;
+            width: 36px;
+            height: 36px;
+            justify-content: center;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+        }
+
+        .app-layout {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 32px 24px;
+            display: grid;
+            grid-template-columns: 290px 1fr;
+            gap: 40px;
+            align-items: start;
+        }
+
+        .sidebar-toc {
+            position: sticky;
+            top: 96px;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+            background: var(--bg-sidebar);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-card);
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border-subtle);
+            margin-bottom: 14px;
+        }
+
+        .sidebar-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .sidebar-header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-close-btn {
+            display: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-muted);
+            font-size: 14px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .toc-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 12px;
+            background: rgba(2, 132, 199, 0.15);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(2, 132, 199, 0.25);
+        }
+
+        .sidebar-jump-box {
+            margin-bottom: 14px;
+        }
+
+        .sidebar-search-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            color: var(--text-muted);
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .sidebar-kbd {
+            font-size: 10px;
+            font-family: var(--font-mono);
+            padding: 2px 5px;
+            border-radius: 4px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-muted);
+        }
+
+        .toc-nav {
+            flex: 1;
+        }
+
+        .toc-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .toc-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.15s ease;
+        }
+
+        .toc-link:hover {
+            color: var(--text-primary);
+            background: var(--bg-card-hover);
+        }
+
+        .toc-item.active>.toc-link {
+            color: var(--accent-cyan);
+            background: rgba(6, 182, 212, 0.1);
+            font-weight: 700;
+        }
+
+        .toc-icon {
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .toc-num {
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--text-muted);
+            background: var(--bg-card);
+            padding: 2px 5px;
+            border-radius: 4px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .toc-text {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-footer {
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .sidebar-study-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 12px;
+            font-size: 12px;
+            line-height: 1.5;
+            color: var(--text-muted);
+        }
+
+        .sidebar-study-card a {
+            color: var(--accent-cyan);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .study-card-title {
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .main-content {
+            min-width: 0;
+            max-width: 980px;
+        }
+
+        .hero-section {
+            position: relative;
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 20px;
+            padding: 44px;
+            margin-bottom: 36px;
+            box-shadow: var(--shadow-card);
+            overflow: hidden;
+        }
+
+        .hero-glow {
+            position: absolute;
+            top: -120px;
+            right: -100px;
+            width: 380px;
+            height: 380px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(2, 132, 199, 0.22) 0%, rgba(249, 115, 22, 0.12) 50%, transparent 80%);
+            pointer-events: none;
+        }
+
+        .hero-badge-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            background: rgba(2, 132, 199, 0.15);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(2, 132, 199, 0.3);
+        }
+
+        .badge-secondary {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-emerald);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .badge-lab {
+            background: rgba(249, 115, 22, 0.15);
+            color: var(--accent-orange);
+            border-color: rgba(249, 115, 22, 0.3);
+        }
+
+        .badge-pulse {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            box-shadow: 0 0 8px var(--accent-cyan);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.4;
+                transform: scale(0.85);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .hero-title {
+            font-size: 38px;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 14px;
+            letter-spacing: -0.8px;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-cyan) 50%, var(--accent-orange) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: 17px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 24px;
+            max-width: 820px;
+        }
+
+        .topic-tags-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .topic-tag {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 8px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+        }
+
+        .guide-usage-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            background: rgba(2, 132, 199, 0.07);
+            border: 1px solid rgba(2, 132, 199, 0.25);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+        }
+
+        .guide-usage-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .guide-usage-title {
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: var(--accent-cyan);
+            margin-bottom: 4px;
+        }
+
+        .learning-obj-box {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin-bottom: 26px;
+        }
+
+        .obj-header {
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: var(--accent-emerald);
+            margin-bottom: 10px;
+        }
+
+        .obj-list {
+            margin: 0 0 0 20px;
+            color: var(--text-secondary);
+            font-size: 13.5px;
+        }
+
+        .content-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 18px;
+            padding: 36px;
+            margin-bottom: 32px;
+            box-shadow: var(--shadow-card);
+            transition: border-color 0.2s ease;
+        }
+
+        .content-card:hover {
+            border-color: var(--border-hover);
+        }
+
+        .section-card-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding-bottom: 20px;
+            margin-bottom: 26px;
+            border-bottom: 1px solid var(--border-subtle);
+            position: relative;
+        }
+
+        .sec-num-badge {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(2, 132, 199, 0.2), rgba(249, 115, 22, 0.15));
+            border: 1px solid rgba(2, 132, 199, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-mono);
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--accent-cyan);
+            flex-shrink: 0;
+        }
+
+        .sec-title-wrap {
+            flex: 1;
+        }
+
+        .sec-kicker {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--accent-orange);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .section-heading {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -0.4px;
+            color: var(--text-primary);
+            line-height: 1.3;
+        }
+
+        .anchor-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 20px;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .section-card-header:hover .anchor-link {
+            opacity: 1;
+        }
+
+        h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 28px 0 14px 0;
+        }
+
+        p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        strong {
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+
+        ul,
+        ol {
+            margin: 12px 0 20px 24px;
+            color: var(--text-secondary);
+        }
+
+        li {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+
+        li::marker {
+            color: var(--accent-cyan);
+            font-weight: 700;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            margin: 20px 0 24px 0;
+            border-radius: 12px;
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            text-align: left;
+        }
+
+        thead th {
+            background: var(--bg-surface);
+            color: var(--text-primary);
+            font-weight: 700;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-subtle);
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.6px;
+            white-space: nowrap;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid var(--border-subtle);
+            transition: background-color 0.15s ease;
+        }
+
+        tbody tr:hover {
+            background: var(--bg-card-hover);
+        }
+
+        tbody td {
+            padding: 12px 16px;
+            color: var(--text-secondary);
+            vertical-align: top;
+        }
+
+        tbody td strong {
+            color: var(--text-primary);
+        }
+
+        .terminal-card {
+            background: var(--bg-terminal);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            margin: 18px 0 22px 0;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .terminal-header {
+            background: var(--bg-terminal-header);
+            padding: 9px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .terminal-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+        }
+
+        .dot-red {
+            background: #ef4444;
+        }
+
+        .dot-yellow {
+            background: #f59e0b;
+        }
+
+        .dot-green {
+            background: #10b981;
+        }
+
+        .terminal-title {
+            font-size: 12px;
+            font-family: var(--font-mono);
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .copy-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 600;
+            font-family: var(--font-sans);
+            cursor: pointer;
+        }
+
+        .terminal-body {
+            padding: 16px 20px;
+            overflow-x: auto;
+        }
+
+        .terminal-line {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-family: var(--font-mono);
+            font-size: 13.5px;
+        }
+
+        .terminal-prompt {
+            color: var(--accent-orange);
+            font-weight: 700;
+        }
+
+        .terminal-cmd {
+            color: #e2e8f0;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .callout {
+            display: flex;
+            gap: 16px;
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin: 20px 0;
+            border: 1px solid transparent;
+        }
+
+        .callout-icon {
+            font-size: 22px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .callout-body {
+            flex: 1;
+        }
+
+        .callout-badge {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .callout-text {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        .callout-lesson {
+            background: rgba(2, 132, 199, 0.08);
+            border-color: rgba(2, 132, 199, 0.3);
+        }
+
+        .callout-lesson .callout-badge {
+            color: var(--accent-cyan);
+        }
+
+        .callout-casestudy {
+            background: rgba(244, 63, 94, 0.08);
+            border-color: rgba(244, 63, 94, 0.3);
+        }
+
+        .callout-casestudy .callout-badge {
+            color: var(--accent-rose);
+        }
+
+        .callout-safety {
+            background: rgba(245, 158, 11, 0.08);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .callout-safety .callout-badge {
+            color: var(--accent-amber);
+        }
+
+        .exam-checklist-widget {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 14px;
+            padding: 24px;
+            margin: 24px 0;
+        }
+
+        .chk-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-subtle);
+            flex-wrap: wrap;
+        }
+
+        .chk-badge {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--accent-orange);
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .chk-title-group h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .chk-progress-box {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+            min-width: 140px;
+        }
+
+        .chk-progress-text {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent-orange);
+            font-family: var(--font-mono);
+        }
+
+        .chk-progress-track {
+            width: 140px;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            overflow: hidden;
+        }
+
+        .chk-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-orange), var(--accent-emerald));
+            transition: width 0.3s ease;
+        }
+
+        .chk-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .checklist-item.checked {
+            border-color: rgba(16, 185, 129, 0.4);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .chk-box-wrap input {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent-emerald);
+            cursor: pointer;
+        }
+
+        .chk-num {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--accent-cyan);
+            margin-top: 2px;
+        }
+
+        .chk-text {
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--text-secondary);
+        }
+
+        .search-modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(6px);
+            z-index: 1100;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 100px;
+        }
+
+        .search-modal-backdrop.open {
+            display: flex;
+        }
+
+        .search-modal-dialog {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 620px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            overflow: hidden;
+        }
+
+        .search-modal-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .modal-search-icon {
+            color: var(--accent-cyan);
+        }
+
+        #globalSearchInput {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 16px;
+            font-family: inherit;
+            outline: none;
+        }
+
+        .search-modal-close {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            color: var(--text-muted);
+            font-size: 11px;
+            padding: 4px 8px;
+            cursor: pointer;
+        }
+
+        .search-results-list {
+            max-height: 380px;
+            overflow-y: auto;
+            padding: 8px 12px;
+            list-style: none;
+        }
+
+        .search-result-item {
+            padding: 10px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            text-decoration: none;
+            color: var(--text-secondary);
+        }
+
+        .search-result-item:hover {
+            background: var(--bg-surface);
+            color: var(--accent-cyan);
+        }
+
+        .result-main {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .result-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .result-sec {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .result-badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: var(--bg-card-hover);
+            color: var(--accent-orange);
+        }
+
+        .app-footer {
+            max-width: 1440px;
+            margin: 40px auto 0 auto;
+            padding: 30px 24px 60px 24px;
+            border-top: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--text-muted);
+            font-size: 13px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .footer-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        @media (max-width: 1024px) {
+            .app-layout {
+                grid-template-columns: 1fr;
+                padding: 24px 20px;
+            }
+
+            .sidebar-toc {
+                display: flex !important;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 320px;
+                height: 100vh;
+                z-index: 950;
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+                background: var(--bg-sidebar);
+            }
+
+            .sidebar-toc.mobile-open {
+                transform: translateX(0);
+            }
+
+            .mobile-menu-btn,
+            .sidebar-close-btn {
+                display: inline-flex;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="readingProgressBar"></div>
+
+    <nav class="app-navbar">
+        <div class="nav-container">
+            <a href="#" class="nav-brand">
+                <div class="brand-icon-shield">
+                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                        <line x1="8" y1="21" x2="16" y2="21"></line>
+                        <line x1="12" y1="17" x2="12" y2="21"></line>
+                    </svg>
+                </div>
+                <div class="brand-info">
+                    <span class="brand-title">CYBERSEC 101</span>
+                    <span class="brand-subtitle">Week 5 • XSS and CSRF</span>
+                </div>
+            </a>
+            <div class="nav-actions">
+                <button class="nav-btn" onclick="openSearchModal()" title="Search guide (Ctrl+K)">
+                    <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <span>Search</span>
+                    <kbd class="sidebar-kbd">Ctrl K</kbd>
+                </button>
+                <button class="nav-btn theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()"
+                    title="Toggle Light/Dark Theme">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="app-layout">
+
+        <aside class="sidebar-toc" id="sidebarNav">
+            <div class="sidebar-header">
+                <div class="sidebar-title">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+                        <line x1="8" y1="6" x2="21" y2="6"></line>
+                        <line x1="8" y1="12" x2="21" y2="12"></line>
+                        <line x1="8" y1="18" x2="21" y2="18"></line>
+                        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                    </svg>
+                    <span>Navigation</span>
+                </div>
+                <div class="sidebar-header-right">
+                    <span class="toc-badge">10 Modules</span>
+                    <button class="sidebar-close-btn" onclick="closeMobileMenu()">✕</button>
+                </div>
+            </div>
+            <div class="sidebar-jump-box">
+                <button class="sidebar-search-btn" onclick="openSearchModal()">
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <span>Quick search...</span>
+                    <kbd class="sidebar-kbd">Ctrl K</kbd>
+                </button>
+            </div>
+            <nav class="toc-nav">
+                <ul class="toc-list">
+                    <li class="toc-item" data-target="mod-1"><a href="#mod-1" class="toc-link"><span
+                                class="toc-icon">📖</span><span class="toc-num">01</span><span class="toc-text">XSS
+                                Definition & Types</span></a></li>
+                    <li class="toc-item" data-target="mod-2"><a href="#mod-2" class="toc-link"><span
+                                class="toc-icon">🌐</span><span class="toc-num">02</span><span
+                                class="toc-text">DOM-Based XSS</span></a></li>
+                    <li class="toc-item" data-target="mod-3"><a href="#mod-3" class="toc-link"><span
+                                class="toc-icon">🔥</span><span class="toc-num">03</span><span
+                                class="toc-text">Persistent (Stored) XSS</span></a></li>
+                    <li class="toc-item" data-target="mod-4"><a href="#mod-4" class="toc-link"><span
+                                class="toc-icon">⚡</span><span class="toc-num">04</span><span class="toc-text">Reflected
+                                XSS</span></a></li>
+                    <li class="toc-item" data-target="mod-5"><a href="#mod-5" class="toc-link"><span
+                                class="toc-icon">🔄</span><span class="toc-num">05</span><span class="toc-text">CSRF &
+                                Trust Models</span></a></li>
+                    <li class="toc-item" data-target="mod-6"><a href="#mod-6" class="toc-link"><span
+                                class="toc-icon">🛡️</span><span class="toc-num">06</span><span
+                                class="toc-text">Adjacent OWASP Risks</span></a></li>
+                    <li class="toc-item" data-target="mod-7"><a href="#mod-7" class="toc-link"><span
+                                class="toc-icon">🌍</span><span class="toc-num">07</span><span
+                                class="toc-text">Real-World Case Studies</span></a></li>
+                    <li class="toc-item" data-target="mod-8"><a href="#mod-8" class="toc-link"><span
+                                class="toc-icon">⚠️</span><span class="toc-num">08</span><span class="toc-text">Common
+                                Misconceptions</span></a></li>
+                    <li class="toc-item" data-target="mod-9"><a href="#mod-9" class="toc-link"><span
+                                class="toc-icon">🎯</span><span class="toc-num">09</span><span class="toc-text">Scenario
+                                & Model Answer</span></a></li>
+                    <li class="toc-item" data-target="mod-10"><a href="#mod-10" class="toc-link"><span
+                                class="toc-icon">🧪</span><span class="toc-num">10</span><span class="toc-text">Lab Prep
+                                & Summary</span></a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+
+            <header class="hero-section">
+                <div class="hero-glow"></div>
+                <div class="hero-badge-wrap">
+                    <span class="hero-badge"><span class="badge-pulse"></span>WEEK 5 STUDY GUIDE</span>
+                    <span class="hero-badge badge-secondary">CCY4202 · ETHICAL HACKING</span>
+                    <span class="hero-badge badge-lab">XSS & CSRF</span>
+                </div>
+                <h1 class="hero-title">Cross-Site Scripting (XSS) and <span class="gradient-text">CSRF</span></h1>
+                <p class="hero-subtitle">Week 5 Lecture Summary · 2-hour lecture preceding a 2-hour hands-on lab[cite:
+                    2]</p>
+
+                <div class="topic-tags-grid">
+                    <span class="topic-tag">🌐 DOM-Based XSS</span>
+                    <span class="topic-tag">🔥 Persistent (Stored) XSS</span>
+                    <span class="topic-tag">⚡ Reflected XSS</span>
+                    <span class="topic-tag">🔄 Cross-Site Request Forgery</span>
+                    <span class="topic-tag">🍪 SameSite Cookies</span>
+                    <span class="topic-tag">🛡️ Anti-CSRF Tokens</span>
+                </div>
+
+                <div class="guide-usage-card">
+                    <div class="guide-usage-icon">🔑</div>
+                    <div class="guide-usage-content">
+                        <div class="guide-usage-title">OVERVIEW</div>
+                        <p>This is the first of two 120-minute sessions in Week 5, followed by a 120-minute lab. The
+                            lecture covers two client-side web attacks. XSS receives the most coverage and is drawn from
+                            the assigned OWASP Juice Shop homework room. CSRF is taught from standard academic and OWASP
+                            sources because the Juice Shop room does not cover it[cite: 2].</p>
+                        <p>The lecture also places Week 5 within the 14-week web attack curriculum. It follows
+                            reconnaissance (Week 3) and SQL injection (Week 4), and precedes Broken Authentication (Week
+                            7), Sensitive Data Exposure (Week 9), and Password Attacks (Week 10). Web App Pentest
+                            Reporting follows in Week 12[cite: 2].</p>
+                    </div>
+                </div>
+
+                <div class="learning-obj-box">
+                    <div class="obj-header">🎯 LEARNING OBJECTIVES</div>
+                    <ul class="obj-list">
+                        <li><strong>1.</strong> Define Cross-Site Scripting (XSS) and distinguish DOM-based, Persistent
+                            (Stored), and Reflected XSS[cite: 2].</li>
+                        <li><strong>2.</strong> Identify and exploit each of the three XSS types using the verified
+                            payloads and techniques[cite: 2].</li>
+                        <li><strong>3.</strong> Define CSRF, explain the trust relationship it exploits, and identify
+                            vulnerable and protected request patterns[cite: 2].</li>
+                        <li><strong>4.</strong> Explain and apply core CSRF defenses: anti-CSRF tokens, SameSite
+                            cookies, and re-authentication for sensitive actions[cite: 2].</li>
+                        <li><strong>5.</strong> Recognize, without deep exploitation, that Injection, Broken
+                            Authentication, Sensitive Data Exposure, and Broken Access Control also appear in Juice
+                            Shop, and know which future week covers each in depth[cite: 2].</li>
+                    </ul>
+                    <p style="font-size: 13.5px; margin-top: 10px; margin-left: 20px;"><em>Objectives 1 to 4 are the
+                            operational core and will be tested in the lab and the end-of-lecture scenario. Objective 5
+                            is a scope-discipline meta-skill: knowing what is in and out of scope for a given engagement
+                            week[cite: 2].</em></p>
+                </div>
+            </header>
+
+            <section id="mod-1" class="content-card section-card" data-section-num="1">
+                <div class="section-card-header">
+                    <div class="sec-num-badge">01</div>
+                    <div class="sec-title-wrap">
+                        <span class="sec-kicker">PART 1</span>
+                        <h2 class="section-heading" id="mod-1">XSS Definition and the Three Types</h2>
+                    </div>
+                    <a class="anchor-link" href="#mod-1">#</a>
+                </div>
+                <p>The lecture defines XSS as a vulnerability that allows attackers to run JavaScript in web
+                    applications. It is one of the most commonly found bugs in web applications, and its difficulty
+                    ranges from easy to extremely hard depending on how the target application parses input. The deck
+                    distinguishes three types along four dimensions: where the payload is injected, where it executes,
+                    how long it persists, and what triggers it[cite: 2].</p>
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Injection point</th>
+                                <th>Execution</th>
+                                <th>Persistence</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>DOM-based</strong> (special)</td>
+                                <td>URL fragment or DOM sink</td>
+                                <td>Entirely in the browser DOM; typically uses a script or iframe tag</td>
+                                <td>None (per request, but client-side)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Persistent</strong> (stored, server-side)</td>
+                                <td>Any field the server stores</td>
+                                <td>Server renders the stored payload to each viewer</td>
+                                <td>High; fires for every viewer</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Reflected</strong> (client-side)</td>
+                                <td>URL parameter or form field</td>
+                                <td>Server reflects the payload back in its response</td>
+                                <td>None; single request and response</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p>The lecture also covers reconnaissance before exploitation. Students browse the application through
+                    Burp Suite with interception turned OFF, so every request is captured in HTTP History for later
+                    analysis. This is passive reconnaissance: no payloads are sent, and it connects directly to the Week
+                    3 enumeration methodology[cite: 2]. The recommended workflow is to configure the browser to route
+                    through Burp at 127.0.0.1:8080, set interception to OFF, browse normally (log in, search, post,
+                    navigate), review HTTP History, and map the attack surface: forms, URL parameters, custom HTTP
+                    headers, and hidden routes. Interception should be turned ON only when a request must be modified,
+                    because it blocks each request and slows reconnaissance[cite: 2].</p>
+
+                <div class="callout callout-lesson">
+                    <div class="callout-icon">🧠</div>
+                    <div class="callout-body">
+                        <div class="callout-badge">KNOWLEDGE CHECK 1</div>
+                        <div class="callout-text">Tests three points: DOM-based XSS is the type that executes entirely
+                            in the victim's browser (answer C), passive reconnaissance uses interception OFF (the
+                            statement that interception ON is recommended is false), and Persistent XSS differs from
+                            Reflected XSS because the payload is stored on the server and fires for every visitor,
+                            whereas Reflected XSS is bundled into a single request and fires only when the victim
+                            submits or clicks the crafted link[cite: 2].</div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="mod-2" class="content-card section-card" data-section-num="2">
+                <div class="section-card-header">
+                    <div class="sec-num-badge">02</div>
+                    <div class="sec-title-wrap">
+                        <span class="sec-kicker">PART 2</span>
+                        <h2 class="section-heading" id="mod-2">Exploiting DOM-Based XSS</h2>
+                    </div>
+                    <a class="anchor-link" href="#mod-2">#</a>
+                </div>
+                <p>The verified payload is an iframe whose src attribute is a javascript: URI[cite: 2]:</p>
+
+                <div class="terminal-card">
+                    <div class="terminal-header">
+                        <div class="terminal-dots"><span class="dot dot-red"></span><span
+                                class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+                        <div class="terminal-title">Payload</div>
+                        <button class="copy-btn" onclick="copyCommand(this)">Copy</button>
+                    </div>
+                    <div class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="terminal-cmd">&lt;iframe src="javascript:alert(&#x60;xss&#x60;)"&gt;</span>
+                        </div>
+                    </div>
+                </div>
+
+                <p>The deck notes that using an iframe to execute a javascript: URI is also called XFS (Cross-Frame
+                    Scripting) and is one of the most common ways to detect XSS in web applications[cite: 2].</p>
+
+                <h3>Technique steps:</h3>
+                <ol>
+                    <li>Locate a search bar or any input field whose value is reflected into the DOM without
+                        encoding[cite: 2].</li>
+                    <li>Paste the iframe payload into the search field and submit[cite: 2].</li>
+                    <li>The browser parses the iframe, encounters the javascript: URI scheme, and executes
+                        <code>alert(`xss`)</code>[cite: 2].</li>
+                </ol>
+
+                <p><strong>Why it works:</strong> it is common for a search bar to send a request to the server and
+                    display the related results. The flaw is that, without correct input sanitisation, the search bar
+                    can be used to perform an XSS attack[cite: 2].</p>
+                <p><strong>General rule:</strong> any application that allows user modification of iframes or other DOM
+                    elements is a likely XSS candidate. Auditors should check every location where user input reaches a
+                    DOM sink, such as innerHTML, document.write, eval, or iframe src[cite: 2].</p>
+
+                <div class="callout callout-lesson">
+                    <div class="callout-icon">🧠</div>
+                    <div class="callout-body">
+                        <div class="callout-badge">KNOWLEDGE CHECK 2</div>
+                        <div class="callout-text">Covers the element used (an iframe whose src is a javascript: URI),
+                            the fact that XFS is a recognised alias for this technique, and why the search bar is a
+                            viable attack surface even though the server returns the response. The attack surface is the
+                            DOM the browser builds from the server's response, so the flaw is the lack of input
+                            sanitisation[cite: 2].</div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="mod-3" class="content-card section-card" data-section-num="3">
+                <div class="section-card-header">
+                    <div class="sec-num-badge">03</div>
+                    <div class="sec-title-wrap">
+                        <span class="sec-kicker">PART 3</span>
+                        <h2 class="section-heading" id="mod-3">Exploiting Persistent (Stored) XSS</h2>
+                    </div>
+                    <a class="anchor-link" href="#mod-3">#</a>
+                </div>
+                <p>This part uses the "Last Login IP" page in Juice Shop, and the technique is injected through an HTTP
+                    header rather than a visible form field[cite: 2].</p>
+
+                <h3>Attack walkthrough:</h3>
+                <ol>
+                    <li>Log in to the Juice Shop account normally[cite: 2].</li>
+                    <li>Navigate to the Last Login IP page, which shows the IP address from which the account last
+                        logged in[cite: 2].</li>
+                    <li>Log OUT, but first enable Burp interception ON so the logout request is captured before it
+                        reaches the server[cite: 2].</li>
+                    <li>In the captured logout request, add a custom HTTP header:
+                        <code>True-Client-IP: &lt;iframe src="javascript:alert(&#x60;xss&#x60;)"&gt;</code>[cite: 2].
+                    </li>
+                    <li>Forward the modified request. The server logs the malicious IP value as part of the logout
+                        record[cite: 2].</li>
+                    <li>Log back in and revisit the Last Login IP page. The stored payload fires in the browser[cite:
+                        2].</li>
+                </ol>
+
+                <p><strong>Why it works:</strong> the True-Client-IP header is similar to X-Forwarded-For, since both
+                    tell the server or a proxy the client's IP address. Because no sanitisation is applied to this
+                    header value, injecting a payload into it and having the application later display it, unsanitised,
+                    triggers stored XSS[cite: 2].</p>
+                <p><strong>Teaching point:</strong> Persistent XSS injection points are not limited to obvious form
+                    fields. HTTP headers that are logged and later displayed are equally valid vectors. These include
+                    Last Login IP, User-Agent, Referer, X-Forwarded-For, and True-Client-IP. Auditors should check every
+                    location where stored data is later rendered[cite: 2].</p>
+
+                <div class="callout callout-lesson">
+                    <div class="callout-icon">🧠</div>
+                    <div class="callout-body">
+                        <div class="callout-badge">KNOWLEDGE CHECK 3</div>
+                        <div class="callout-text">Asks why the True-Client-IP injection succeeds (the server stores the
+                            value and renders it without sanitisation), states and corrects the claim that Persistent
+                            XSS is limited to traditional form fields (false, because any stored and displayed data can
+                            serve as an injection point), and asks students to name two abusable headers. The model
+                            answers are True-Client-IP and X-Forwarded-For, which are typically not sanitised because
+                            developers assume they contain a benign IP address string[cite: 2].</div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="mod-4" class="content-card section-card" data-section-num="4">
+                <div class="section-card-header">
+                    <div class="sec-num-badge">04</div>
+                    <div class="sec-title-wrap">
+                        <span class="sec-kicker">PART 4</span>
+                        <h2 class="section-heading" id="mod-4">Exploiting Reflected XSS</h2>
+                    </div>
+                    <a class="anchor-link" href="#mod-4">#</a>
+                </div>
+                <p>This part uses the Order History tracking page in Juice Shop. The payload is identical to Parts 2 and
+                    3. Only the injection point changes, and the new vector is the id parameter[cite: 2].</p>
+
+                <h3>Attack walkthrough:</h3>
+                <ol>
+                    <li>Log in to Juice Shop and navigate to the Order History page[cite: 2].</li>
+                    <li>Click the tracking icon for any order. This opens a tracking-result page whose URL contains an
+                        id parameter, for example 5267-f73dcd000abcc353[cite: 2].</li>
+                    <li>Replace that id value with the iframe payload:
+                        <code>&lt;iframe src="javascript:alert(&#x60;xss&#x60;)"&gt;</code>[cite: 2].</li>
+                    <li>Submit the modified URL by pasting it into the address bar and pressing Enter[cite: 2].</li>
+                    <li>Refresh the page. The alert fires[cite: 2].</li>
+                </ol>
+
+                <p><strong>Why it works:</strong> the server looks up the tracking ID against a lookup table or
+                    database. Because the id parameter is not sanitised before being reflected back into the page, the
+                    injected payload executes. This is the defining trait of Reflected XSS: the payload travels out in
+                    the same request and response cycle, so the victim must submit or click the malicious link or
+                    URL[cite: 2].</p>
+
+                <h3>Request and response cycle:</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Step</th>
+                                <th>Actor</th>
+                                <th>What happens</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>Attacker</td>
+                                <td>Crafts a malicious URL with the payload in the id parameter[cite: 2]</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Victim</td>
+                                <td>Clicks or submits the URL[cite: 2]</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>Server</td>
+                                <td>Looks up the id in the database[cite: 2]</td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>Server</td>
+                                <td>Reflects the payload back into the response page, unsanitised[cite: 2]</td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>Browser</td>
+                                <td>Parses the HTML and executes the payload (alert)[cite: 2]</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="callout callout-lesson">
+                    <div class="callout-icon">🧠</div>
+                    <div class="callout-body">
+                        <div class="callout-badge">KNOWLEDGE CHECK 4</div>
+                        <div class="callout-text">Tests the single-request nature of Reflected XSS (answer C), states
+                            the false claim that Reflected XSS fires automatically for every visitor, and asks why the
+                            attacker must trick the victim into clicking a link or submitting a form. The answer is that
+                            the payload is not stored, so it must travel in the request itself, which is why Reflected
+                            XSS usually depends on phishing or link shortening[cite: 2].</div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="mod-5" class="content-card section-card" data-section-num="5">
+                <div class="section-card-header">
+                    <div class="sec-num-badge">05</div>
+                    <div class="sec-title-wrap">
+                        <span class="sec-kicker">PART 5</span>
+                        <h2 class="section-heading" id="mod-5">Cross-Site Request Forgery (CSRF)</h2>
+                    </div>
+                    <a class="anchor-link" href="#mod-5">#</a>
+                </div>
+                <p><em>Source note: the CSRF material in this lecture comes from standard academic and OWASP coverage,
+                        not from the Juice Shop room, which does not cover CSRF. The lab room named "CSRF" must have its
+                        exact content confirmed before the session[cite: 2].</em></p>
+
+                <h3>Definition</h3>
+                <p>CSRF is an attack that tricks an authenticated victim's browser into submitting an unwanted,
+                    state-changing request to a web application in which the victim is currently logged in. It exploits
+                    the trust the application places in the victim's browser and session, rather than in the victim's
+                    explicit intent[cite: 2].</p>
+
+                <h3>Trust model</h3>
+                <p>The web application trusts the victim's browser, not the victim's intent. Once the victim is logged
+                    in, the browser automatically attaches the session cookie to every outgoing request to that domain,
+                    including requests triggered by an attacker's page. The application cannot distinguish a request the
+                    user deliberately made from a request the attacker silently triggered[cite: 2].</p>
+
+                <h3>Preconditions for a successful attack</h3>
+                <ol>
+                    <li>The target application relies on session cookies or credentials that the browser sends
+                        automatically[cite: 2].</li>
+                    <li>The application performs a state-changing action based solely on a valid session, without any
+                        additional per-request proof of intent[cite: 2].</li>
+                    <li>The attacker can predict all parameters needed for the request, or the request works with
+                        parameters the attacker controls[cite: 2].</li>
+                </ol>
+
+                <h3>Attack flow</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Step</th>
+                                <th>Stage</th>
+                                <th>What happens</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>Victim logged in</td>
+                                <td>The victim has an active session on target-site.com, and the browser holds a valid
+                                    session cookie (for example, sessionid=abc123)[cite: 2].</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Victim visits attacker page</td>
+                                <td>The victim opens a page on attacker.com (through a phishing link, malicious ad, or
+                                    embedded iframe). The page contains a hidden auto-submitting form that points at
+                                    target-site.com/transfer[cite: 2].</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>Browser sends cookie silently</td>
+                                <td>The browser sends the forged POST to target-site.com and automatically attaches the
+                                    sessionid cookie, even though attacker.com triggered the request[cite: 2].</td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>Target executes the action</td>
+                                <td>The site receives a valid request with a valid session cookie, assumes the user
+                                    intended it, and performs the transfer, email change, or password reset with the
+                                    victim's privileges[cite: 2].</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p>The lecture stresses the trust gap: the browser has no way to know the user did not intend the
+                    request, and the application has no way to know the request came from attacker.com. Both the classic
+                    exploitation pattern and the example form use an auto-submitting HTML form, or an img or fetch
+                    request, aimed at a state-changing endpoint such as a funds transfer or an email change[cite: 2].
+                </p>
+
+                <p><strong>Example forged form used in the slide:</strong></p>
+                <div class="terminal-card">
+                    <div class="terminal-header">
+                        <div class="terminal-dots"><span class="dot dot-red"></span><span
+                                class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+                        <div class="terminal-title">CSRF Payload</div>
+                        <button class="copy-btn" onclick="copyCommand(this)">Copy</button>
+                    </div>
+                    <div class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="terminal-cmd">&lt;form action="target-site.com/transfer" method="POST"&gt;
+                                &lt;input name="to" value="attacker"&gt;
+                                &lt;input name="amount" value="1000"&gt;
+                                &lt;/form&gt;
+                                &lt;script&gt;document.forms[0].submit()&lt;/script&gt;</span>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Core CSRF defenses</h3>
+                <p>The deck emphasises defense-in-depth: no single defense is sufficient on its own[cite: 2].</p>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Defense</th>
+                                <th>How it works</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1. Anti-CSRF tokens</td>
+                                <td>A unique, unpredictable token is embedded in each form or request and validated
+                                    server-side. Typically a cryptographically random value tied to the user's session.
+                                    Example: a hidden input named csrf_token. The server validates it on every
+                                    state-changing request[cite: 2].</td>
+                                <td>Core defense[cite: 2]</td>
+                            </tr>
+                            <tr>
+                                <td>2. SameSite cookie attribute</td>
+                                <td>SameSite=Strict or SameSite=Lax on the session cookie stops the browser sending the
+                                    cookie on cross-site requests. Strict blocks all cross-site sends. Lax allows
+                                    top-level GET navigations but blocks cross-site POST. Example: Set-Cookie:
+                                    sessionid=abc123; SameSite=Lax; Secure; HttpOnly[cite: 2].</td>
+                                <td>Browser-level defense[cite: 2]</td>
+                            </tr>
+                            <tr>
+                                <td>3. Re-authentication or confirmation</td>
+                                <td>Requires the user to re-enter a password, or complete a 2FA challenge, before highly
+                                    sensitive actions such as password change, funds transfer, or email change. GitHub
+                                    asks for a password before changing the account email, and Gmail requires re-login
+                                    before changing the recovery email[cite: 2].</td>
+                                <td>Protects high-value actions[cite: 2]</td>
+                            </tr>
+                            <tr>
+                                <td>4. Origin or Referer header check</td>
+                                <td>The server validates that the Origin or Referer header matches the expected domain.
+                                    Example: reject the request if the origin is not https://target-site.com[cite: 2].
+                                </td>
+                                <td>Supplementary only. Headers can be missing (privacy extensions, HTTPS to HTTP
+                                    transitions) or stripped[cite: 2].</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p><strong>Rules from the slide:</strong> never rely on Origin or Referer alone, and never rely on
+                    HttpOnly alone. Combine SameSite cookies, anti-CSRF tokens, and re-authentication for sensitive
+                    actions[cite: 2].</p>
+
+                <div class="callout callout-lesson">
+                    <div class="callout-icon">🧠</div>
+                    <div class="callout-body">
+                        <div class="callout-badge">KNOWLEDGE CHECK 5</div>
+                        <div class="callout-text">Tests three points. The defense that most directly stops the browser
+                            sending a session cookie on a cross-site forged request is the SameSite attribute, not an
+                            anti-CSRF token or a header check. The statement that HttpOnly prevents CSRF is false,
+                            because HttpOnly only stops JavaScript reading the cookie, and the browser still sends it
+                            automatically. HttpOnly is an XSS defense against cookie theft, not a CSRF defense. The core
+                            difference between the two attacks is explained in the comparison below[cite: 2].</div>
+                    </div>
+                </div>
+
+                <h3>XSS and CSRF compared</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Dimension</th>
+                                <th>XSS</th>
+                                <th>CSRF</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>What is executed</td>
+                                <td>JavaScript inside the target site's context; the attacker's script runs as the
+                                    site[cite: 2].</td>
+                                <td>No script runs on the target site. A forged HTTP request is sent from the victim's
+                                    browser[cite: 2].</td>
+                            </tr>
+                            <tr>
+                                <td>Where it runs</td>
+                                <td>In the victim's browser, under the origin of the vulnerable site. It can read that
+                                    site's DOM, cookies, and data[cite: 2].</td>
+                                <td>No code runs anywhere. The target site receives and acts on a forged request[cite:
+                                    2].</td>
+                            </tr>
+                            <tr>
+                                <td>Victim requirement</td>
+                                <td>Visit a vulnerable page (Persistent) or click a malicious URL (Reflected). DOM XSS
+                                    needs only a crafted URL fragment[cite: 2].</td>
+                                <td>Be logged in to the target site and visit an attacker-controlled page[cite: 2].</td>
+                            </tr>
+                            <tr>
+                                <td>Typical impact</td>
+                                <td>Steals cookies not marked HttpOnly, reads user data, defaces content, and performs
+                                    actions as the user from within the site[cite: 2].</td>
+                                <td>Forces state-changing actions with the victim's privileges, such as funds transfer,
+                                    email change, password reset, or account deletion[cite: 2].</td>
+                            </tr>
+                            <tr>
+                                <td>Can they chain?</td>
+                                <td>Stored XSS can perform a CSRF-style forced action from within the site itself.
+                                    Requests then originate from the site's own origin, which bypasses SameSite and
+                                    Origin or Referer checks[cite: 2].</td>
+                                <td>See XSS column[cite: 2].</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p><strong>Memory aid:</strong> XSS = run script AS the site. CSRF = send request AS the user. The two
+                    attacks exploit different trust boundaries[cite: 2].</p>
+            </section>
+
+            <section id="mod-6" class="content-card section-card" data-section-num="6">
+                <div class="section-card-header">
+                    <div class="sec-num-badge">06</div>
+                    <div class="sec-title-wrap">
+                        <span class="sec-kicker">PART 6</span>
+                        <h2 class="section-heading" id="mod-6">Adjacent OWASP Categories (Recognition Only)</h2>
+                    </div>
+                    <a class="anchor-link" href="#mod-6">#</a>
+                </div>
+                <p>This part is for recognition and routing only. The Juice Shop room demonstrates four additional
+                    vulnerability classes beyond XSS. None of them is this week's topic, and students must not attempt
+                    to exploit them in this week's lab. Knowledge Check 6 tests recognition and routing, not
+                    exploitation technique[cite: 2].</p>
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Observation in Juice Shop</th>
+                                <th>Category</th>
+                                <th>Covered in depth</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>SQLi login bypass using <code>' or 1=1--</code> in the email field, and a
+                                    known-valid-email bypass using <code>bender@juice-sh.op'--</code>[cite: 2]</td>
+                                <td>Injection (already taught in full)[cite: 2]</td>
+                                <td>Week 4: Injection[cite: 2]</td>
+                            </tr>
+                            <tr>
+                                <td>Burp Intruder brute-force against the Administrator account using the SecLists
+                                    best1050.txt wordlist, and a password-reset security-question exploit[cite: 2]</td>
+                                <td>Broken Authentication[cite: 2]</td>
+                                <td>Week 7 (Broken Auth) and Week 10 (Password Attacks)[cite: 2]</td>
+                            </tr>
+                            <tr>
+                                <td>Downloadable /ftp/ directory with confidential files, and the Poison Null Byte
+                                    technique (%2500 before a permitted file extension)[cite: 2]</td>
+                                <td>Sensitive Data Exposure[cite: 2]</td>
+                                <td>Week 9: Sensitive Data Exposure[cite: 2]</td>
+                            </tr>
+                            <tr>
+                                <td>Hidden /#/administration route found in a JavaScript bundle, and Horizontal
+                                    Privilege Escalation by changing the /rest/basket/&lt;id&gt; parameter[cite: 2]</td>
+                                <td>Broken Access Control[cite: 2]</td>
+                                <td>Week 7: Broken Access Control (horizontal vs vertical distinction)[cite: 2]</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="callout callout-lesson">
+                    <div class="callout-icon">🧠</div>
+                    <div class="callout-body">
+                        <div class="callout-badge">KNOWLEDGE CHECK 6</div>
+                        <div class="callout-text">Covers three points. The /ftp/ exposure and Poison Null Byte bypass
+                            belong to Sensitive Data Exposure, covered in Week 9. Horizontal Privilege Escalation is not
+                            covered in depth this week. Students must match three observations to their future weeks:
+                            the SQLi login bypass to Week 4, the Administrator brute force to Weeks 7 and 10, and the
+                            exposed /ftp/ directory to Week 9[cite: 2].</div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="mod-7" class="content-card section-card" data-section-num="7">
+                <div class="section-card-header">
+                    <div class="sec-num-badge">07</div>
+                    <div class="sec-title-wrap">
+                        <span class="sec-kicker">PART 7</span>
+                        <h2 class="section-heading" id="mod-7">Real-World Case Studies</h2>
+                    </div>
+                    <a class="anchor-link" href="#mod-7">#</a>
+                </div>
+                <p>Four publicly documented incidents illustrate the lecture's concepts[cite: 2].</p>
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Case</th>
+                                <th>What happened</th>
+                                <th>Lesson</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Samy worm, MySpace (2005)[cite: 2]</td>
+                                <td>Samy Kamkar injected a Persistent XSS payload into his MySpace profile. When any
+                                    logged-in user viewed the profile, the payload silently added Samy as a friend and
+                                    copied itself into the viewer's profile. Over one million profiles were infected
+                                    within 24 hours, the fastest-spreading worm at the time[cite: 2].</td>
+                                <td>Stored XSS can be weaponised into a self-propagating worm, needing nothing more than
+                                    a page view[cite: 2].</td>
+                            </tr>
+                            <tr>
+                                <td>TweetDeck XSS worm, Twitter (2014)[cite: 2]</td>
+                                <td>A stored payload hidden in a tweet retweeted itself whenever a TweetDeck user viewed
+                                    it. The payload used a heart character to break out of an HTML attribute and inject
+                                    a script that retweeted the original tweet. Twitter took TweetDeck offline
+                                    temporarily[cite: 2].</td>
+                                <td>A single character of unsanitised input in a tweet body can become a
+                                    self-propagating worm[cite: 2].</td>
+                            </tr>
+                            <tr>
+                                <td>Netflix queue CSRF (2006)[cite: 2]</td>
+                                <td>Daniel Stamm publicly demonstrated a malicious page that silently added DVDs to a
+                                    logged-in victim's Netflix queue and changed the shipping address. Netflix relied
+                                    solely on the session cookie to authorise queue changes, with no anti-CSRF token.
+                                    The demonstration helped drive OWASP's CSRF awareness campaign[cite: 2].</td>
+                                <td>Any state-changing endpoint protected only by a session cookie is
+                                    CSRF-vulnerable[cite: 2].</td>
+                            </tr>
+                            <tr>
+                                <td>Yamanner worm, Yahoo Mail (2006)[cite: 2]</td>
+                                <td>A stored XSS payload in a Yahoo Mail email body stole the victim's address book and
+                                    forwarded itself to all contacts. The worm combined XSS, which gave code execution
+                                    inside Yahoo's origin, with a CSRF-style forced send[cite: 2].</td>
+                                <td>XSS can chain with CSRF. Once an attacker has script execution inside the site,
+                                    SameSite and Origin or Referer defenses are bypassed[cite: 2].</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="mod-8" class="content-card section-card" data-section-num="8">
+                <div class="section-card-header">
+                    <div class="sec-num-badge">08</div>
+                    <div class="sec-title-wrap">
+                        <span class="sec-kicker">PART 8</span>
+                        <h2 class="section-heading" id="mod-8">Common Misconceptions</h2>
+                    </div>
+                    <a class="anchor-link" href="#mod-8">#</a>
+                </div>
+                <p>The lecture closes its content with three myths that cause real security failures[cite: 2].</p>
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Myth</th>
+                                <th>Reality</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>"XSS is just annoying popups."[cite: 2]</td>
+                                <td>XSS enables session hijacking (stealing cookies not marked HttpOnly), data theft
+                                    (reading the DOM, localStorage, and API responses), account takeover (performing
+                                    actions as the user), on-page keylogging, and internal network pivoting. Samy,
+                                    Yamanner, and TweetDeck all started from something as simple as a single alert[cite:
+                                    2].</td>
+                            </tr>
+                            <tr>
+                                <td>"A Referer check equals CSRF defense."[cite: 2]</td>
+                                <td>The Referer header can be missing entirely, because of browser privacy modes, HTTPS
+                                    to HTTP transitions, referrer-policy=no-referrer, or stripping by network
+                                    intermediaries. Relying on it alone breaks legitimate users while leaving edge-case
+                                    attackers through. Use it only as a supplementary defense, combined with SameSite
+                                    cookies and anti-CSRF tokens[cite: 2].</td>
+                            </tr>
+                            <tr>
+                                <td>"HttpOnly stops CSRF."[cite: 2]</td>
+                                <td>HttpOnly prevents JavaScript from reading the cookie value, for example through
+                                    document.cookie. The browser still sends the cookie automatically on every
+                                    cross-site request, including forged CSRF requests. HttpOnly is an XSS defense. For
+                                    CSRF, use SameSite and anti-CSRF tokens[cite: 2].</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="mod-9" class="content-card section-card" data-section-num="9">
+                <div class="section-card-header">
+                    <div class="sec-num-badge">09</div>
+                    <div class="sec-title-wrap">
+                        <span class="sec-kicker">SCENARIO</span>
+                        <h2 class="section-heading" id="mod-9">Integrated Scenario and Model Answer</h2>
+                    </div>
+                    <a class="anchor-link" href="#mod-9">#</a>
+                </div>
+                <p>The end-of-lecture scenario describes a web application with three features[cite: 2]:</p>
+                <ol>
+                    <li>A comment field that stores and later displays user input unmodified, used by other
+                        visitors[cite: 2].</li>
+                    <li>A search bar that reflects the search term back into the page without encoding[cite: 2].</li>
+                    <li>A funds-transfer form that checks only for a valid session cookie, with no additional
+                        token[cite: 2].</li>
+                </ol>
+                <p>Students attempt three tasks: (a) name the vulnerability class for each issue; (b) write a real
+                    payload or technique for the comment field and the search bar, using the methods taught in the
+                    lecture; and (c) explain why the transfer form is vulnerable and which single defense would most
+                    directly fix it[cite: 2].</p>
+
+                <h3>Model answer</h3>
+                <ul>
+                    <li><strong>Comment field:</strong> Persistent (stored) XSS. The server stores the payload and
+                        renders it for every visitor[cite: 2].</li>
+                    <li><strong>Search bar:</strong> Reflected XSS. The payload travels in the request and is reflected
+                        back unsanitised, firing when the specific user submits the search[cite: 2].</li>
+                    <li><strong>Funds-transfer form:</strong> Cross-site request forgery. The form authorises a
+                        state-changing action based solely on the auto-attached session cookie, which satisfies all
+                        three CSRF preconditions[cite: 2].</li>
+                </ul>
+
+                <p>For both XSS vectors the same payload works:
+                    <code>&lt;iframe src="javascript:alert(&#x60;xss&#x60;)"&gt;</code>. For the comment field, inject
+                    it, submit, and revisit the page or have another visitor view it, because the payload is stored
+                    server-side. For the search bar, paste it into the search and submit, because the server reflects
+                    the term back and the browser executes it. Only the injection point differs[cite: 2].</p>
+
+                <p>On the transfer form, the vulnerability is explained through the three preconditions: the browser
+                    sends the cookie automatically, the action depends only on a valid session, and the attacker can
+                    predict the recipient and amount. A logged-in victim visiting an attacker-controlled page would have
+                    the session cookie attached to a forged transfer[cite: 2].</p>
+
+                <p><em>Note: the final "single defense that most directly fixes it" entry is cut off in the source deck,
+                        so the slide does not confirm an answer. Based on the rest of the lecture, the expected answer
+                        is an anti-CSRF token validated server-side. SameSite cookies are also an acceptable answer,
+                        since they stop the cookie being sent on cross-site requests[cite: 2].</em></p>
+            </section>
+
+            <section id="mod-10" class="content-card section-card" data-section-num="10">
+                <div class="section-card-header">
+                    <div class="sec-num-badge">10</div>
+                    <div class="sec-title-wrap">
+                        <span class="sec-kicker">LAB & SUMMARY</span>
+                        <h2 class="section-heading" id="mod-10">Lab Preparation, Summary, and Terminology</h2>
+                    </div>
+                    <a class="anchor-link" href="#mod-10">#</a>
+                </div>
+
+                <h3>Lab Preparation and Pitfalls</h3>
+                <p>The XSS reference card condenses the three verified techniques. Each has a single payload and a short
+                    sequence[cite: 2]:</p>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Technique</th>
+                                <th>Vector</th>
+                                <th>Steps</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1. DOM XSS[cite: 2]</td>
+                                <td>Search bar; iframe payload[cite: 2]</td>
+                                <td>Locate the search bar, paste the payload, submit. The browser executes the
+                                    javascript: URI and the alert fires[cite: 2].</td>
+                            </tr>
+                            <tr>
+                                <td>2. Persistent XSS[cite: 2]</td>
+                                <td>True-Client-IP header; True-Client-IP:
+                                    <code>&lt;iframe src="javascript:alert(&#x60;xss&#x60;)"&gt;</code>[cite: 2]</td>
+                                <td>Log in, open the Last Login IP page. Enable Burp interception ON, log out, add the
+                                    header, forward. Log back in and revisit the page[cite: 2].</td>
+                            </tr>
+                            <tr>
+                                <td>3. Reflected XSS[cite: 2]</td>
+                                <td>Tracking-page id parameter;
+                                    ?id=<code>&lt;iframe src="javascript:alert(&#x60;xss&#x60;)"&gt;</code>[cite: 2]
+                                </td>
+                                <td>Log in, open Order History, click the tracking icon. Replace the id value with the
+                                    payload, submit the modified URL, and refresh[cite: 2].</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p>The room recommends completing the free TryHackMe rooms "Burp Suite Basics" and "Burp Suite Repeater"
+                    first. The pitfalls slide gives three troubleshooting notes, taken from the room[cite: 2]:</p>
+                <ul>
+                    <li><strong>XSS tasks not working:</strong> clear cookies and site data for the Juice Shop domain
+                        only, through the browser's clear browsing data settings[cite: 2].</li>
+                    <li><strong>Flag fails to display:</strong> temporarily disable Burp interception after task
+                        completion, then refresh. The room describes this as a known Burp and flag-display interaction,
+                        not an application bug[cite: 2].</li>
+                    <li><strong>App slow to load:</strong> the Juice Shop app can take two to five minutes to load. Wait
+                        at least five minutes before reporting it as broken[cite: 2].</li>
+                </ul>
+
+                <h3>Summary of Key Takeaways</h3>
+                <ol>
+                    <li>XSS is attacker-run JavaScript in a web application. It has three types: DOM (browser-side,
+                        iframe), Persistent (stored server-side, for example via True-Client-IP), and Reflected (single
+                        request, for example via the id parameter)[cite: 2].</li>
+                    <li>The same payload primitive, an iframe with a javascript: URI, works across all three types. Only
+                        the injection vector changes[cite: 2].</li>
+                    <li>Persistent XSS injection points are not limited to form fields. HTTP headers such as
+                        True-Client-IP and X-Forwarded-For are equally valid vectors[cite: 2].</li>
+                    <li>CSRF sends a forged request from the victim's browser, exploiting the application's trust in the
+                        session cookie. No script runs on the target site[cite: 2].</li>
+                    <li>The core CSRF defenses are anti-CSRF tokens, SameSite cookies, and re-authentication for
+                        sensitive actions. Origin and Referer checks are supplementary only[cite: 2].</li>
+                    <li>Juice Shop also demonstrates Injection (Week 4), Broken Authentication (Weeks 7 and 10),
+                        Sensitive Data Exposure (Week 9), and Broken Access Control (Week 7). These are not in scope
+                        this week[cite: 2].</li>
+                </ol>
+
+                <h3>Key Terminology</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Term</th>
+                                <th>Definition</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>XSS</strong></td>
+                                <td>Cross-Site Scripting. Attacker-run JavaScript in a web application's context[cite:
+                                    2].</td>
+                            </tr>
+                            <tr>
+                                <td><strong>DOM (special)</strong></td>
+                                <td>XSS that executes through the HTML environment, using script or iframe tags. Runs
+                                    entirely client-side[cite: 2].</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Persistent XSS</strong></td>
+                                <td>JavaScript that runs when the server loads a page containing it. The payload is
+                                    stored, for example in a database, and fires for every visitor[cite: 2].</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Reflected XSS</strong></td>
+                                <td>JavaScript that runs client-side. The payload travels in the request URL or form and
+                                    is reflected back unsanitised[cite: 2].</td>
+                            </tr>
+                            <tr>
+                                <td><strong>XFS</strong></td>
+                                <td>Cross-Frame Scripting. An alias for the iframe and javascript: URI technique used
+                                    for DOM XSS[cite: 2].</td>
+                            </tr>
+                            <tr>
+                                <td><strong>True-Client-IP</strong></td>
+                                <td>HTTP header, similar to X-Forwarded-For, that tells the server or proxy the client's
+                                    IP. A vulnerable injection vector for Persistent XSS[cite: 2].</td>
+                            </tr>
+                            <tr>
+                                <td><strong>CSRF</strong></td>
+                                <td>Cross-Site Request Forgery. A forged request from the victim's browser that exploits
+                                    session-cookie trust[cite: 2].</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Anti-CSRF token</strong></td>
+                                <td>A unique, unpredictable token embedded per form or request and validated
+                                    server-side[cite: 2].</td>
+                            </tr>
+                            <tr>
+                                <td><strong>SameSite</strong></td>
+                                <td>A cookie attribute (Strict or Lax) that stops the browser sending the cookie on
+                                    cross-site requests[cite: 2].</td>
+                            </tr>
+                            <tr>
+                                <td><strong>HttpOnly</strong></td>
+                                <td>A cookie attribute that stops JavaScript reading the cookie value. An XSS defense,
+                                    not a CSRF defense[cite: 2].</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="exam-checklist-widget">
+                    <div class="chk-header">
+                        <div class="chk-title-group">
+                            <div class="chk-badge">WEEK 5 LAB CHECKLIST</div>
+                            <h3>Tutorial Activity (2 hours)</h3>
+                        </div>
+                    </div>
+                    <div class="chk-list">
+                        <div class="checklist-item" id="w5-chk-item-1" onclick="toggleW3Checklist(1)">
+                            <div class="chk-box-wrap"><input id="w5-chk-1" type="checkbox" /></div>
+                            <div class="chk-num">Task 01</div>
+                            <div class="chk-text">
+                                <p>Boot Juice Shop in the homework room. Complete the Burp Suite Basics and Burp Suite
+                                    Repeater rooms first if not already done[cite: 2].</p>
+                            </div>
+                        </div>
+                        <div class="checklist-item" id="w5-chk-item-2" onclick="toggleW3Checklist(2)">
+                            <div class="chk-box-wrap"><input id="w5-chk-2" type="checkbox" /></div>
+                            <div class="chk-num">Task 02</div>
+                            <div class="chk-text">
+                                <p>Execute all three verified XSS techniques against Juice Shop: DOM XSS via the search
+                                    bar, Persistent XSS via the True-Client-IP header during an intercepted logout, and
+                                    Reflected XSS via the tracking-page id parameter[cite: 2].</p>
+                            </div>
+                        </div>
+                        <div class="checklist-item" id="w5-chk-item-3" onclick="toggleW3Checklist(3)">
+                            <div class="chk-box-wrap"><input id="w5-chk-3" type="checkbox" /></div>
+                            <div class="chk-num">Task 03</div>
+                            <div class="chk-text">
+                                <p>Document each technique with the request captured in Burp HTTP History, the modified
+                                    request for the Persistent case, and a screenshot of the alert firing[cite: 2].</p>
+                            </div>
+                        </div>
+                        <div class="checklist-item" id="w5-chk-item-4" onclick="toggleW3Checklist(4)">
+                            <div class="chk-box-wrap"><input id="w5-chk-4" type="checkbox" /></div>
+                            <div class="chk-num">Task 04</div>
+                            <div class="chk-text">
+                                <p>Using the sample vulnerable funds-transfer form from the lab handout, which checks
+                                    only a session cookie, draft a one-page CSRF defense recommendation covering: (a)
+                                    the specific vulnerability, (b) the anti-CSRF token implementation, including where
+                                    to embed and how to validate it, (c) the recommended SameSite cookie attribute, and
+                                    (d) any re-authentication step[cite: 2].</p>
+                            </div>
+                        </div>
+                    </div>
+                    <p style="margin-top: 15px; font-size: 13.5px; color: var(--text-secondary);">
+                        <strong>Deliverables:</strong> an XSS write-up with three techniques, screenshots, and Burp
+                        captures, and a CSRF defense recommendation of one page in four sections[cite: 2].</p>
+                </div>
+
+                <h3>Suggested reading</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Resource</th>
+                                <th>Description</th>
+                                <th>Link</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>OWASP Cross-Site Scripting (XSS) Prevention Cheat Sheet (required before the
+                                    lab)[cite: 2]</td>
+                                <td>Input validation, output encoding, Content Security Policy, and modern framework
+                                    protections[cite: 2].</td>
+                                <td><a href="https://owasp.org/www-community/attacks/xss/"
+                                        style="color:var(--accent-cyan);">owasp.org/www-community/attacks/xss/</a>[cite:
+                                    2]</td>
+                            </tr>
+                            <tr>
+                                <td>OWASP Cross-Site Request Forgery (CSRF) Prevention Cheat Sheet[cite: 2]</td>
+                                <td>Anti-CSRF token patterns, the SameSite attribute, defense-in-depth, and
+                                    framework-specific implementations[cite: 2].</td>
+                                <td><a href="https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html"
+                                        style="color:var(--accent-cyan);">cheatsheetseries.owasp.org/.../Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html</a>[cite:
+                                    2]</td>
+                            </tr>
+                            <tr>
+                                <td>PortSwigger Web Security Academy: XSS and CSRF modules (optional)[cite: 2]</td>
+                                <td>Free hands-on labs that complement the material. Recommended for students who finish
+                                    early[cite: 2].</td>
+                                <td><a href="https://portswigger.net/web-security/"
+                                        style="color:var(--accent-cyan);">portswigger.net/web-security/</a>[cite: 2]
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="callout callout-safety">
+                    <div class="callout-icon">⚠️</div>
+                    <div class="callout-body">
+                        <div class="callout-badge">OPEN ITEMS TO VERIFY BEFORE THE LAB</div>
+                        <div class="callout-text">
+                            <ul style="margin: 0; padding-left: 15px;">
+                                <li>The CSRF content is standard coverage, not room-verified. Confirm the exact
+                                    vulnerable form and exploitation steps in the lab room named "CSRF"[cite: 2].</li>
+                                <li>The instructor name, office hours, and room details are still placeholders in the
+                                    deck[cite: 2].</li>
+                                <li>The final point of the integrated scenario model answer is cut off, so the single
+                                    best defense is not confirmed on the slide[cite: 2].</li>
+                                <li>The exercises assume the Burp Suite Basics and Repeater rooms are complete. Students
+                                    who have not finished them should do so before the lab[cite: 2].</li>
+                            </ul>
+                            <p style="margin-top:10px;"><strong>Next week:</strong> Week 6, Server-Side Request Forgery
+                                (SSRF) and File Upload Vulnerabilities[cite: 2].</p>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Modals & Footers -->
+    <div class="search-modal-backdrop" id="searchModal" onclick="if(event.target === this) closeSearchModal()">
+        <div class="search-modal-dialog">
+            <div class="search-modal-header">
+                <svg class="modal-search-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor"
+                    fill="none" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="globalSearchInput" placeholder="Search guide...">
+                <button class="search-modal-close" onclick="closeSearchModal()">ESC</button>
+            </div>
+            <ul class="search-results-list" id="searchResultsList"></ul>
+        </div>
+    </div>
+
+    <footer class="app-footer">
+        <div class="footer-left">
+            <span>🛡️ Cross-Site Scripting (XSS) and CSRF</span>
+            <span>•</span>
+            <span>CCY4202 Ethical Hacking Week 5</span>
+        </div>
+        <div class="footer-right">
+            <button class="footer-btn" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2">
+                    <polyline points="18 15 12 9 6 15"></polyline>
+                </svg>
+                <span>Back to Top</span>
+            </button>
+        </div>
+    </footer>
+
+    <script>
+        // Search index data for Week 5
+        const searchData = [
+            { "title": "XSS Definition and the Three Types", "section": "Part 1", "id": "mod-1", "category": "Topic" },
+            { "title": "Exploiting DOM-Based XSS", "section": "Part 2", "id": "mod-2", "category": "Topic" },
+            { "title": "Exploiting Persistent (Stored) XSS", "section": "Part 3", "id": "mod-3", "category": "Topic" },
+            { "title": "Exploiting Reflected XSS", "section": "Part 4", "id": "mod-4", "category": "Topic" },
+            { "title": "Cross-Site Request Forgery (CSRF)", "section": "Part 5", "id": "mod-5", "category": "Topic" },
+            { "title": "Adjacent OWASP Categories", "section": "Part 6", "id": "mod-6", "category": "Topic" },
+            { "title": "Real-World Case Studies", "section": "Part 7", "id": "mod-7", "category": "Topic" },
+            { "title": "Common Misconceptions", "section": "Part 8", "id": "mod-8", "category": "Topic" },
+            { "title": "Integrated Scenario and Model Answer", "section": "Scenario", "id": "mod-9", "category": "Topic" },
+            { "title": "Lab Preparation and Pitfalls", "section": "Lab & Summary", "id": "mod-10", "category": "Topic" }
+        ];
+
+        // Preserving identical JS functionality from template
+        window.addEventListener('scroll', () => {
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (winScroll / height) * 100;
+            document.getElementById('readingProgressBar').style.width = scrolled + '%';
+            updateScrollSpy();
+        });
+
+        function updateScrollSpy() {
+            const sections = document.querySelectorAll('.section-card');
+            let currentId = '';
+            const scrollPos = window.scrollY + 120;
+            sections.forEach(sec => {
+                if (scrollPos >= sec.offsetTop && scrollPos < sec.offsetTop + sec.offsetHeight) currentId = sec.getAttribute('id');
+            });
+            if (currentId) {
+                document.querySelectorAll('.toc-item').forEach(item => {
+                    if (item.getAttribute('data-target') === currentId) item.classList.add('active');
+                    else item.classList.remove('active');
+                });
+            }
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('pentest_guide_theme', next);
+        }
+        (function initTheme() {
+            const saved = localStorage.getItem('pentest_guide_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', saved);
+        })();
+
+        function copyCommand(btn) {
+            const terminal = btn.closest('.terminal-card');
+            const cmdText = terminal.querySelector('.terminal-cmd').innerText.trim();
+            navigator.clipboard.writeText(cmdText).then(() => {
+                const orig = btn.innerText;
+                btn.innerText = 'Copied!';
+                setTimeout(() => btn.innerText = orig, 2000);
+            });
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('sidebarNav').classList.toggle('mobile-open');
+        }
+        function closeMobileMenu() {
+            document.getElementById('sidebarNav').classList.remove('mobile-open');
+        }
+
+        function openSearchModal() {
+            document.getElementById('searchModal').classList.add('open');
+            document.getElementById('globalSearchInput').value = '';
+            renderSearchResults('');
+            setTimeout(() => document.getElementById('globalSearchInput').focus(), 50);
+        }
+        function closeSearchModal() {
+            document.getElementById('searchModal').classList.remove('open');
+        }
+        window.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openSearchModal(); }
+            else if (e.key === 'Escape') closeSearchModal();
+        });
+        function renderSearchResults(query) {
+            const list = document.getElementById('searchResultsList');
+            list.innerHTML = '';
+            const q = query.toLowerCase().trim();
+            const matches = searchData.filter(item => !q || item.title.toLowerCase().includes(q)).slice(0, 10);
+            if (matches.length === 0) return list.innerHTML = '<li style="padding: 16px; text-align: center;">No matches</li>';
+            matches.forEach(m => {
+                const li = document.createElement('li');
+                li.innerHTML = `<a href="#${m.id}" class="search-result-item" onclick="closeSearchModal()">
+            <div class="result-main"><span class="result-title">${m.title}</span></div></a>`;
+                list.appendChild(li);
+            });
+        }
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('globalSearchInput').addEventListener('input', (e) => renderSearchResults(e.target.value));
+        });
+
+        // Checklist logic
+        function toggleW3Checklist(num) {
+            const chk = document.getElementById('w5-chk-' + num);
+            if (chk) { chk.checked = !chk.checked; updateW5ChecklistProgress(); }
+        }
+        function updateW5ChecklistProgress() {
+            for (let i = 1; i <= 4; i++) {
+                const chk = document.getElementById('w5-chk-' + i);
+                const item = document.getElementById('w5-chk-item-' + i);
+                if (chk && chk.checked) item.classList.add('checked');
+                else if (item) item.classList.remove('checked');
+            }
+        }
+    </script>
+<!-- home-btn -->
+<style>
+.home-fab,.author-tag{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom));z-index:2000;font-family:system-ui,-apple-system,sans-serif;line-height:1}
+.home-fab{left:calc(14px + env(safe-area-inset-left));display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;border-radius:999px;background:#10b981;color:#06251b;font-weight:700;font-size:14px;text-decoration:none;box-shadow:0 6px 18px rgba(0,0,0,.4);-webkit-tap-highlight-color:transparent}
+.home-fab:hover,.home-fab:active{background:#06b6d4}
+.author-tag{right:calc(14px + env(safe-area-inset-right));padding:8px 12px;border-radius:8px;background:rgba(15,23,42,.88);color:#94a3b8;font-weight:600;font-size:12px;max-width:45vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.author-tag b{color:#10b981}
+@media(max-width:600px){
+.home-fab{width:48px;height:48px;min-height:48px;padding:0;justify-content:center;font-size:22px}
+.home-fab span{display:none}
+.author-tag{font-size:11px;padding:6px 10px;bottom:calc(22px + env(safe-area-inset-bottom))}
+}
+@media print{.home-fab,.author-tag{display:none}}
+</style>
+<a class="home-fab" href="index.html" aria-label="Back to Home">&#8962;<span> Home</span></a>
+<div class="author-tag">Author: <b>Zaneso</b></div>
+<!-- /home-btn -->
+</body>
+
+</html>

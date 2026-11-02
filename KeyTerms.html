@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Key Terminology - Penetration Testing Course</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;800&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --card: #111827;
+      --hover: #162032;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --border: rgba(255, 255, 255, .1)
+    }
+
+    [data-theme="light"] {
+      --bg: #f8fafc;
+      --card: #fff;
+      --hover: #f1f5f9;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: rgba(0, 0, 0, .1)
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden
+    }
+
+    header {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 56px 24px 24px;
+      position: relative
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: rgba(16, 185, 129, .15);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, .3);
+      text-decoration: none;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-size: clamp(26px, 6vw, 40px);
+      font-weight: 800;
+      margin: 14px 0 10px;
+      letter-spacing: -.6px;
+      line-height: 1.2
+    }
+
+    h1 span {
+      background: linear-gradient(135deg, #10b981, #06b6d4);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent
+    }
+
+    .sub {
+      color: var(--muted);
+      max-width: 700px
+    }
+
+    #theme {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      width: 44px;
+      height: 44px;
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 18px
+    }
+
+    .section-heading {
+      max-width: 1100px;
+      margin: 32px auto 0;
+      padding: 0 24px;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 16px 24px 40px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px
+    }
+
+    .card {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--c);
+      border-radius: 16px;
+      padding: 24px;
+      text-decoration: none;
+      color: inherit;
+      transition: transform .2s, border-color .2s, background .2s;
+    }
+
+    .card ul,
+    .card ol {
+      margin-left: 20px;
+      color: var(--muted);
+      font-size: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .card li strong {
+      color: var(--text);
+    }
+
+    .wk {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--c);
+      text-transform: uppercase;
+      letter-spacing: 1px
+    }
+
+    .card h2 {
+      font-size: 20px;
+      line-height: 1.3;
+      overflow-wrap: anywhere
+    }
+
+    footer {
+      text-align: center;
+      padding: 24px 16px calc(24px + env(safe-area-inset-bottom));
+      color: var(--muted);
+      font-size: 13px;
+      border-top: 1px solid var(--border)
+    }
+
+    @media(max-width:600px) {
+      header {
+        padding: 72px 16px 12px
+      }
+
+      .sub {
+        font-size: 14px
+      }
+
+      .section-heading {
+        padding: 0 16px;
+        margin-top: 24px;
+        font-size: 20px
+      }
+
+      main {
+        padding: 12px 16px 32px;
+        gap: 14px
+      }
+
+      .card {
+        padding: 18px
+      }
+
+      .card h2 {
+        font-size: 18px
+      }
+
+      #theme {
+        top: 16px;
+        right: 16px
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <button id="theme" aria-label="Toggle theme">&#9788;</button>
+    <a href="index.html" class="badge">&larr; Back to Home</a>
+    <h1><span>Course Glossary</span> & Key Terms</h1>
+    <p class="sub">Terminology and definitions for all weeks of the penetration testing course.</p>
+  </header>
+
+  <main>
+    <div class="card" style="--c:#10b981">
+      <span class="wk">Week 1</span>
+      <h2>Terminology</h2>
+      <ul>
+        <li><strong>Ethical hacking</strong> — Authorized practice of attacking systems to discover weaknesses before
+          adversaries do.</li>
+        <li><strong>Penetration testing</strong> — Formal, contracted, RoE-bounded subset of ethical hacking.</li>
+        <li><strong>White-hat / Black-hat / Grey-hat</strong> — Classifications by authorization + intent + disclosure
+          behavior.</li>
+        <li><strong>PTES</strong> — Penetration Testing Execution Standard; 7-phase pentest lifecycle.</li>
+        <li><strong>RoE</strong> — Rules of Engagement; signed document governing the engagement.</li>
+        <li><strong>CFAA</strong> — 18 U.S.C. § 1030; U.S. federal anti-hacking statute.</li>
+        <li><strong>GDPR</strong> — EU Regulation 2016/679; governs processing of EU personal data.</li>
+        <li><strong>OSINT</strong> — Open-Source Intelligence; passive recon from public sources.</li>
+        <li><strong>CVSS</strong> — Common Vulnerability Scoring System; severity 0.0–10.0.</li>
+        <li><strong>Safe-harbor</strong> — Legal protection for researchers acting within a bug-bounty program's scope
+          and disclosure rules.</li>
+      </ul>
+    </div>
+
+    <div class="card" style="--c:#06b6d4">
+      <span class="wk">Week 2</span>
+      <h2>Terminology</h2>
+      <ul>
+        <li><strong>OSINT</strong> — Open-Source Intelligence</li>
+        <li><strong>WHOIS</strong> — Registrant-ownership database</li>
+        <li><strong>GHDB</strong> — Google Hacking Database (Offensive Security)</li>
+        <li><strong>AXFR</strong> — DNS zone transfer</li>
+        <li><strong>PTR</strong> — Pointer record — reverse DNS</li>
+        <li><strong>Community string</strong> — SNMP v1/v2c password</li>
+        <li><strong>SYN scan</strong> — Half-open TCP scan (-sS)</li>
+        <li><strong>Null session</strong> — Anonymous SMB bind to IPC$</li>
+        <li><strong>Anonymous bind</strong> — Unauthenticated LDAP query</li>
+        <li><strong>MIB</strong> — Management Information Base (SNMP)</li>
+      </ul>
+    </div>
+
+    <div class="card" style="--c:#a855f7">
+      <span class="wk">Week 3</span>
+      <h2>Terminology</h2>
+      <ul>
+        <li><strong>Web Enumeration</strong> — recon phase mapping pages, params, dirs, tech, input points</li>
+        <li><strong>OWASP Top 10</strong> — community-driven, risk-prioritized list of top web app risks</li>
+        <li><strong>Injection</strong> — user input interpreted as commands/parameters</li>
+        <li><strong>Command Injection</strong> — server-side system call exploitation → OS commands</li>
+        <li><strong>Blind vs Active Injection</strong> — response not visible vs visible in HTML</li>
+        <li><strong>Allow-listing</strong> — input validation against known-safe values</li>
+        <li><strong>Broken Authentication</strong> — flaws in credential/session management</li>
+        <li><strong>Session Cookie</strong> — tracks authenticated user across stateless HTTP</li>
+        <li><strong>Sensitive Data Exposure</strong> — accidental divulging of PII/credentials/financial data</li>
+        <li><strong>XXE</strong> — XML External Entity attack via malicious DTD</li>
+        <li><strong>DTD</strong> — Document Type Definition</li>
+        <li><strong>#PCDATA</strong> — parseable character data</li>
+        <li><strong>In-band vs OOB XXE</strong> — immediate response vs exfiltrate to attacker server</li>
+        <li><strong>Broken Access Control</strong> — unauthorized reachability of restricted functions</li>
+        <li><strong>Forced Browsing</strong> — accessing unlinked/hidden URLs</li>
+        <li><strong>IDOR</strong> — Insecure Direct Object Reference</li>
+        <li><strong>Security Misconfiguration</strong> — default creds, unnecessary features, verbose errors</li>
+        <li><strong>Stored/Reflected/DOM XSS</strong> — three XSS types</li>
+        <li><strong>Insecure Deserialization</strong> — untrusted serialized data executed without validation</li>
+        <li><strong>OWASP ZAP</strong> — free open-source web app scanner</li>
+        <li><strong>Forced Browse (ZAP)</strong> — directory brute-force</li>
+        <li><strong>Fuzzer (ZAP)</strong> — login/request brute-force</li>
+        <li><strong>Authenticated Scanning</strong> — scanning with active session cookie</li>
+        <li><strong>PHPSESSID</strong> — DVWA's session cookie name</li>
+        <li><strong>HUNT</strong> — Bugcrowd extension for passive vulnerability flagging</li>
+      </ul>
+    </div>
+
+    <div class="card" style="--c:#f59e0b">
+      <span class="wk">Week 4</span>
+      <h2>Terminology</h2>
+      <ul>
+        <li>DBMS</li>
+        <li>Table</li>
+        <li>Column</li>
+        <li>Row</li>
+        <li>Primary Key</li>
+        <li>UNION</li>
+        <li>information_schema</li>
+        <li>group_concat()</li>
+        <li>SLEEP()</li>
+        <li>Prepared Statement</li>
+        <li>Allow-List</li>
+        <li>Escaping</li>
+      </ul>
+    </div>
+
+    <div class="card" style="--c:#f43f5e">
+      <span class="wk">Week 5</span>
+      <h2>Summary & Key Terminology</h2>
+      <ol style="margin-bottom: 16px;">
+        <li>XSS = attacker-run JavaScript in a web app. Three types: DOM (browser-side, iframe), Persistent (stored
+          server-side, e.g., True-Client-IP), Reflected (single request, e.g., id param).</li>
+        <li>Same payload primitive (<code>&lt;iframe src="javascript:alert(`xss`)"&gt;</code>) works across all three
+          XSS types — only the injection vector changes.</li>
+        <li>Persistent XSS injection points are NOT limited to form fields — HTTP headers (True-Client-IP,
+          X-Forwarded-For) are equally valid.</li>
+        <li>CSRF = forged request from victim's browser, exploiting the app's trust in the session cookie. No script
+          runs on the target site.</li>
+        <li>Core CSRF defenses: anti-CSRF tokens, SameSite cookies, re-auth for sensitive actions, Origin/Referer
+          (supplementary only).</li>
+        <li>Juice Shop also demonstrates Injection (W4), Broken Auth (W7/10), Sensitive Data Exposure (W9), Broken
+          Access Control (W7) — NOT this week's scope.</li>
+      </ol>
+      <ul>
+        <li><strong>XSS</strong> — Cross-Site Scripting; attacker-run JavaScript in a web app's context.</li>
+        <li><strong>DOM (Special)</strong> — XSS that executes via the HTML environment; uses &lt;script&gt; or iframe
+          tags; runs entirely client-side.</li>
+        <li><strong>Reflected XSS</strong> — JavaScript that runs on the client-side; payload travels in the request
+          URL/form and is reflected back unsanitised.</li>
+        <li><strong>XFS</strong> — Cross-Frame Scripting; alias for the iframe+javascript: URI technique used for DOM
+          XSS.</li>
+        <li><strong>Persistent XSS</strong> — JavaScript that runs when the server loads a page containing it; payload
+          is stored (e.g., in a database); fires for every visitor.</li>
+        <li><strong>True-Client-IP</strong> — HTTP header similar to X-Forwarded-For; tells the server/proxy the
+          client's IP; vulnerable injection vector for Persistent XSS.</li>
+        <li><strong>CSRF</strong> — Cross-Site Request Forgery; forged request from victim's browser exploiting
+          session-cookie trust.</li>
+        <li><strong>Anti-CSRF token</strong> — Unique unpredictable token embedded per form/request and validated
+          server-side.</li>
+        <li><strong>SameSite</strong> — Cookie attribute (Strict/Lax) preventing the browser from sending the cookie on
+          cross-site requests.</li>
+        <li><strong>HttpOnly</strong> — Cookie attribute preventing JavaScript from reading the cookie value (XSS
+          defense, NOT a CSRF defense).</li>
+      </ul>
+    </div>
+
+    <div class="card" style="--c:#3b82f6">
+      <span class="wk">Week 6</span>
+      <h2>Terminology</h2>
+      <ul>
+        <li><strong>LFI</strong> — Local File Inclusion — include-family call with user-controlled local path</li>
+        <li><strong>RFI</strong> — Remote File Inclusion — include-family call with a remote URL (needs
+          allow_url_include=On)</li>
+        <li><strong>allow_url_include</strong> — PHP setting that permits include-family functions to fetch remote URLs;
+          default Off</li>
+        <li><strong>php://filter</strong> — Wrapper that reads file source as base64 — leaks PHP source code</li>
+        <li><strong>Path Traversal</strong> — Manipulating file path input to escape the intended directory</li>
+        <li><strong>Null byte</strong> — %00 — older PHP truncates strings at it (file.php%00.jpg)</li>
+        <li><strong>Command Injection</strong> — User input reaches a shell command unfiltered</li>
+        <li><strong>Blind vs Active</strong> — No output reflected vs output reflected (Week 3 callback)</li>
+        <li><strong>$IFS</strong> — Shell Internal Field Separator — default whitespace; bypasses space filters</li>
+        <li><strong>File Upload</strong> — Endpoint that writes user files to disk; RCE if name+content are
+          attacker-controlled</li>
+        <li><strong>Magic bytes</strong> — First bytes identifying a file format (e.g. GIF89a;); spoofable</li>
+        <li><strong>getimagesize()</strong> — PHP function that trusts magic bytes — bypassed by prepending a valid
+          image header</li>
+        <li><strong>Defense-in-depth</strong> — Stacking orthogonal controls so no single bypass compromises the system
+        </li>
+      </ul>
+    </div>
+  </main>
+
+  <footer>&copy; Zaneso &mdash; Penetration Testing Course Notes</footer>
+  <script>
+    const r = document.documentElement, s = localStorage.getItem('theme');
+    if (s) r.setAttribute('data-theme', s);
+    document.getElementById('theme').onclick = () => { const n = r.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; r.setAttribute('data-theme', n); localStorage.setItem('theme', n) };
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,4655 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <title>Week 2: Reconnaissance & Enumeration — Lecture Summary & Exam Revision Guide</title>
+    <meta name="description" content="Comprehensive Week 2 study guide on Reconnaissance and Enumeration covering passive OSINT, DNS zone transfers (AXFR), Nmap port scanning, and SMB/LDAP/SNMP enumeration.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+
+:root {
+    --bg-page: #090d16;
+    --bg-surface: #0f172a;
+    --bg-card: #111827;
+    --bg-card-hover: #162032;
+    --bg-sidebar: #0b1120;
+    --bg-terminal: #070a12;
+    --bg-terminal-header: #111827;
+    
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-card: rgba(255, 255, 255, 0.1);
+    --border-hover: rgba(6, 182, 212, 0.4);
+    
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    
+    --accent-emerald: #10b981;
+    --accent-emerald-glow: rgba(16, 185, 129, 0.2);
+    --accent-cyan: #06b6d4;
+    --accent-purple: #a855f7;
+    --accent-amber: #f59e0b;
+    --accent-rose: #f43f5e;
+    --accent-blue: #3b82f6;
+
+    --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', Menlo, Consolas, monospace;
+
+    --shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+    --shadow-glow: 0 0 20px rgba(6, 182, 212, 0.18);
+}
+
+[data-theme="light"] {
+    --bg-page: #f8fafc;
+    --bg-surface: #ffffff;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f1f5f9;
+    --bg-sidebar: #f1f5f9;
+    --bg-terminal: #0f172a;
+    --bg-terminal-header: #1e293b;
+    
+    --border-subtle: rgba(0, 0, 0, 0.08);
+    --border-card: rgba(0, 0, 0, 0.1);
+    --border-hover: rgba(2, 132, 199, 0.4);
+    
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+
+    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.07);
+    --shadow-glow: 0 0 15px rgba(2, 132, 199, 0.12);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 80px;
+}
+
+body {
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    line-height: 1.7;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bg-page);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--border-subtle);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-cyan);
+}
+
+/* Reading Progress Bar */
+#readingProgressBar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent-cyan), var(--accent-emerald), var(--accent-purple));
+    z-index: 1000;
+    transition: width 0.1s ease-out;
+}
+
+/* App Navbar */
+.app-navbar {
+    position: sticky;
+    top: 0;
+    z-index: 900;
+    background: rgba(11, 17, 32, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border-subtle);
+    transition: background-color 0.25s ease;
+}
+[data-theme="light"] .app-navbar {
+    background: rgba(255, 255, 255, 0.88);
+}
+
+.nav-container {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 0 24px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: var(--text-primary);
+}
+
+.brand-icon-shield {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-emerald));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 12px rgba(6, 182, 212, 0.25);
+    color: #fff;
+}
+
+.brand-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.brand-title {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+    line-height: 1.2;
+}
+
+.brand-subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.nav-btn:hover {
+    color: var(--text-primary);
+    border-color: var(--accent-cyan);
+    background: var(--bg-card-hover);
+}
+
+.theme-toggle-btn {
+    padding: 8px;
+    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    justify-content: center;
+}
+
+.mobile-menu-btn {
+    display: none;
+    padding: 8px;
+    width: 36px;
+    height: 36px;
+    justify-content: center;
+}
+
+/* Main Layout */
+.app-layout {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 32px 24px;
+    display: grid;
+    grid-template-columns: 290px 1fr;
+    gap: 40px;
+    align-items: start;
+}
+
+/* Sidebar TOC */
+.sidebar-toc {
+    position: sticky;
+    top: 96px;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    background: var(--bg-sidebar);
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-card);
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 14px;
+}
+
+.sidebar-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.sidebar-header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sidebar-close-btn {
+    display: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+    font-size: 14px;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.sidebar-close-btn:hover {
+    color: var(--accent-rose);
+    border-color: var(--accent-rose);
+}
+
+.toc-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 12px;
+    background: rgba(6, 182, 212, 0.15);
+    color: var(--accent-cyan);
+    border: 1px solid rgba(6, 182, 212, 0.25);
+}
+
+.sidebar-jump-box {
+    margin-bottom: 14px;
+}
+
+.sidebar-search-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s ease;
+}
+.sidebar-search-btn:hover {
+    border-color: var(--accent-cyan);
+    color: var(--text-primary);
+}
+
+.sidebar-kbd {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    padding: 2px 5px;
+    border-radius: 4px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+}
+
+.toc-nav {
+    flex: 1;
+}
+
+.toc-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.toc-item {
+    border-radius: 8px;
+    transition: background-color 0.15s ease;
+}
+
+.toc-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.15s ease;
+}
+
+.toc-link:hover {
+    color: var(--text-primary);
+    background: var(--bg-card-hover);
+}
+
+.toc-item.active > .toc-link {
+    color: var(--accent-cyan);
+    background: rgba(6, 182, 212, 0.1);
+    font-weight: 700;
+}
+
+.toc-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.toc-num {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--text-muted);
+    background: var(--bg-card);
+    padding: 2px 5px;
+    border-radius: 4px;
+    border: 1px solid var(--border-subtle);
+}
+
+.toc-text {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.toc-sublist {
+    list-style: none;
+    padding-left: 28px;
+    margin: 4px 0 6px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    border-left: 1px solid var(--border-subtle);
+    margin-left: 16px;
+}
+
+.toc-sublink {
+    text-decoration: none;
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.4;
+    display: block;
+    padding: 3px 6px;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+}
+.toc-sublink:hover {
+    color: var(--accent-cyan);
+}
+
+.sidebar-footer {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.sidebar-study-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-muted);
+}
+.sidebar-study-card a {
+    color: var(--accent-cyan);
+    text-decoration: none;
+    font-weight: 600;
+}
+.sidebar-study-card a:hover {
+    text-decoration: underline;
+}
+.study-card-title {
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+/* Main Content Area */
+.main-content {
+    min-width: 0;
+    max-width: 980px;
+}
+
+/* Hero Section */
+.hero-section {
+    position: relative;
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: 20px;
+    padding: 44px;
+    margin-bottom: 36px;
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+}
+
+.hero-glow {
+    position: absolute;
+    top: -120px;
+    right: -100px;
+    width: 380px;
+    height: 380px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(6, 182, 212, 0.2) 0%, rgba(16, 185, 129, 0.1) 50%, transparent 80%);
+    pointer-events: none;
+}
+
+.hero-badge-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    background: rgba(6, 182, 212, 0.15);
+    color: var(--accent-cyan);
+    border: 1px solid rgba(6, 182, 212, 0.3);
+}
+
+.hero-badge.badge-secondary {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--accent-emerald);
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.hero-badge.badge-lab {
+    background: rgba(168, 85, 247, 0.15);
+    color: var(--accent-purple);
+    border-color: rgba(168, 85, 247, 0.3);
+}
+
+.badge-pulse {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-cyan);
+    box-shadow: 0 0 8px var(--accent-cyan);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.hero-title {
+    font-size: 38px;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 14px;
+    letter-spacing: -0.8px;
+}
+
+.gradient-text {
+    background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-emerald) 50%, var(--accent-purple) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero-subtitle {
+    font-size: 17px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 24px;
+    max-width: 820px;
+}
+
+.topic-tags-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.topic-tag {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+}
+
+.guide-usage-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    background: rgba(6, 182, 212, 0.07);
+    border: 1px solid rgba(6, 182, 212, 0.25);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+}
+
+.guide-usage-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+    line-height: 1;
+    margin-top: 2px;
+}
+
+.guide-usage-title {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: var(--accent-cyan);
+    margin-bottom: 4px;
+}
+
+.guide-usage-content p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.learning-obj-box {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 26px;
+}
+
+.obj-header {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: var(--accent-emerald);
+    margin-bottom: 10px;
+}
+
+.obj-list {
+    margin: 0 0 0 20px;
+    color: var(--text-secondary);
+    font-size: 13.5px;
+}
+.obj-list li {
+    margin-bottom: 6px;
+}
+
+.quick-stats-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    padding: 16px 20px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.stat-number {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--accent-cyan);
+    font-family: var(--font-mono);
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-divider {
+    width: 1px;
+    height: 32px;
+    background: var(--border-subtle);
+}
+
+/* Content Cards */
+.content-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: 18px;
+    padding: 36px;
+    margin-bottom: 32px;
+    box-shadow: var(--shadow-card);
+    transition: border-color 0.2s ease;
+}
+
+.content-card:hover {
+    border-color: var(--border-hover);
+}
+
+.section-card-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-bottom: 20px;
+    margin-bottom: 26px;
+    border-bottom: 1px solid var(--border-subtle);
+    position: relative;
+}
+
+.sec-num-badge {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(16, 185, 129, 0.15));
+    border: 1px solid rgba(6, 182, 212, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--accent-cyan);
+    flex-shrink: 0;
+}
+
+.sec-title-wrap {
+    flex: 1;
+}
+
+.sec-kicker {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--accent-cyan);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.section-heading {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+    color: var(--text-primary);
+    line-height: 1.3;
+}
+
+.anchor-link {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 20px;
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 0.2s ease, color 0.2s ease;
+}
+.section-card-header:hover .anchor-link {
+    opacity: 1;
+}
+.anchor-link:hover {
+    color: var(--accent-cyan);
+}
+
+/* Headings within sections */
+h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 28px 0 14px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+h3:first-of-type {
+    margin-top: 10px;
+}
+
+p {
+    margin-bottom: 16px;
+    color: var(--text-secondary);
+}
+
+strong {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+em {
+    color: var(--accent-cyan);
+    font-style: italic;
+}
+
+/* Lists */
+ul, ol {
+    margin: 12px 0 20px 24px;
+    color: var(--text-secondary);
+}
+
+li {
+    margin-bottom: 8px;
+    line-height: 1.6;
+}
+
+li::marker {
+    color: var(--accent-cyan);
+    font-weight: 700;
+}
+
+/* Tables */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    margin: 20px 0 24px 0;
+    border-radius: 12px;
+    border: 1px solid var(--border-subtle);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    -webkit-overflow-scrolling: touch;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    text-align: left;
+}
+
+thead th {
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    font-weight: 700;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.6px;
+    white-space: nowrap;
+}
+
+tbody tr {
+    border-bottom: 1px solid var(--border-subtle);
+    transition: background-color 0.15s ease;
+}
+
+tbody tr:last-child {
+    border-bottom: none;
+}
+
+tbody tr:hover {
+    background: var(--bg-card-hover);
+}
+
+tbody td {
+    padding: 12px 16px;
+    color: var(--text-secondary);
+    vertical-align: top;
+}
+
+tbody td strong {
+    color: var(--text-primary);
+}
+
+/* Badges */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+}
+
+.badge-passive {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-active {
+    background: rgba(244, 63, 94, 0.15);
+    color: #f43f5e;
+    border: 1px solid rgba(244, 63, 94, 0.3);
+}
+
+.badge-scan {
+    background: rgba(6, 182, 212, 0.15);
+    color: var(--accent-cyan);
+    font-family: var(--font-mono);
+    border: 1px solid rgba(6, 182, 212, 0.3);
+}
+
+.badge-output {
+    background: rgba(168, 85, 247, 0.15);
+    color: var(--accent-purple);
+    font-family: var(--font-mono);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.badge-timing {
+    font-family: var(--font-mono);
+    border-radius: 4px;
+}
+.badge-timing.t-paranoid { background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
+.badge-timing.t-sneaky { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+.badge-timing.t-polite { background: rgba(6, 182, 212, 0.15); color: #06b6d4; border: 1px solid rgba(6, 182, 212, 0.3); }
+.badge-timing.t-normal { background: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3); }
+.badge-timing.t-aggressive { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+.badge-timing.t-insane { background: rgba(244, 63, 94, 0.15); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.3); }
+
+.badge-service.smb {
+    background: rgba(59, 130, 246, 0.15);
+    color: #3b82f6;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+.badge-service.ldap {
+    background: rgba(168, 85, 247, 0.15);
+    color: #a855f7;
+    border: 1px solid rgba(168, 85, 247, 0.3);
+}
+.badge-service.snmp {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.nmap-flag {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    background: var(--bg-surface);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--border-subtle);
+}
+
+/* Terminal Card */
+.terminal-card {
+    background: var(--bg-terminal);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    margin: 18px 0 22px 0;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.terminal-header {
+    background: var(--bg-terminal-header);
+    padding: 9px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.terminal-dots {
+    display: flex;
+    gap: 6px;
+}
+
+.dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+}
+.dot-red { background: #ef4444; }
+.dot-yellow { background: #f59e0b; }
+.dot-green { background: #10b981; }
+
+.terminal-title {
+    font-size: 12px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.copy-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 600;
+    font-family: var(--font-sans);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.copy-btn:hover {
+    background: rgba(6, 182, 212, 0.15);
+    color: var(--accent-cyan);
+    border-color: rgba(6, 182, 212, 0.3);
+}
+
+.terminal-body {
+    padding: 16px 20px;
+    overflow-x: auto;
+}
+
+.terminal-line {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 13.5px;
+}
+
+.terminal-prompt {
+    color: var(--accent-cyan);
+    user-select: none;
+    font-weight: 700;
+}
+
+.terminal-cmd {
+    color: #e2e8f0;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+/* Callout Boxes */
+.callout {
+    display: flex;
+    gap: 16px;
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin: 20px 0;
+    border: 1px solid transparent;
+}
+
+.callout-icon {
+    font-size: 22px;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.callout-body {
+    flex: 1;
+}
+
+.callout-badge {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.callout-text {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+.callout-exam {
+    background: rgba(245, 158, 11, 0.08);
+    border-color: rgba(245, 158, 11, 0.3);
+}
+.callout-exam .callout-badge { color: var(--accent-amber); }
+
+.callout-principle {
+    background: rgba(6, 182, 212, 0.08);
+    border-color: rgba(6, 182, 212, 0.3);
+}
+.callout-principle .callout-badge { color: var(--accent-cyan); }
+
+.callout-passive {
+    background: rgba(16, 185, 129, 0.08);
+    border-color: rgba(16, 185, 129, 0.3);
+}
+.callout-passive .callout-badge { color: var(--accent-emerald); }
+
+.callout-active {
+    background: rgba(244, 63, 94, 0.08);
+    border-color: rgba(244, 63, 94, 0.3);
+}
+.callout-active .callout-badge { color: var(--accent-rose); }
+
+.callout-lesson {
+    background: rgba(168, 85, 247, 0.08);
+    border-color: rgba(168, 85, 247, 0.3);
+}
+.callout-lesson .callout-badge { color: var(--accent-purple); }
+
+/* Quiz Container (Part 7) */
+.quiz-container {
+    margin: 24px 0;
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    background: var(--bg-surface);
+    overflow: hidden;
+}
+
+.quiz-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: rgba(6, 182, 212, 0.08);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.quiz-badge {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--accent-cyan);
+    display: block;
+}
+
+.quiz-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.quiz-toggle-all-btn {
+    padding: 6px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s ease;
+}
+.quiz-toggle-all-btn:hover {
+    color: var(--accent-cyan);
+    border-color: var(--accent-cyan);
+}
+
+.quiz-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.qa-card {
+    border-bottom: 1px solid var(--border-subtle);
+}
+.qa-card:last-child {
+    border-bottom: none;
+}
+
+.qa-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.15s ease;
+}
+.qa-header:hover {
+    background: var(--bg-card-hover);
+}
+
+.qa-num-badge {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: rgba(6, 182, 212, 0.15);
+    color: var(--accent-cyan);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.qa-question {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.qa-toggle-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+}
+.toggle-icon {
+    display: inline-block;
+    transition: transform 0.2s ease;
+    font-size: 11px;
+}
+.qa-card.open .toggle-icon {
+    transform: rotate(180deg);
+}
+
+.qa-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.25s ease-out;
+    background: var(--bg-card);
+}
+.qa-card.open .qa-answer {
+    max-height: 300px;
+}
+
+.qa-answer-inner {
+    padding: 14px 20px 16px 20px;
+    border-top: 1px dashed var(--border-subtle);
+}
+
+.qa-ans-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    color: var(--accent-emerald);
+    display: block;
+    margin-bottom: 4px;
+}
+
+.qa-answer-inner p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 0;
+}
+
+/* Concepts Filter */
+.concepts-filter-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin: 20px 0 16px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.filter-input-wrap {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.filter-search-icon {
+    position: absolute;
+    left: 12px;
+    color: var(--text-muted);
+}
+
+#termSearchInput {
+    width: 100%;
+    padding: 10px 36px 10px 40px;
+    border-radius: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    font-size: 13.5px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+#termSearchInput:focus {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.2);
+}
+
+.clear-filter-btn {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.filter-stats {
+    flex-shrink: 0;
+}
+
+/* Checklist Widget */
+.exam-checklist-widget {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    padding: 24px;
+    margin: 24px 0;
+}
+
+.chk-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.chk-badge {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--accent-cyan);
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.chk-title-group h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.chk-progress-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    min-width: 140px;
+}
+
+.chk-progress-text {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    font-family: var(--font-mono);
+}
+
+.chk-progress-track {
+    width: 140px;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    overflow: hidden;
+}
+
+.chk-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-cyan), var(--accent-emerald));
+    transition: width 0.3s ease;
+}
+
+.chk-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.checklist-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.checklist-item:hover {
+    border-color: rgba(6, 182, 212, 0.3);
+    background: var(--bg-card-hover);
+}
+
+.checklist-item.checked {
+    border-color: rgba(16, 185, 129, 0.4);
+    background: rgba(16, 185, 129, 0.05);
+}
+
+.checklist-item.checked .chk-text {
+    color: var(--text-primary);
+}
+
+.chk-box-wrap input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent-emerald);
+    cursor: pointer;
+    margin-top: 3px;
+}
+
+.chk-num {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--accent-cyan);
+    margin-top: 2px;
+}
+
+.chk-text {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+}
+
+/* Global Search Modal */
+.search-modal-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(6px);
+    z-index: 1100;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 100px;
+}
+
+.search-modal-backdrop.open {
+    display: flex;
+}
+
+.search-modal-dialog {
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 620px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    overflow: hidden;
+}
+
+.search-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.modal-search-icon {
+    color: var(--accent-cyan);
+}
+
+#globalSearchInput {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 16px;
+    font-family: inherit;
+    outline: none;
+}
+
+.search-modal-close {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    color: var(--text-muted);
+    font-size: 11px;
+    padding: 4px 8px;
+    cursor: pointer;
+}
+
+.search-results-list {
+    max-height: 380px;
+    overflow-y: auto;
+    padding: 8px 12px;
+    list-style: none;
+}
+
+.search-result-item {
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-decoration: none;
+    color: var(--text-secondary);
+    transition: all 0.15s ease;
+}
+.search-result-item:hover, .search-result-item.highlighted {
+    background: var(--bg-surface);
+    color: var(--accent-cyan);
+}
+
+.result-main {
+    display: flex;
+    flex-direction: column;
+}
+.result-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.result-sec {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+.result-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--bg-card-hover);
+    color: var(--accent-cyan);
+}
+
+/* Footer */
+.app-footer {
+    max-width: 1440px;
+    margin: 40px auto 0 auto;
+    padding: 30px 24px 60px 24px;
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--text-muted);
+    font-size: 13px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.footer-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.footer-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 6px 12px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    text-decoration: none;
+}
+.footer-btn:hover {
+    color: var(--accent-cyan);
+    border-color: var(--accent-cyan);
+}
+
+/* RESPONSIVE DESIGN FOR TABLET & MOBILE */
+.sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 940;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+.sidebar-backdrop.active {
+    display: block;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Mobile Floating Navigation */
+.mobile-floating-nav {
+    display: none;
+    position: fixed;
+    bottom: 24px;
+    right: 20px;
+    z-index: 850;
+    align-items: center;
+    gap: 10px;
+}
+
+.floating-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 30px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.floating-btn:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent-cyan);
+}
+
+.floating-toc-btn {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.95), rgba(16, 185, 129, 0.95));
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 8px 25px rgba(6, 182, 212, 0.35);
+}
+.floating-toc-btn:hover {
+    box-shadow: 0 10px 30px rgba(6, 182, 212, 0.5);
+}
+
+.floating-top-btn {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.85);
+    transition: opacity 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
+}
+.floating-top-btn.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: scale(1);
+}
+
+/* TABLET LANDSCAPE & PORTRAIT (max-width: 1024px) */
+@media (max-width: 1024px) {
+    .app-layout {
+        grid-template-columns: 1fr;
+        padding: 24px 20px;
+        gap: 24px;
+    }
+
+    .main-content {
+        max-width: 100%;
+    }
+
+    .sidebar-toc {
+        display: flex !important;
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 320px;
+        max-width: 85vw;
+        height: 100vh;
+        max-height: 100vh;
+        z-index: 950;
+        border-radius: 0;
+        border: none;
+        border-right: 1px solid var(--border-subtle);
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 15px 0 40px rgba(0, 0, 0, 0.6);
+        background: var(--bg-sidebar);
+        padding: 20px 18px;
+    }
+
+    .sidebar-toc.mobile-open {
+        transform: translateX(0);
+    }
+
+    .mobile-menu-btn {
+        display: inline-flex;
+    }
+
+    .sidebar-close-btn {
+        display: flex;
+    }
+
+    .mobile-floating-nav {
+        display: flex;
+    }
+
+    .hero-section {
+        padding: 36px 30px;
+    }
+
+    .hero-title {
+        font-size: 32px;
+    }
+
+    .quick-stats-bar {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 12px;
+        padding: 16px;
+    }
+
+    .stat-divider {
+        display: none;
+    }
+
+    .stat-item {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: 10px;
+        padding: 10px;
+    }
+
+    .content-card {
+        padding: 28px 24px;
+    }
+}
+
+/* SMARTPHONE & NARROW TABLET (max-width: 768px) */
+@media (max-width: 768px) {
+    html {
+        scroll-padding-top: 70px;
+    }
+
+    .app-navbar {
+        height: 58px;
+    }
+
+    .nav-container {
+        padding: 0 16px;
+        height: 58px;
+    }
+
+    .brand-icon-shield {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+    }
+    .brand-icon-shield svg {
+        width: 17px;
+        height: 17px;
+    }
+
+    .brand-title {
+        font-size: 14px;
+    }
+
+    .brand-subtitle {
+        display: none;
+    }
+
+    .nav-actions {
+        gap: 8px;
+    }
+
+    .nav-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+    .nav-btn span, .nav-btn kbd {
+        display: none;
+    }
+
+    .app-layout {
+        padding: 16px 12px;
+        gap: 16px;
+    }
+
+    .hero-section {
+        padding: 24px 18px;
+        border-radius: 16px;
+        margin-bottom: 20px;
+    }
+
+    .hero-title {
+        font-size: 26px;
+        line-height: 1.25;
+        margin-bottom: 12px;
+    }
+
+    .hero-subtitle {
+        font-size: 14.5px;
+        line-height: 1.55;
+        margin-bottom: 18px;
+    }
+
+    .topic-tags-grid {
+        gap: 6px;
+        margin-bottom: 18px;
+    }
+
+    .topic-tag {
+        font-size: 11px;
+        padding: 4px 9px;
+        border-radius: 6px;
+    }
+
+    .guide-usage-card {
+        padding: 14px;
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+    .guide-usage-icon {
+        font-size: 20px;
+    }
+    .guide-usage-title {
+        font-size: 11px;
+    }
+    .guide-usage-content p {
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    .learning-obj-box {
+        padding: 14px;
+    }
+    .obj-header {
+        font-size: 11px;
+    }
+    .obj-list {
+        font-size: 12.5px;
+        margin-left: 16px;
+    }
+
+    .quick-stats-bar {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        padding: 10px;
+    }
+    .quick-stats-bar .stat-item:last-child {
+        grid-column: span 2;
+    }
+    .stat-number {
+        font-size: 20px;
+    }
+    .stat-label {
+        font-size: 10px;
+    }
+
+    .content-card {
+        padding: 20px 16px;
+        border-radius: 14px;
+        margin-bottom: 20px;
+    }
+
+    .section-card-header {
+        gap: 12px;
+        padding-bottom: 14px;
+        margin-bottom: 18px;
+    }
+
+    .sec-num-badge {
+        width: 38px;
+        height: 38px;
+        font-size: 15px;
+        border-radius: 10px;
+    }
+
+    .sec-kicker {
+        font-size: 10px;
+    }
+
+    .section-heading {
+        font-size: 19px;
+        line-height: 1.25;
+    }
+
+    .anchor-link {
+        display: none;
+    }
+
+    h3 {
+        font-size: 16.5px;
+        margin: 22px 0 10px 0;
+        line-height: 1.35;
+    }
+
+    p {
+        font-size: 14.5px;
+        line-height: 1.65;
+        margin-bottom: 14px;
+    }
+
+    ul, ol {
+        margin: 10px 0 16px 18px;
+        font-size: 14.5px;
+    }
+
+    li {
+        margin-bottom: 6px;
+    }
+
+    /* Tables */
+    .table-responsive {
+        margin: 14px 0 18px 0;
+        border-radius: 10px;
+    }
+
+    table {
+        font-size: 12.5px;
+    }
+
+    thead th {
+        padding: 10px 12px;
+        font-size: 10px;
+    }
+
+    tbody td {
+        padding: 10px 12px;
+    }
+
+    .badge {
+        font-size: 11px;
+        padding: 2px 7px;
+    }
+
+    /* Terminal blocks */
+    .terminal-card {
+        margin: 14px 0 18px 0;
+        border-radius: 10px;
+    }
+
+    .terminal-header {
+        padding: 8px 12px;
+    }
+
+    .terminal-title {
+        font-size: 11px;
+    }
+
+    .terminal-body {
+        padding: 12px 14px;
+    }
+
+    .terminal-line {
+        font-size: 12.5px;
+        gap: 8px;
+    }
+
+    /* Callout cards */
+    .callout {
+        padding: 14px;
+        gap: 12px;
+        margin: 16px 0;
+        border-radius: 10px;
+    }
+    .callout-icon {
+        font-size: 18px;
+    }
+    .callout-badge {
+        font-size: 10px;
+    }
+    .callout-text {
+        font-size: 13px;
+        line-height: 1.55;
+    }
+
+    /* Quiz Container */
+    .quiz-container {
+        margin: 16px 0;
+        border-radius: 12px;
+    }
+    .quiz-toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px 14px;
+    }
+    .quiz-toggle-all-btn {
+        width: 100%;
+        text-align: center;
+        padding: 8px;
+    }
+    .qa-header {
+        padding: 12px 14px;
+        gap: 10px;
+    }
+    .qa-num-badge {
+        width: 24px;
+        height: 24px;
+        font-size: 11px;
+    }
+    .qa-question {
+        font-size: 13.5px;
+        line-height: 1.4;
+    }
+    .qa-answer-inner {
+        padding: 12px 14px;
+    }
+    .qa-answer-inner p {
+        font-size: 13px;
+    }
+
+    /* Filter Card */
+    .concepts-filter-card {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding: 12px 14px;
+    }
+    #termSearchInput {
+        padding: 8px 32px 8px 36px;
+        font-size: 13px;
+    }
+    .filter-stats {
+        text-align: right;
+    }
+
+    /* Checklist */
+    .exam-checklist-widget {
+        padding: 16px 14px;
+        border-radius: 12px;
+    }
+    .chk-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 14px;
+        padding-bottom: 12px;
+    }
+    .chk-progress-box {
+        width: 100%;
+        align-items: flex-start;
+    }
+    .chk-progress-track {
+        width: 100%;
+    }
+    .checklist-item {
+        padding: 10px 12px;
+        gap: 10px;
+    }
+    .chk-box-wrap input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+    }
+    .chk-num {
+        font-size: 11px;
+    }
+    .chk-text {
+        font-size: 13px;
+    }
+
+    /* Search Modal Mobile */
+    .search-modal-backdrop {
+        padding-top: 40px;
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+    .search-modal-dialog {
+        border-radius: 14px;
+        max-height: 80vh;
+    }
+    .search-modal-header {
+        padding: 12px 14px;
+    }
+    #globalSearchInput {
+        font-size: 14px;
+    }
+
+    /* Footer Mobile */
+    .app-footer {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 12px;
+        padding: 24px 16px 80px 16px;
+    }
+}
+
+/* EXTRA SMALL MOBILE (max-width: 480px) */
+@media (max-width: 480px) {
+    .hero-title {
+        font-size: 23px;
+    }
+    .hero-badge-wrap {
+        gap: 6px;
+    }
+    .hero-badge {
+        font-size: 9.5px;
+        padding: 3px 8px;
+    }
+    .content-card {
+        padding: 16px 12px;
+    }
+    .sec-num-badge {
+        width: 34px;
+        height: 34px;
+        font-size: 13px;
+    }
+    .section-heading {
+        font-size: 17.5px;
+    }
+    table {
+        font-size: 12px;
+    }
+    thead th, tbody td {
+        padding: 8px 10px;
+    }
+    .mobile-floating-nav {
+        bottom: 16px;
+        right: 14px;
+    }
+    .floating-btn {
+        padding: 8px 14px;
+        font-size: 12px;
+    }
+}
+
+/* Print Styles */
+@media print {
+    body {
+        background: #ffffff !important;
+        color: #000000 !important;
+    }
+    .app-navbar, .sidebar-toc, .search-modal-backdrop, #readingProgressBar, .nav-actions, .copy-btn, .quiz-toolbar, .quiz-toggle-all-btn, .concepts-filter-card, .app-footer, .anchor-link, .mobile-floating-nav {
+        display: none !important;
+    }
+    .app-layout {
+        display: block !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+    }
+    .main-content {
+        max-width: 100% !important;
+    }
+    .content-card {
+        border: 1px solid #ccc !important;
+        box-shadow: none !important;
+        background: #fff !important;
+        page-break-inside: avoid;
+        margin-bottom: 20px !important;
+        padding: 20px !important;
+    }
+    .hero-section {
+        border: 1px solid #ccc !important;
+        background: #fff !important;
+        box-shadow: none !important;
+    }
+    .qa-answer {
+        max-height: none !important;
+    }
+    table {
+        border: 1px solid #ddd !important;
+    }
+    th, td {
+        border: 1px solid #ddd !important;
+        color: #000 !important;
+    }
+}
+
+    </style>
+</head>
+<body>
+    <div id="readingProgressBar"></div>
+
+    <nav class="app-navbar">
+        <div class="nav-container">
+            <a href="#" class="nav-brand">
+                <div class="brand-icon-shield">
+                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="2" y1="12" x2="22" y2="12"></line>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                    </svg>
+                </div>
+                <div class="brand-info">
+                    <span class="brand-title">CYBERSEC 101</span>
+                    <span class="brand-subtitle">Week 2 • Recon & Enumeration</span>
+                </div>
+            </a>
+
+            <div class="nav-actions">
+                <button class="nav-btn" onclick="openSearchModal()" title="Search guide (Ctrl+K)">
+                    <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <span>Search</span>
+                    <kbd class="sidebar-kbd">Ctrl K</kbd>
+                </button>
+                <button class="nav-btn theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Light/Dark Theme">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </button>
+                <button class="nav-btn" onclick="window.print()" title="Print or save as PDF">
+                    <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                    <span>Print</span>
+                </button>
+                <button class="nav-btn mobile-menu-btn" onclick="toggleMobileMenu()" title="Toggle Navigation">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="app-layout">
+        
+<aside class="sidebar-toc" id="sidebarNav">
+    <div class="sidebar-header">
+        <div class="sidebar-title">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+                <line x1="8" y1="6" x2="21" y2="6"></line>
+                <line x1="8" y1="12" x2="21" y2="12"></line>
+                <line x1="8" y1="18" x2="21" y2="18"></line>
+                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+            <span>Navigation</span>
+        </div>
+        <div class="sidebar-header-right">
+            <span class="toc-badge">7 Parts</span>
+            <button class="sidebar-close-btn" onclick="closeMobileMenu()" aria-label="Close navigation">✕</button>
+        </div>
+    </div>
+    <div class="sidebar-jump-box">
+        <button class="sidebar-search-btn" onclick="openSearchModal()">
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <span>Quick search...</span>
+            <kbd class="sidebar-kbd">Ctrl K</kbd>
+        </button>
+    </div>
+    <nav class="toc-nav">
+        <ul class="toc-list">
+            
+    <li class="toc-item" data-target="part-1">
+        <a href="#part-1" class="toc-link">
+            <span class="toc-icon">🔍</span>
+            <span class="toc-num">01</span>
+            <span class="toc-text">Passive vs Active Information Gathering</span>
+        </a>
+        <ul class="toc-sublist"><li class="toc-subitem"><a href="#part-1-1-what-is-reconnaissance" class="toc-sublink">1. What is reconnaissance?</a></li><li class="toc-subitem"><a href="#part-1-2-passive-information-gathering" class="toc-sublink">2. Passive information gathering</a></li><li class="toc-subitem"><a href="#part-1-whois" class="toc-sublink">WHOIS</a></li><li class="toc-subitem"><a href="#part-1-website-mirroring" class="toc-sublink">Website mirroring</a></li><li class="toc-subitem"><a href="#part-1-reverse-ip-lookup" class="toc-sublink">Reverse IP lookup</a></li><li class="toc-subitem"><a href="#part-1-google-hacking-and-ghdb" class="toc-sublink">Google Hacking and GHDB</a></li><li class="toc-subitem"><a href="#part-1-foca-and-document-metadata" class="toc-sublink">FOCA and document metadata</a></li><li class="toc-subitem"><a href="#part-1-3-active-information-gathering" class="toc-sublink">3. Active information gathering</a></li><li class="toc-subitem"><a href="#part-1-4-reconnaissance-decision-flow" class="toc-sublink">4. Reconnaissance decision flow</a></li></ul>
+    </li>
+    
+    <li class="toc-item" data-target="part-2">
+        <a href="#part-2" class="toc-link">
+            <span class="toc-icon">🌐</span>
+            <span class="toc-num">02</span>
+            <span class="toc-text">Webserver Fingerprinting & DNS Enumeration</span>
+        </a>
+        <ul class="toc-sublist"><li class="toc-subitem"><a href="#part-2-5-webserver-fingerprinting" class="toc-sublink">5. Webserver fingerprinting</a></li><li class="toc-subitem"><a href="#part-2-tools-burp-suite-whatweb-and-netcraft" class="toc-sublink">Tools: Burp Suite, WhatWeb and Netcraft</a></li><li class="toc-subitem"><a href="#part-2-6-dns-fundamentals" class="toc-sublink">6. DNS fundamentals</a></li><li class="toc-subitem"><a href="#part-2-dns-resolution" class="toc-sublink">DNS resolution</a></li><li class="toc-subitem"><a href="#part-2-7-dns-zone-transfers-axfr" class="toc-sublink">7. DNS Zone Transfers (AXFR)</a></li><li class="toc-subitem"><a href="#part-2-8-dns-cache-snooping" class="toc-sublink">8. DNS cache snooping</a></li></ul>
+    </li>
+    
+    <li class="toc-item" data-target="part-3">
+        <a href="#part-3" class="toc-link">
+            <span class="toc-icon">☁️</span>
+            <span class="toc-num">03</span>
+            <span class="toc-text">Subdomains, Load Balancers, CloudFlare & Shodan</span>
+        </a>
+        <ul class="toc-sublist"><li class="toc-subitem"><a href="#part-3-9-subdomain-discovery" class="toc-sublink">9. Subdomain discovery</a></li><li class="toc-subitem"><a href="#part-3-10-load-balancer-detection" class="toc-sublink">10. Load balancer detection</a></li><li class="toc-subitem"><a href="#part-3-11-cloudflare-and-origin-server-exposure" class="toc-sublink">11. CloudFlare and origin-server exposure</a></li><li class="toc-subitem"><a href="#part-3-12-shodan" class="toc-sublink">12. Shodan</a></li><li class="toc-subitem"><a href="#part-3-13-email-harvesting" class="toc-sublink">13. Email harvesting</a></li></ul>
+    </li>
+    
+    <li class="toc-item" data-target="part-4">
+        <a href="#part-4" class="toc-link">
+            <span class="toc-icon">🎯</span>
+            <span class="toc-num">04</span>
+            <span class="toc-text">Active Scanning with Nmap</span>
+        </a>
+        <ul class="toc-sublist"><li class="toc-subitem"><a href="#part-4-14-introduction-to-nmap" class="toc-sublink">14. Introduction to Nmap</a></li><li class="toc-subitem"><a href="#part-4-15-host-discovery" class="toc-sublink">15. Host discovery</a></li><li class="toc-subitem"><a href="#part-4-16-tcp-and-udp-scanning" class="toc-sublink">16. TCP and UDP scanning</a></li><li class="toc-subitem"><a href="#part-4-17-port-targeting" class="toc-sublink">17. Port targeting</a></li><li class="toc-subitem"><a href="#part-4-18-important-nmap-flags" class="toc-sublink">18. Important Nmap flags</a></li><li class="toc-subitem"><a href="#part-4-19-nmap-output-formats" class="toc-sublink">19. Nmap output formats</a></li><li class="toc-subitem"><a href="#part-4-20-timing-templates" class="toc-sublink">20. Timing templates</a></li><li class="toc-subitem"><a href="#part-4-21-stealth-and-evasion-related-flags" class="toc-sublink">21. Stealth and evasion-related flags</a></li><li class="toc-subitem"><a href="#part-4-22-worked-nmap-command" class="toc-sublink">22. Worked Nmap command</a></li><li class="toc-subitem"><a href="#part-4-23-common-nmap-mistakes" class="toc-sublink">23. Common Nmap mistakes</a></li></ul>
+    </li>
+    
+    <li class="toc-item" data-target="part-5">
+        <a href="#part-5" class="toc-link">
+            <span class="toc-icon">⚙️</span>
+            <span class="toc-num">05</span>
+            <span class="toc-text">Service Enumeration: SMB, LDAP & SNMP</span>
+        </a>
+        <ul class="toc-sublist"><li class="toc-subitem"><a href="#part-5-24-what-is-service-enumeration" class="toc-sublink">24. What is service enumeration?</a></li><li class="toc-subitem"><a href="#part-5-25-smb-enumeration" class="toc-sublink">25. SMB enumeration</a></li><li class="toc-subitem"><a href="#part-5-what-enumeration-may-reveal" class="toc-sublink">What enumeration may reveal:</a></li><li class="toc-subitem"><a href="#part-5-26-ldap-enumeration" class="toc-sublink">26. LDAP enumeration</a></li><li class="toc-subitem"><a href="#part-5-27-snmp-enumeration" class="toc-sublink">27. SNMP enumeration</a></li><li class="toc-subitem"><a href="#part-5-28-smb-vs-ldap-vs-snmp" class="toc-sublink">28. SMB vs LDAP vs SNMP</a></li></ul>
+    </li>
+    
+    <li class="toc-item" data-target="part-6">
+        <a href="#part-6" class="toc-link">
+            <span class="toc-icon">🏢</span>
+            <span class="toc-num">06</span>
+            <span class="toc-text">Integrated Reconnaissance Scenario</span>
+        </a>
+        <ul class="toc-sublist"><li class="toc-subitem"><a href="#part-6-29-scenario" class="toc-sublink">29. Scenario</a></li><li class="toc-subitem"><a href="#part-6-phase-1-passive-reconnaissance" class="toc-sublink">Phase 1: Passive reconnaissance</a></li><li class="toc-subitem"><a href="#part-6-phase-2-active-reconnaissance" class="toc-sublink">Phase 2: Active reconnaissance</a></li><li class="toc-subitem"><a href="#part-6-phase-3-service-investigation-and-conclusions" class="toc-sublink">Phase 3: Service investigation and conclusions</a></li><li class="toc-subitem"><a href="#part-6-suggested-one-page-attack-surface-report" class="toc-sublink">Suggested one-page attack-surface report</a></li></ul>
+    </li>
+    
+    <li class="toc-item" data-target="part-7">
+        <a href="#part-7" class="toc-link">
+            <span class="toc-icon">📝</span>
+            <span class="toc-num">07</span>
+            <span class="toc-text">Exam Revision & Quick Reference</span>
+        </a>
+        <ul class="toc-sublist"><li class="toc-subitem"><a href="#part-7-30-key-terminology" class="toc-sublink">30. Key terminology</a></li><li class="toc-subitem"><a href="#part-7-31-exam-style-quick-questions" class="toc-sublink">31. Exam-style quick questions</a></li><li class="toc-subitem"><a href="#part-7-32-commonly-confused-concepts" class="toc-sublink">32. Commonly confused concepts</a></li><li class="toc-subitem"><a href="#part-7-33-practical-lab-checklist" class="toc-sublink">33. Practical lab checklist</a></li><li class="toc-subitem"><a href="#part-7-8-practical-lab-competencies" class="toc-sublink">8 Practical Lab Competencies</a></li><li class="toc-subitem"><a href="#part-7-34-final-takeaways" class="toc-sublink">34. Final takeaways</a></li><li class="toc-subitem"><a href="#part-7-end-of-detailed-summary" class="toc-sublink">End of detailed summary</a></li></ul>
+    </li>
+    
+        </ul>
+    </nav>
+    <div class="sidebar-footer">
+        <div class="sidebar-study-card">
+            <div class="study-card-title">💡 Exam Quick Link</div>
+            <p>Jump to <a href="#part-7-31-exam-style-quick-questions">26 Exam Quiz Cards</a> or test with the <a href="#part-7-30-key-terminology">Glossary Filter</a>.</p>
+        </div>
+    </div>
+</aside>
+
+
+        <main class="main-content">
+            
+<header class="hero-section">
+    <div class="hero-glow"></div>
+    <div class="hero-badge-wrap">
+        <span class="hero-badge"><span class="badge-pulse"></span>WEEK 2 STUDY GUIDE & EXAM REVISION</span>
+        <span class="hero-badge badge-secondary">CCY4202 · ETHICAL HACKING</span>
+        <span class="hero-badge badge-lab">RECON & ENUMERATION</span>
+    </div>
+    <h1 class="hero-title">Reconnaissance & <span class="gradient-text">Enumeration</span></h1>
+    <p class="hero-subtitle">Comprehensive Lecture Summary, Passive & Active Reconnaissance Methodologies, DNS AXFR, Nmap Port Scanning & Core Network Service Enumeration (SMB, LDAP, SNMP)</p>
+    
+    <div class="topic-tags-grid">
+        <span class="topic-tag">🔍 Passive Recon</span>
+        <span class="topic-tag">⚡ Active Recon</span>
+        <span class="topic-tag">🌐 Web Fingerprinting</span>
+        <span class="topic-tag">🔄 DNS & AXFR Zone Transfers</span>
+        <span class="topic-tag">☁️ Subdomains & Shodan</span>
+        <span class="topic-tag">🎯 Nmap Scanning & Evasion</span>
+        <span class="topic-tag">⚙️ SMB, LDAP & SNMP</span>
+        <span class="topic-tag">🏢 AcmeCorp Scenario</span>
+    </div>
+
+    <div class="guide-usage-card">
+        <div class="guide-usage-icon">🔑</div>
+        <div class="guide-usage-content">
+            <div class="guide-usage-title">CORE OPERATIONAL PRINCIPLE</div>
+            <p><strong>Begin with passive reconnaissance</strong> to understand the target's attack surface without alert generation. Transition to active reconnaissance and port scanning <em>only when explicitly authorized</em> by the Rules of Engagement (RoE).</p>
+        </div>
+    </div>
+
+    <div class="learning-obj-box">
+        <div class="obj-header">🎯 FIVE CORE LEARNING OBJECTIVES</div>
+        <ul class="obj-list">
+            <li><strong>Distinguish passive from active reconnaissance:</strong> Select suitable tools and assess detection risks.</li>
+            <li><strong>Webserver fingerprinting & DNS:</strong> Analyze HTTP headers, DNS record types, AXFR zone transfers, and cache snooping.</li>
+            <li><strong>Infrastructure discovery:</strong> Discover subdomains, detect load balancers, understand CloudFlare origin exposure, and query Shodan.</li>
+            <li><strong>Master Nmap scanning:</strong> Interpret 10 scan types, port flags, timing templates (-T0 to -T5), and evasion techniques.</li>
+            <li><strong>Service enumeration:</strong> Explain ports, security risks, null sessions, and enumeration tools for SMB, LDAP, and SNMP.</li>
+        </ul>
+    </div>
+
+    <div class="quick-stats-bar">
+        <div class="stat-item">
+            <span class="stat-number">7</span>
+            <span class="stat-label">Core Parts</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <span class="stat-number">34</span>
+            <span class="stat-label">Modules & Topics</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <span class="stat-number">21</span>
+            <span class="stat-label">Technical Tables</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <span class="stat-number">10</span>
+            <span class="stat-label">Nmap Scan Types</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <span class="stat-number">30</span>
+            <span class="stat-label">Exam Quiz Cards</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <span class="stat-number">19</span>
+            <span class="stat-label">Glossary Terms</span>
+        </div>
+    </div>
+</header>
+
+
+            
+    <section id="part-1" class="content-card section-card" data-section-num="1">
+        
+<div class="section-card-header">
+<div class="sec-num-badge">01</div>
+<div class="sec-title-wrap">
+<span class="sec-kicker">PART 01</span>
+<h2 class="section-heading" id="part-1">Passive vs Active Information Gathering</h2>
+</div>
+<a class="anchor-link" href="#part-1" title="Direct link to part">#</a>
+</div>
+<h3 id="part-1-1-what-is-reconnaissance">1. What is reconnaissance?</h3>
+<p>Reconnaissance is the information-gathering phase of a penetration test. It builds an understanding of the target before vulnerability validation or exploitation. The tester seeks domain names, IP addresses, employees' email addresses, technologies, software versions, operating systems, open ports, services, subdomains and exposed infrastructure.</p>
+<h3 id="part-1-2-passive-information-gathering">2. Passive information gathering</h3>
+
+<div class="callout callout-passive">
+<div class="callout-icon">🔍</div>
+<div class="callout-body">
+<div class="callout-badge">PASSIVE RECONNAISSANCE DEFINITION</div>
+<div class="callout-text">Passive reconnaissance: Collect information without directly interacting with the target's systems. It generally has a lower chance of detection, but information may be incomplete or outdated.</div>
+</div>
+</div>
+
+<ul>
+<li>
+<p>WHOIS lookups, Google Dorking and Google Hacking Database (GHDB) searches.</p>
+</li>
+<li>
+<p>Shodan searches, public document analysis, email harvesting and social-media research.</p>
+</li>
+<li>
+<p>Reviewing public job advertisements and other publicly available organisational information.</p>
+</li>
+<li>
+<p>Website mirroring of publicly served pages for offline inspection.</p>
+</li>
+</ul>
+<h3 id="part-1-whois">WHOIS</h3>
+<p>WHOIS is a domain registration database. A lookup may disclose the registrar, registrant information (unless privacy protection is used), registration and expiry dates, and name servers. It helps build an organisational and DNS-infrastructure profile.</p>
+
+<div class="terminal-card">
+<div class="terminal-header">
+<div class="terminal-dots">
+<span class="dot dot-red"></span>
+<span class="dot dot-yellow"></span>
+<span class="dot dot-green"></span>
+</div>
+<div class="terminal-title">bash — Kali Linux Terminal</div>
+<button class="copy-btn" onclick="copyCommand(this)" title="Copy to clipboard">
+<svg class="copy-icon" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="14">
+<rect height="13" rx="2" ry="2" width="13" x="9" y="9"></rect>
+<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+</svg>
+<span class="copy-text">Copy</span>
+</button>
+</div>
+<div class="terminal-body">
+<div class="terminal-line">
+<span class="terminal-prompt">$</span>
+<span class="terminal-cmd">whois example.com</span>
+</div>
+</div>
+</div>
+
+<div class="table-responsive"><table>
+<thead>
+<tr>
+<th>WHOIS field</th>
+<th>Why it matters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Registrant / organisation</td>
+<td>May identify the domain owner.</td>
+</tr>
+<tr>
+<td>Registrar</td>
+<td>Identifies the domain registration provider.</td>
+</tr>
+<tr>
+<td>Creation / expiry dates</td>
+<td>Shows domain registration history.</td>
+</tr>
+<tr>
+<td>Name servers</td>
+<td>Provides clues about DNS infrastructure.</td>
+</tr>
+<tr>
+<td>Registrant email</td>
+<td>May provide a contact or organisational clue; often</td>
+</tr>
+<tr>
+<td></td>
+<td>privacy-protected.</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="part-1-website-mirroring">Website mirroring</h3>
+<p>Website mirroring creates a local copy of publicly accessible website content for offline review. Tools mentioned in the lecture include HTTrack (Website Copier) and Website Ripper Copier. A local copy may help inspect HTML, JavaScript, comments, references, directories and publicly served files.</p>
+<h3 id="part-1-reverse-ip-lookup">Reverse IP lookup</h3>
+<p>Reverse IP lookup identifies other websites hosted on the same server as a given IP address or domain. A service such as YouGetSignal may reveal co-hosted sites and expand the list of infrastructure requiring review. Shared hosting does not automatically mean that one site's weakness compromises another.</p>
+<h3 id="part-1-google-hacking-and-ghdb">Google Hacking and GHDB</h3>
+<p>Google Hacking uses advanced search operators to find information indexed by search engines. The Google Hacking Database (GHDB), associated with Offensive Security, collects search queries known as Google Dorks.</p>
+<div class="table-responsive"><table>
+<thead>
+<tr>
+<th>Example query</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>site:example.com filetype:pdf</td>
+<td>Find indexed PDF documents on a domain.</td>
+</tr>
+</tbody>
+</table></div>
+<div class="table-responsive"><table>
+<thead>
+<tr>
+<th>Example query</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>intitle:"index of" "parent directory"</td>
+<td>Find indexed directory-listing pages.</td>
+</tr>
+<tr>
+<td>inurl:admin login.php</td>
+<td>Find pages with administrative URL patterns.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Google Dorks may expose documents, usernames, email lists, backup files, directory listings or administrative pages. The lecture also mentions Xcode Exploit Scanner as an automated tool that uses common Google Dorks to search for issues such as SQL injection (SQLi) and Cross-Site Scripting (XSS). Search results are leads, not proof of a vulnerability.</p>
+<h3 id="part-1-foca-and-document-metadata">FOCA and document metadata</h3>
+<p>FOCA analyses publicly available documents and extracts metadata. The lecture lists DOC, PDF and XLS files and search sources such as Google, Yahoo and Bing. Metadata is information about a file rather than its visible content; examples include author names, internal file paths, software versions and document properties.</p>
+<h3 id="part-1-3-active-information-gathering">3. Active information gathering</h3>
+
+<div class="callout callout-active">
+<div class="callout-icon">⚡</div>
+<div class="callout-body">
+<div class="callout-badge">ACTIVE RECONNAISSANCE DEFINITION</div>
+<div class="callout-text">Active reconnaissance: Directly interacts with target systems by sending network packets or requests. It can provide current information but is more likely to generate logs or alerts in IDS, IPS, firewall and SIEM systems.</div>
+</div>
+</div>
+
+<ul>
+<li>
+<p>Nmap host discovery, port scanning, service/version detection and OS detection.</p>
+</li>
+<li>
+<p>SMB, LDAP and SNMP enumeration.</p>
+</li>
+<li>
+<p>Direct webserver fingerprinting and other authorised network probes.</p>
+</li>
+</ul>
+<div class="table-responsive"><table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th><span class="badge badge-passive">🔍 Passive</span></th>
+<th><span class="badge badge-active">⚡ Active</span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Target engagement</td>
+<td>No direct interaction with target systems</td>
+<td>Direct interaction</td>
+</tr>
+<tr>
+<td>Detection risk</td>
+<td>Generally lower</td>
+<td>Generally higher</td>
+</tr>
+<tr>
+<td>Freshness</td>
+<td>May be outdated</td>
+<td>Usually current at scan time</td>
+</tr>
+<tr>
+<td>Examples</td>
+<td>WHOIS, GHDB, Shodan, FOCA,</td>
+<td>Nmap, enum4linux, snmpwalk</td>
+</tr>
+<tr>
+<td></td>
+<td>TheHarvester</td>
+<td></td>
+</tr>
+</tbody>
+</table></div>
+<p>Passive does not mean automatically legal or harmless. Publicly finding information does not authorise its use. Legality and permission depend on the activity, applicable law and engagement authorisation.</p>
+<h3 id="part-1-4-reconnaissance-decision-flow">4. Reconnaissance decision flow</h3>
+<ul>
+<li>
+<p>Confirm written authorisation, scope and Rules of Engagement.</p>
+</li>
+<li>
+<p>Start with passive sources: WHOIS, Google Dorks, GHDB, FOCA, TheHarvester, Shodan and public sources.</p>
+</li>
+<li>
+<p>Assess whether the intelligence is sufficient; identify gaps.</p>
+</li>
+<li>
+<p>If authorised and necessary, proceed to active discovery and enumeration.</p>
+</li>
+<li>
+<p>Produce an attack-surface profile containing prioritised targets, exposed services, candidate credential risks and configuration concerns.</p>
+</li>
+</ul>
+    </section>
+    
+    <section id="part-2" class="content-card section-card" data-section-num="2">
+        
+<div class="section-card-header">
+<div class="sec-num-badge">02</div>
+<div class="sec-title-wrap">
+<span class="sec-kicker">PART 02</span>
+<h2 class="section-heading" id="part-2">Webserver Fingerprinting &amp; DNS Enumeration</h2>
+</div>
+<a class="anchor-link" href="#part-2" title="Direct link to part">#</a>
+</div>
+<h3 id="part-2-5-webserver-fingerprinting">5. Webserver fingerprinting</h3>
+<p>Webserver fingerprinting identifies the webserver and technologies used by a website by examining responses to HTTP requests. Useful clues include the Server header, X-Powered-By header and Set-Cookie header. Responses may disclose server software, versions, frameworks, modules, libraries or application clues.</p>
+<div class="table-responsive"><table>
+<thead>
+<tr>
+<th>Header</th>
+<th>Potential information</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Server</td>
+<td>Webserver software and sometimes its version.</td>
+</tr>
+<tr>
+<td>X-Powered-By</td>
+<td>Framework or technology information.</td>
+</tr>
+<tr>
+<td>Set-Cookie</td>
+<td>Cookie names, attributes and application clues.</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="part-2-tools-burp-suite-whatweb-and-netcraft">Tools: Burp Suite, WhatWeb and Netcraft</h3>
+<ul>
+<li>
+<p>Burp Suite: An intercepting proxy that allows a tester to inspect HTTP requests and responses. The lecture also mentions Paros and WebScarab.</p>
+</li>
+<li>
+<p>WhatWeb: Active web fingerprinting tool with more than 900 plugins. It may identify server banners, framework versions, JavaScript libraries, analytics identifiers, email addresses and SQL errors.</p>
+</li>
+<li>
+<p>Netcraft: Uses information from its online database / Internet Survey. It is treated in the lecture as passive, unlike WhatWeb, which sends requests directly to the target.</p>
+</li>
+</ul>
+<p>whatweb slashdot.org reddit.com</p>
+<h3 id="part-2-6-dns-fundamentals">6. DNS fundamentals</h3>
+<p>The Domain Name System (DNS) translates between domain names and IP addresses. Forward lookup resolves a hostname to an IP address; reverse lookup resolves an IP address to a hostname.</p>
+<div class="table-responsive"><table>
+<thead>
+<tr>
+<th>Lookup</th>
+<th>Direction</th>
+<th></th>
+<th>Record / example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Forward DNS</td>
+<td>Hostname</td>
+<td>IPv4 address</td>
+<td>A record: dig example.com A</td>
+</tr>
+<tr>
+<td>Reverse DNS</td>
+<td>IP address</td>
+<td>hostname</td>
+<td>PTR record under in-addr.arpa</td>
+</tr>
+</tbody>
+</table></div>
+<p>For reverse IPv4 DNS, reverse the IP octets and append .in-addr.arpa. For example, 208.80.152.201 becomes 201.152.80.208.in-addr.arpa.</p>
+
+<div class="terminal-card">
+<div class="terminal-header">
+<div class="terminal-dots">
+<span class="dot dot-red"></span>
+<span class="dot dot-yellow"></span>
+<span class="dot dot-green"></span>
+</div>
+<div class="terminal-title">bash — Kali Linux Terminal</div>
+<button class="copy-btn" onclick="copyCommand(this)" title="Copy to clipboard">
+<svg class="copy-icon" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="14">
+<rect height="13" rx="2" ry="2" width="13" x="9" y="9"></rect>
+<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+</svg>
+<span class="copy-text">Copy</span>
+</button>
+</div>
+<div class="terminal-body">
+<div class="terminal-line">
+<span class="terminal-prompt">$</span>
+<span class="terminal-cmd">dig example.com A
+nslookup example.com
+nslookup -type=mx example.com
+dig 201.152.80.208.in-addr.arpa PTR</span>
+</div>
+</div>
+</div>
+
+<h3 id="part-2-dns-resolution">DNS resolution</h3>
+<ul>
+<li>
+<p>The client sends a query to its resolver/cache.</p>
+</li>
+<li>
+<p>If the answer is not cached, the resolver may query a Root Name Server.</p>
+</li>
+<li>
+<p>The Root server refers the resolver to the appropriate Top-Level Domain (TLD) server.</p>
+</li>
+<li>
+<p>The TLD server refers it to the authoritative name server.</p>
+</li>
+<li>
+<p>The authoritative server returns the requested DNS record.</p>
+</li>
+</ul>
+<p>The lecture presents dig as a powerful DNS query utility that supports different record types and displays details such as TTL. nslookup is a simpler DNS query utility.</p>
+<h3 id="part-2-7-dns-zone-transfers-axfr">7. DNS Zone Transfers (AXFR)</h3>
+<p>A DNS Zone Transfer is a legitimate DNS replication mechanism. If a server is misconfigured to allow unauthorised external zone transfers, a requester may obtain many or all DNS records for a zone. Exposed records may reveal hostnames, subdomains, mail servers and other infrastructure.</p>
+<p>DNSenum is a Perl-based tool described as automating zone-transfer attempts, subdomain brute-forcing and Google scraping. Fierce performs forward and reverse lookup, subdomain brute-forcing and zone-transfer attempts.</p>
+
+<div class="terminal-card">
+<div class="terminal-header">
+<div class="terminal-dots">
+<span class="dot dot-red"></span>
+<span class="dot dot-yellow"></span>
+<span class="dot dot-green"></span>
+</div>
+<div class="terminal-title">bash — Kali Linux Terminal</div>
+<button class="copy-btn" onclick="copyCommand(this)" title="Copy to clipboard">
+<svg class="copy-icon" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="14">
+<rect height="13" rx="2" ry="2" width="13" x="9" y="9"></rect>
+<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+</svg>
+<span class="copy-text">Copy</span>
+</button>
+</div>
+<div class="terminal-body">
+<div class="terminal-line">
+<span class="terminal-prompt">$</span>
+<span class="terminal-cmd">./dnsenum.pl zonetransfer.me
+fierce -dns example.com -wordlist hosts.txt</span>
+</div>
+</div>
+</div>
+
+<p>The lecture recommends checking for a misconfigured zone transfer before attempting subdomain brute-forcing. Only test domains included in the authorised scope.</p>
+<h3 id="part-2-8-dns-cache-snooping">8. DNS cache snooping</h3>
+<p>DNS Cache Snooping attempts to determine whether a DNS record is already cached on a DNS server. A cached record may provide clues about domains queried by users of that resolver.</p>
+<ul>
+<li>
+<p>Nonrecursive method: Set the Recursion Desired (RD) flag to 0 and query the DNS server. An immediate answer may indicate that the record is cached.</p>
+</li>
+<li>
+<p>Recursive method: Send a normal recursive query and compare the returned TTL with the expected initial or authoritative TTL. A lower TTL may suggest a cached record.</p>
+</li>
+</ul>
+<p>The lecture describes the nonrecursive method as more direct and the recursive method as less accurate because TTL comparisons are indirect and can be affected by upstream caches.</p>
+    </section>
+    
+    <section id="part-3" class="content-card section-card" data-section-num="3">
+        
+<div class="section-card-header">
+<div class="sec-num-badge">03</div>
+<div class="sec-title-wrap">
+<span class="sec-kicker">PART 03</span>
+<h2 class="section-heading" id="part-3">Subdomains, Load Balancers, CloudFlare &amp; Shodan</h2>
+</div>
+<a class="anchor-link" href="#part-3" title="Direct link to part">#</a>
+</div>
+<h3 id="part-3-9-subdomain-discovery">9. Subdomain discovery</h3>
+<p>A subdomain is an additional hostname under a domain. For example, mail.example.com, vpn.example.com, dev.example.com, admin.example.com and ftp.example.com are possible subdomains of example.com.</p>
+<p>Subdomain discovery matters because older, development or administrative systems may be less protected than the main website. Tools and approaches in the lecture include Google Dorking, Fierce and WolframAlpha. Fierce can test possible hostnames from a wordlist.</p>
+<p>fierce -dns example.com -wordlist hosts.txt</p>
+<p>A discovered subdomain is a lead for assessment, not proof that the service is vulnerable. Confirm ownership, scope and exposure before further testing.</p>
+<h3 id="part-3-10-load-balancer-detection">10. Load balancer detection</h3>
+<p>A load balancer distributes incoming traffic across multiple servers to improve performance, availability, scalability and reliability.</p>
+<div class="table-responsive"><table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Layer / behaviour</th>
+<th>Possible indicator</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Layer 4</td>
+<td>Transport-layer distribution, often based on</td>
+<td>A hostname may resolve to multiple IP</td>
+</tr>
+<tr>
+<td></td>
+<td>network/transport information.</td>
+<td>addresses.</td>
+</tr>
+<tr>
+<td>Layer 7</td>
+<td>Application-layer proxy can route HTTP</td>
+<td>Different requests may reach different</td>
+</tr>
+<tr>
+<td></td>
+<td>requests to different backends.</td>
+<td>backend servers while the visible IP</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>remains the same.</td>
+</tr>
+</tbody>
+</table></div>
+<p>The lecture mentions lbd, a Bash script for detecting Layer 4 and Layer 7 load balancers.</p>
+
+<div class="terminal-card">
+<div class="terminal-header">
+<div class="terminal-dots">
+<span class="dot dot-red"></span>
+<span class="dot dot-yellow"></span>
+<span class="dot dot-green"></span>
+</div>
+<div class="terminal-title">bash — Kali Linux Terminal</div>
+<button class="copy-btn" onclick="copyCommand(this)" title="Copy to clipboard">
+<svg class="copy-icon" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="14">
+<rect height="13" rx="2" ry="2" width="13" x="9" y="9"></rect>
+<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+</svg>
+<span class="copy-text">Copy</span>
+</button>
+</div>
+<div class="terminal-body">
+<div class="terminal-line">
+<span class="terminal-prompt">$</span>
+<span class="terminal-cmd">host www.google.com
+lbd www.google.com</span>
+</div>
+</div>
+</div>
+
+<h3 id="part-3-11-cloudflare-and-origin-server-exposure">11. CloudFlare and origin-server exposure</h3>
+<p>CloudFlare can operate as a reverse proxy between visitors and a website's origin server. Visitors connect to CloudFlare, which forwards requests to the origin and returns responses. This can conceal the origin IP address.</p>
+<p>The lecture discusses three conceptual ways an origin IP might be exposed. These are for understanding and authorised assessment only:</p>
+<ul>
+<li>
+<p>Historical DNS records: Old DNS records may contain an origin IP from before the proxy was enabled.</p>
+</li>
+<li>
+<p>Subdomain misconfiguration: Some subdomains may point directly to the origin rather than using the proxy.</p>
+</li>
+<li>
+<p>Mail server / MX and headers: MX records identify mail servers. The lecture discusses examining email headers, especially Received headers, for infrastructure clues.</p>
+</li>
+</ul>
+<div class="table-responsive"><table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Underlying condition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Historical DNS</td>
+<td>Origin IP was publicly exposed in earlier DNS data.</td>
+</tr>
+<tr>
+<td>Subdomain</td>
+<td>A subdomain is configured to point directly to the origin.</td>
+</tr>
+<tr>
+<td>Mail headers</td>
+<td>Mail infrastructure or message headers disclose relevant server</td>
+</tr>
+<tr>
+<td></td>
+<td>details.</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="part-3-12-shodan">12. Shodan</h3>
+<p>Shodan is a search engine for internet-connected devices and services. Unlike conventional search engines that primarily index web pages, Shodan collects information about exposed devices such as printers, cameras, routers, industrial control systems and network infrastructure.</p>
+<p>Device banners may reveal device type, software/firmware information and service details. The lecture gives these example searches:</p>
+
+<div class="terminal-card">
+<div class="terminal-header">
+<div class="terminal-dots">
+<span class="dot dot-red"></span>
+<span class="dot dot-yellow"></span>
+<span class="dot dot-green"></span>
+</div>
+<div class="terminal-title">bash — Kali Linux Terminal</div>
+<button class="copy-btn" onclick="copyCommand(this)" title="Copy to clipboard">
+<svg class="copy-icon" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="14">
+<rect height="13" rx="2" ry="2" width="13" x="9" y="9"></rect>
+<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+</svg>
+<span class="copy-text">Copy</span>
+</button>
+</div>
+<div class="terminal-body">
+<div class="terminal-line">
+<span class="terminal-prompt">$</span>
+<span class="terminal-cmd">admin+1234
+cisco-ios "last-modified"
+default-password</span>
+</div>
+</div>
+</div>
+
+<p>The lecture associates these queries with searching for common credential text, Cisco IOS banners and the default-password keyword. A Shodan result is an observation, not permission to connect to or test the device.</p>
+<h3 id="part-3-13-email-harvesting">13. Email harvesting</h3>
+<p>Email harvesting collects publicly available email addresses associated with an organisation. TheHarvester is a Python-based OSINT tool that can collect information from supported search engines and sources such as PGP key servers and LinkedIn.</p>
+<p>theHarvester -d example.com -b all</p>
+<ul>
+<li>
+<p>-d specifies the target domain.</p>
+</li>
+<li>
+<p>-b specifies the data source; all requests all supported sources.</p>
+</li>
+</ul>
+<p>The lecture also mentions Pipl as a people-search service for cross-referencing publicly collected information. Email harvesting may help build employee lists, infer organisational relationships and identify social-engineering risks. It does not establish that an account is vulnerable.</p>
+    </section>
+    
+    <section id="part-4" class="content-card section-card" data-section-num="4">
+        
+<div class="section-card-header">
+<div class="sec-num-badge">04</div>
+<div class="sec-title-wrap">
+<span class="sec-kicker">PART 04</span>
+<h2 class="section-heading" id="part-4">Active Scanning with Nmap</h2>
+</div>
+<a class="anchor-link" href="#part-4" title="Direct link to part">#</a>
+</div>
+<h3 id="part-4-14-introduction-to-nmap">14. Introduction to Nmap</h3>
+<p>Nmap (Network Mapper), developed by Fyodor / Gordon Lyon, is a network discovery and security auditing tool. It is used to discover live hosts, identify open ports, detect services and versions, attempt OS detection, investigate firewall behaviour and save scan results. The lecture lists Kali Linux, Parrot Security OS, BlackArch and Pentoo as distributions that include Nmap.</p>
+<h3 id="part-4-15-host-discovery">15. Host discovery</h3>
+<div class="table-responsive"><table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Example</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>-PR</td>
+<td>nmap -PR 192.168.1.50</td>
+<td>ARP discovery, useful on local Ethernet</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>networks.</td>
+</tr>
+<tr>
+<td><code class="nmap-flag">-sn</code></td>
+<td>nmap -sn 192.168.1.0/24</td>
+<td>Host discovery only; no port scan.</td>
+</tr>
+<tr>
+<td>-PS</td>
+<td>nmap -PS22,80,443 192.168.1.50</td>
+<td>TCP SYN discovery probes to specified</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>ports.</td>
+</tr>
+</tbody>
+</table></div>
+<p>The lecture describes -sn discovery as using a combination of probes such as ICMP Echo, TCP SYN to 443, TCP ACK to 80 and ICMP timestamp (probe behaviour can vary with privileges and scan context).</p>
+<h3 id="part-4-16-tcp-and-udp-scanning">16. TCP and UDP scanning</h3>
+<div class="table-responsive"><table>
+<thead>
+<tr>
+<th>Scan</th>
+<th>Command</th>
+<th>How it works / characteristics</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SYN scan (-sS)</td>
+<td>sudo nmap -sS target</td>
+<td>Half-open TCP scan. Sends SYN; an open</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>port typically replies SYN-ACK; Nmap</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>sends RST rather than completing the</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>handshake. Normally requires elevated</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>privileges.</td>
+</tr>
+<tr>
+<td>TCP Connect (-sT)</td>
+<td>nmap -sT target</td>
+<td>Uses the operating system's connect call</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>and completes the TCP three-way</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>handshake. Does not normally require root;</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>may be more visible in logs.</td>
+</tr>
+<tr>
+<td>UDP (-sU)</td>
+<td>sudo nmap -sU --top-ports 50</td>
+<td>Scans UDP services. No TCP handshake</td>
+</tr>
+<tr>
+<td></td>
+<td>target</td>
+<td>applies. Open UDP services may not reply;</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>closed ports may return ICMP Port</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>Unreachable.</td>
+</tr>
+</tbody>
+</table></div>
+<p>TCP three-way handshake: client sends SYN; server responds SYN-ACK; client sends ACK. A SYN scan stops short of completing the handshake and normally sends RST after receiving SYN-ACK.</p>
+<p>UDP open|filtered: This result is ambiguous. Nmap cannot tell whether the UDP port is open but silent or whether a firewall is filtering probes. It is not proof that the port is open.</p>
+<h3 id="part-4-17-port-targeting">17. Port targeting</h3>
+
+<div class="terminal-card">
+<div class="terminal-header">
+<div class="terminal-dots">
+<span class="dot dot-red"></span>
+<span class="dot dot-yellow"></span>
+<span class="dot dot-green"></span>
+</div>
+<div class="terminal-title">bash — Kali Linux Terminal</div>
+<button class="copy-btn" onclick="copyCommand(this)" title="Copy to clipboard">
+<svg class="copy-icon" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="14">
+<rect height="13" rx="2" ry="2" width="13" x="9" y="9"></rect>
+<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+</svg>
+<span class="copy-text">Copy</span>
+</button>
+</div>
+<div class="terminal-body">
+<div class="terminal-line">
+<span class="terminal-prompt">$</span>
+<span class="terminal-cmd">nmap -p 80 &lt;target&gt;
+nmap -p 80,443 &lt;target&gt;
+nmap -p 1024-3000 &lt;target&gt;
+nmap -p U:53,111,137,T:21-25,80,139,443 &lt;target&gt;
+nmap -p- &lt;target&gt;</span>
+</div>
+</div>
+</div>
+
+<p>The -p option specifies ports. Use commas for individual ports and hyphens for ranges. Prefixes U: and T: distinguish UDP and TCP. The -p- option scans all TCP ports (1–65535) in the usual TCP scan context.</p>
+<h3 id="part-4-18-important-nmap-flags">18. Important Nmap flags</h3>
+<div class="table-responsive"><table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>-r</td>
+<td>Scan ports in numerical order.</td>
+</tr>
+<tr>
+<td><code class="nmap-flag">--top-ports</code></td>
+<td>Scan the n most common ports.</td>
+</tr>
+<tr>
+<td>-6</td>
+<td>Enable IPv6 scanning.</td>
+</tr>
+<tr>
+<td>-iL</td>
+<td>Read targets from a file.</td>
+</tr>
+<tr>
+<td>--exclude</td>
+<td>Exclude a host.</td>
+</tr>
+<tr>
+<td>-n</td>
+<td>Disable DNS resolution.</td>
+</tr>
+<tr>
+<td><code class="nmap-flag">-F</code></td>
+<td>Fast scan using fewer ports.</td>
+</tr>
+<tr>
+<td><code class="nmap-flag">-O</code></td>
+<td>Attempt OS detection.</td>
+</tr>
+<tr>
+<td><code class="nmap-flag">-A</code></td>
+<td>Enable OS detection, version detection, default scripts and</td>
+</tr>
+<tr>
+<td></td>
+<td>traceroute.</td>
+</tr>
+<tr>
+<td>--version-intensity &lt;0-9&gt;</td>
+<td>Set service version-detection intensity.</td>
+</tr>
+<tr>
+<td>--script=</td>
+<td>Run a specified Nmap Scripting Engine (NSE) script.</td>
+</tr>
+<tr>
+<td><code class="nmap-flag">-sC</code></td>
+<td>Run default NSE scripts.</td>
+</tr>
+<tr>
+<td>-v / -vv</td>
+<td>Increase verbosity.</td>
+</tr>
+</tbody>
+</table></div>
+<p>-O versus -A: -O focuses on OS detection. -A enables a broader set of features, including OS detection, version detection, script scanning and traceroute.</p>
+<h3 id="part-4-19-nmap-output-formats">19. Nmap output formats</h3>
+<div class="table-responsive"><table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Format</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="badge badge-output">-oN</span></td>
+<td>Normal text</td>
+<td>-oN scan.txt</td>
+</tr>
+<tr>
+<td><span class="badge badge-output">-oX</span></td>
+<td>XML</td>
+<td>-oX scan.xml</td>
+</tr>
+<tr>
+<td>-oS</td>
+<td>Script-kiddie format</td>
+<td>-oS scan.scr</td>
+</tr>
+<tr>
+<td><span class="badge badge-output">-oG</span></td>
+<td>Grepable</td>
+<td>-oG scan.grep</td>
+</tr>
+<tr>
+<td><span class="badge badge-output">-oA</span></td>
+<td>Save all major formats</td>
+<td>-oA scan_all</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="part-4-20-timing-templates">20. Timing templates</h3>
+<div class="table-responsive"><table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="badge badge-timing t-paranoid">-T0</span></td>
+<td>Paranoid</td>
+<td>Extremely slow.</td>
+</tr>
+<tr>
+<td><span class="badge badge-timing t-sneaky">-T1</span></td>
+<td>Sneaky</td>
+<td>Very slow.</td>
+</tr>
+<tr>
+<td><span class="badge badge-timing t-polite">-T2</span></td>
+<td>Polite</td>
+<td>Slower / less aggressive.</td>
+</tr>
+<tr>
+<td><span class="badge badge-timing t-normal">-T3</span></td>
+<td>Normal</td>
+<td>Default timing.</td>
+</tr>
+<tr>
+<td><span class="badge badge-timing t-aggressive">-T4</span></td>
+<td>Aggressive</td>
+<td>Faster; lecture recommendation for a</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>balance in coursework.</td>
+</tr>
+<tr>
+<td><span class="badge badge-timing t-insane">-T5</span></td>
+<td>Insane</td>
+<td>Extremely fast; may cause packet loss,</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>missed responses or unreliable results.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Faster is not always better. Aggressive timing may result in packet loss or false negatives, where an open service is not correctly identified.</p>
+<h3 id="part-4-21-stealth-and-evasion-related-flags">21. Stealth and evasion-related flags</h3>
+<div class="table-responsive"><table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code class="nmap-flag">-Pn</code></td>
+<td>Skip host discovery and treat target as online.</td>
+</tr>
+<tr>
+<td><span class="badge badge-scan">-sA</span></td>
+<td>ACK scan; can help assess firewall filtering behaviour.</td>
+</tr>
+<tr>
+<td>-sF / -sN / -sX</td>
+<td>FIN, NULL and XMAS TCP scans using unusual TCP flag patterns.</td>
+</tr>
+<tr>
+<td><span class="badge badge-scan">-sI</span></td>
+<td>Idle / zombie scan using a third host as an indirect scanning source.</td>
+</tr>
+<tr>
+<td>-b</td>
+<td>FTP bounce scan.</td>
+</tr>
+<tr>
+<td><code class="nmap-flag">-f</code></td>
+<td>Fragment packets.</td>
+</tr>
+<tr>
+<td><code class="nmap-flag">-D</code></td>
+<td>Use decoy addresses.</td>
+</tr>
+<tr>
+<td>-e</td>
+<td>Choose a network interface.</td>
+</tr>
+<tr>
+<td><code class="nmap-flag">-S</code></td>
+<td>Set/spoof source IP (subject to network and privilege constraints).</td>
+</tr>
+<tr>
+<td>--spoof-mac</td>
+<td>Set a spoofed MAC address.</td>
+</tr>
+<tr>
+<td>--source-port</td>
+<td>Specify source port.</td>
+</tr>
+<tr>
+<td>--randomize-hosts</td>
+<td>Randomise host scan order.</td>
+</tr>
+<tr>
+<td>--proxies</td>
+<td>Route scan connections through supported proxies.</td>
+</tr>
+</tbody>
+</table></div>
+<p>These options do not guarantee invisibility. Network monitoring may still detect unusual traffic, and their use must be explicitly permitted by the Rules of Engagement.</p>
+<h3 id="part-4-22-worked-nmap-command">22. Worked Nmap command</h3>
+<div class="table-responsive"><table>
+<thead>
+<tr>
+<th>sudo nmap -sS -sV -O -p- -T4 -oA scan_results 192.168.1.50</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Part</td>
+<td>Meaning</td>
+</tr>
+<tr>
+<td>sudo</td>
+<td>Run with elevated privileges.</td>
+</tr>
+<tr>
+<td><span class="badge badge-scan">-sS</span></td>
+<td>TCP SYN half-open scan.</td>
+</tr>
+<tr>
+<td><code class="nmap-flag">-sV</code></td>
+<td>Service/version detection.</td>
+</tr>
+<tr>
+<td><code class="nmap-flag">-O</code></td>
+<td>OS detection.</td>
+</tr>
+<tr>
+<td><code class="nmap-flag">-p-</code></td>
+<td>Scan all TCP ports.</td>
+</tr>
+<tr>
+<td><span class="badge badge-timing t-aggressive">-T4</span></td>
+<td>Aggressive timing template.</td>
+</tr>
+<tr>
+<td>-oA scan_results</td>
+<td>Save output in all major formats.</td>
+</tr>
+<tr>
+<td>192.168.1.50</td>
+<td>Target IP address.</td>
+</tr>
+</tbody>
+</table></div>
+<p>This command combines a full TCP port scan with service/version detection and OS detection, then saves the results. It is suitable only when the target and scan intensity are within the authorised scope.</p>
+<h3 id="part-4-23-common-nmap-mistakes">23. Common Nmap mistakes</h3>
+<ul>
+<li>
+<p>Running a SYN scan without sufficient privileges may cause Nmap to use a different scan method, such as TCP Connect.</p>
+</li>
+<li>
+<p>Treating UDP open|filtered as definitely open is incorrect; the result is ambiguous.</p>
+</li>
+<li>
+<p>Using -T5 automatically does not improve accuracy. Timing should suit the network and engagement.</p>
+</li>
+</ul>
+    </section>
+    
+    <section id="part-5" class="content-card section-card" data-section-num="5">
+        
+<div class="section-card-header">
+<div class="sec-num-badge">05</div>
+<div class="sec-title-wrap">
+<span class="sec-kicker">PART 05</span>
+<h2 class="section-heading" id="part-5">Service Enumeration: SMB, LDAP &amp; SNMP</h2>
+</div>
+<a class="anchor-link" href="#part-5" title="Direct link to part">#</a>
+</div>
+<h3 id="part-5-24-what-is-service-enumeration">24. What is service enumeration?</h3>
+<p>Service enumeration follows initial host and port discovery. It collects more detailed information from services, such as users, groups, shared resources, directory attributes, network interfaces and device configuration.</p>
+<h3 id="part-5-25-smb-enumeration">25. SMB enumeration</h3>
+<p>SMB (Server Message Block) is a network protocol used for file and printer sharing and other resource access, commonly in Windows environments. The lecture lists TCP 445 and TCP 139.</p>
+<h3 id="part-5-what-enumeration-may-reveal">What enumeration may reveal:</h3>
+<ul>
+<li>
+<p>Share names and access permissions / ACLs.</p>
+</li>
+<li>
+<p>Whether anonymous SMB access (a null session) is allowed, including access attempts involving IPC\$.</p>
+</li>
+<li>
+<p>User accounts, groups and other information available through RPC.</p>
+</li>
+</ul>
+<p>A null session is an anonymous SMB connection. If permitted, it may expose information without normal authentication. SMB findings can inform later investigations involving credential risks, NTLM-related hash capture, lateral movement and access to shared resources.</p>
+<div class="table-responsive"><table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Purpose / example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>enum4linux</td>
+<td>Windows/SMB enumeration. enum4linux -a 192.168.1.50</td>
+</tr>
+<tr>
+<td>smbclient</td>
+<td>Command-line interaction with SMB shares.</td>
+</tr>
+<tr>
+<td>rpcclient</td>
+<td>Interact with RPC services and retrieve Windows account / domain</td>
+</tr>
+<tr>
+<td></td>
+<td>information.</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="part-5-26-ldap-enumeration">26. LDAP enumeration</h3>
+<p>LDAP (Lightweight Directory Access Protocol) accesses and manages directory information. It is common in enterprise environments and Active Directory-integrated systems. The lecture lists TCP/UDP 389 for LDAP and TCP 636 for LDAPS.</p>
+<p>LDAP enumeration may identify naming contexts and directory partitions, whether anonymous bind is permitted, user attributes, group membership and Organisational Unit (OU) hierarchy.</p>
+<div class="table-responsive"><table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>displayName</td>
+<td>User's display name.</td>
+</tr>
+<tr>
+<td>mail</td>
+<td>Email address.</td>
+</tr>
+<tr>
+<td>memberOf</td>
+<td>Groups the user belongs to.</td>
+</tr>
+<tr>
+<td>ldapsearch -x -H ldap://192.168.1.50 -b "dc=example,dc=com"</td>
+<td></td>
+</tr>
+</tbody>
+</table></div>
+<p>In this command, -x selects simple authentication, -H specifies the LDAP server URI, and -b sets the base distinguished name (DN) from which the directory search begins. Anonymous queries only return information if the directory permits them.</p>
+<h3 id="part-5-27-snmp-enumeration">27. SNMP enumeration</h3>
+<p>SNMP (Simple Network Management Protocol) is used to monitor and manage network devices such as routers, switches, servers and printers. The lecture identifies UDP 161 as the default query port.</p>
+<p>Versions: SNMP v1, v2 and v3. In SNMP v1 and v2c, community strings act as shared access values. Common examples are public and private. Older v1/v2c community strings are not encrypted in transit; SNMP v3 provides stronger security capabilities.</p>
+<p>SNMP data may disclose system information, network interfaces, routing tables, running processes, device configuration and MIB information. MIB means Management Information Base.</p>
+<div class="table-responsive"><table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Purpose / example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Onesixtyone</td>
+<td>Tests community strings from a wordlist. onesixtyone -c</td>
+</tr>
+<tr>
+<td></td>
+<td>communities.txt 192.168.1.50</td>
+</tr>
+<tr>
+<td>Snmpenum</td>
+<td>Enumerates information after a valid community string is available.</td>
+</tr>
+<tr>
+<td></td>
+<td>snmpenum.pl 192.168.1.50 public linux.txt</td>
+</tr>
+<tr>
+<td>SolarWinds Toolset</td>
+<td>Network administration tools that can query and display SNMP /</td>
+</tr>
+<tr>
+<td></td>
+<td>MIB information.</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="part-5-28-smb-vs-ldap-vs-snmp">28. SMB vs LDAP vs SNMP</h3>
+<div class="table-responsive"><table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th><span class="badge badge-service smb">📁 SMB (139/445)</span></th>
+<th><span class="badge badge-service ldap">👥 LDAP (389/636)</span></th>
+<th><span class="badge badge-service snmp">📡 SNMP (161/162)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ports</td>
+<td>TCP 445, 139</td>
+<td>TCP/UDP 389; TCP 636</td>
+<td>UDP 161</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>LDAPS</td>
+<td></td>
+</tr>
+<tr>
+<td>Main data</td>
+<td>Shares, users, groups</td>
+<td>Users, groups, OUs, attributes</td>
+<td>System data, MIB, interfaces,</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td>processes</td>
+</tr>
+<tr>
+<td>Anonymous / weak access</td>
+<td>Null session / IPC$</td>
+<td>Anonymous bind</td>
+<td>Weak or default community</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td>strings</td>
+</tr>
+<tr>
+<td>Tools</td>
+<td>enum4linux, smbclient, rpcclient</td>
+<td>ldapsearch, ldeep,</td>
+<td>onesixtyone, snmpenum,</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>windapsearch</td>
+<td>snmpwalk</td>
+</tr>
+<tr>
+<td>Security concerns</td>
+<td>Exposed shares and account</td>
+<td>Overly permissive directory</td>
+<td>Weak community strings; older</td>
+</tr>
+<tr>
+<td></td>
+<td>information</td>
+<td>queries; insecure simple binds</td>
+<td>versions lack encryption</td>
+</tr>
+</tbody>
+</table></div>
+<p>Easy way to remember: SMB = shared resources and Windows information. LDAP = directory structure and identity information. SNMP = network-device monitoring and management information.</p>
+    </section>
+    
+    <section id="part-6" class="content-card section-card" data-section-num="6">
+        
+<div class="section-card-header">
+<div class="sec-num-badge">06</div>
+<div class="sec-title-wrap">
+<span class="sec-kicker">PART 06</span>
+<h2 class="section-heading" id="part-6">Integrated Reconnaissance Scenario</h2>
+</div>
+<a class="anchor-link" href="#part-6" title="Direct link to part">#</a>
+</div>
+<h3 id="part-6-29-scenario">29. Scenario</h3>
+<p>The lecture asks students to design a reconnaissance plan for a mock organisation with a public website, an SNMP-enabled router and employees active on job websites. The goal is to combine passive and active techniques and produce a one-page attack-surface summary.</p>
+<h3 id="part-6-phase-1-passive-reconnaissance">Phase 1: Passive reconnaissance</h3>
+<ul>
+<li>
+<p>WHOIS: Identify registration information, registrar and name servers.</p>
+</li>
+<li>
+<p>Google Dorking: Search for indexed documents and exposed directory listings.</p>
+</li>
+<li>
+<p>TheHarvester: Collect publicly available email addresses and related OSINT.</p>
+</li>
+<li>
+<p>Shodan: Review internet-facing device and service information.</p>
+</li>
+</ul>
+<h3 id="part-6-phase-2-active-reconnaissance">Phase 2: Active reconnaissance</h3>
+
+<div class="terminal-card">
+<div class="terminal-header">
+<div class="terminal-dots">
+<span class="dot dot-red"></span>
+<span class="dot dot-yellow"></span>
+<span class="dot dot-green"></span>
+</div>
+<div class="terminal-title">bash — Kali Linux Terminal</div>
+<button class="copy-btn" onclick="copyCommand(this)" title="Copy to clipboard">
+<svg class="copy-icon" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="14">
+<rect height="13" rx="2" ry="2" width="13" x="9" y="9"></rect>
+<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+</svg>
+<span class="copy-text">Copy</span>
+</button>
+</div>
+<div class="terminal-body">
+<div class="terminal-line">
+<span class="terminal-prompt">$</span>
+<span class="terminal-cmd">nmap -sn 192.168.1.0/24
+sudo nmap -sS -sV -O -p- -T4 -oA router_scan 192.168.1.1
+sudo nmap -sU -p 161 --top-ports 50 -T4 192.168.1.1</span>
+</div>
+</div>
+</div>
+
+<p>First discover live hosts. Then scan the in-scope router for TCP services, versions and OS clues. Separately investigate UDP 161 for SNMP availability.</p>
+<h3 id="part-6-phase-3-service-investigation-and-conclusions">Phase 3: Service investigation and conclusions</h3>
+<p>If SNMP is exposed, assess community-string security using an approved wordlist and, if permitted, enumerate relevant system information. Employee email and job-site information may help identify organisational relationships and social-engineering exposure. Windows systems discovered during scanning may be prioritised for in-scope SMB or LDAP enumeration.</p>
+<h3 id="part-6-suggested-one-page-attack-surface-report">Suggested one-page attack-surface report</h3>
+<ul>
+<li>
+<p>Scope and authorisation reference.</p>
+</li>
+<li>
+<p>Discovered domains, subdomains, hosts and exposed services.</p>
+</li>
+<li>
+<p>Service versions and relevant device information.</p>
+</li>
+<li>
+<p>Credential-related and anonymous-access risks.</p>
+</li>
+<li>
+<p>Potential configuration weaknesses and supporting evidence.</p>
+</li>
+<li>
+<p>Risk-based priorities and recommended next steps.</p>
+</li>
+</ul>
+    </section>
+    
+    <section id="part-7" class="content-card section-card" data-section-num="7">
+        
+<div class="section-card-header">
+<div class="sec-num-badge">07</div>
+<div class="sec-title-wrap">
+<span class="sec-kicker">PART 07</span>
+<h2 class="section-heading" id="part-7">Exam Revision &amp; Quick Reference</h2>
+</div>
+<a class="anchor-link" href="#part-7" title="Direct link to part">#</a>
+</div>
+<h3 id="part-7-30-key-terminology">30. Key terminology</h3>
+
+<div class="concepts-filter-card">
+<div class="filter-input-wrap">
+<svg class="filter-search-icon" fill="none" height="18" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="18">
+<circle cx="11" cy="11" r="8"></circle>
+<line x1="21" x2="16.65" y1="21" y2="16.65"></line>
+</svg>
+<input id="termSearchInput" oninput="filterTerminologyRows()" placeholder="Instant filter 19 terms (e.g. AXFR, PTR, MIB, SYN, Null session)..." type="text"/>
+<button class="clear-filter-btn" id="clearTermFilterBtn" onclick="clearTermFilter()" style="display:none;">✕</button>
+</div>
+<div class="filter-stats">
+<span class="badge badge-info" id="termVisibleCount">19 / 19 terms visible</span>
+</div>
+</div>
+<div class="table-responsive"><table id="terminologyTable">
+<thead>
+<tr>
+<th>Term</th>
+<th>Definition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OSINT</td>
+<td>Open-Source Intelligence.</td>
+</tr>
+<tr>
+<td>WHOIS</td>
+<td>Domain registration and ownership information.</td>
+</tr>
+<tr>
+<td>GHDB</td>
+<td>Google Hacking Database.</td>
+</tr>
+<tr>
+<td>AXFR</td>
+<td>DNS Zone Transfer.</td>
+</tr>
+<tr>
+<td>PTR</td>
+<td>DNS Pointer record used for reverse lookup.</td>
+</tr>
+<tr>
+<td>A record</td>
+<td>Maps a hostname to an IPv4 address.</td>
+</tr>
+<tr>
+<td>MX record</td>
+<td>Identifies mail servers for a domain.</td>
+</tr>
+<tr>
+<td>TTL</td>
+<td>Time To Live value associated with DNS data.</td>
+</tr>
+<tr>
+<td>Community string</td>
+<td>Shared access value used by SNMP v1/v2c.</td>
+</tr>
+<tr>
+<td>SYN scan</td>
+<td>Half-open TCP scan, selected with -sS.</td>
+</tr>
+<tr>
+<td>Null session</td>
+<td>Anonymous SMB connection.</td>
+</tr>
+<tr>
+<td>Anonymous bind</td>
+<td>LDAP query without normal authentication, if allowed.</td>
+</tr>
+<tr>
+<td>MIB</td>
+<td>Management Information Base used by SNMP.</td>
+</tr>
+<tr>
+<td>OS fingerprinting</td>
+<td>Attempt to identify the target operating system.</td>
+</tr>
+<tr>
+<td>Service enumeration</td>
+<td>Collect detailed information from running services.</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="part-7-31-exam-style-quick-questions">31. Exam-style quick questions</h3>
+
+<div class="quiz-container">
+<div class="quiz-toolbar">
+<div class="quiz-title">
+<span class="quiz-badge">💡 Active Recall &amp; Rapid Quiz (26 Exam Questions)</span>
+<span class="quiz-desc">Tap any question to reveal the verified answer</span>
+</div>
+<button class="quiz-toggle-all-btn" onclick="toggleAllW2Qa()">Reveal / Hide All Answers</button>
+</div>
+<div class="quiz-list">
+<div class="qa-card" id="w2-qa-1">
+<div class="qa-header" onclick="toggleW2Qa(1)">
+<div class="qa-num-badge">Q1</div>
+<div class="qa-question">Which reconnaissance type uses WHOIS?</div>
+<button aria-label="Toggle answer" class="qa-toggle-btn">
+<span class="toggle-icon">▼</span>
+</button>
+</div>
+<div class="qa-answer" id="w2-ans-1">
+<div class="qa-answer-inner">
+<span class="qa-ans-label">EXAM ANSWER:</span>
+<p><strong>Passive.</strong></p>
+</div>
+</div>
+</div>
+<div class="qa-card" id="w2-qa-2">
+<div class="qa-header" onclick="toggleW2Qa(2)">
+<div class="qa-num-badge">Q2</div>
+<div class="qa-question">Is WhatWeb passive or active?</div>
+<button aria-label="Toggle answer" class="qa-toggle-btn">
+<span class="toggle-icon">▼</span>
+</button>
+</div>
+<div class="qa-answer" id="w2-ans-2">
+<div class="qa-answer-inner">
+<span class="qa-ans-label">EXAM ANSWER:</span>
+<p><strong>Active.</strong></p>
+</div>
+</div>
+</div>
+<div class="qa-card" id="w2-qa-3">
+<div class="qa-header" onclick="toggleW2Qa(3)">
+<div class="qa-num-badge">Q3</div>
+<div class="qa-question">Is Netcraft passive or active in the lecture?</div>
+<button aria-label="Toggle answer" class="qa-toggle-btn">
+<span class="toggle-icon">▼</span>
+</button>
+</div>
+<div class="qa-answer" id="w2-ans-3">
+<div class="qa-answer-inner">
+<span class="qa-ans-label">EXAM ANSWER:</span>
+<p><strong>Passive.</strong></p>
+</div>
+</div>
+</div>
+<div class="qa-card" id="w2-qa-4">
+<div class="qa-header" onclick="toggleW2Qa(4)">
+<div class="qa-num-badge">Q4</div>
+<div class="qa-question">Which tool extracts document metadata?</div>
+<button aria-label="Toggle answer" class="qa-toggle-btn">
+<span class="toggle-icon">▼</span>
+</button>
+</div>
+<div class="qa-answer" id="w2-ans-4">
+<div class="qa-answer-inner">
+<span class="qa-ans-label">EXAM ANSWER:</span>
+<p><strong>FOCA.</strong></p>
+</div>
+</div>
+</div>
+<div class="qa-card" id="w2-qa-5">
+<div class="qa-header" onclick="toggleW2Qa(5)">
+<div class="qa-num-badge">Q5</div>
+<div class="qa-question">What does GHDB contain?</div>
+<button aria-label="Toggle answer" class="qa-toggle-btn">
+<span class="toggle-icon">▼</span>
+</button>
+</div>
+<div class="qa-answer" id="w2-ans-5">
+<div class="qa-answer-inner">
+<span class="qa-ans-label">EXAM ANSWER:</span>
+<p><strong>Google Dorks.</strong></p>
+</div>
+</div>
+</div>
+<div class="qa-card" id="w2-qa-6">
+<div class="qa-header" onclick="toggleW2Qa(6)">
+<div class="qa-num-badge">Q6</div>
+<div class="qa-question">Forward DNS resolves what?</div>
+<button aria-label="Toggle answer" class="qa-toggle-btn">
+<span class="toggle-icon">▼</span>
+</button>
+</div>
+<div class="qa-answer" id="w2-ans-6">
+<div class="qa-answer-inner">
+<span class="qa-ans-label">EXAM ANSWER:</span>
+<p><strong>Hostname to IP.</strong></p>
+</div>
+</div>
+</div>
+<div class="qa-card" id="w2-qa-7">
+<div class="qa-header" onclick="toggleW2Qa(7)">
+<div class="qa-num-badge">Q7</div>
+<div class="qa-question">Reverse DNS resolves what?</div>
+<button aria-label="Toggle answer" class="qa-toggle-btn">
+<span class="toggle-icon">▼</span>
+</button>
+</div>
+<div class="qa-answer" id="w2-ans-7">
+<div class="qa-answer-inner">
+<span class="qa-ans-label">EXAM ANSWER:</span>
+<p><strong>IP to hostname.</strong></p>
+</div>
+</div>
+</div>
+<div class="qa-card" id="w2-qa-8">
+<div class="qa-header" onclick="toggleW2Qa(8)">
+<div class="qa-num-badge">Q8</div>
+<div class="qa-question">Which record is used for reverse DNS?</div>
+<button aria-label="Toggle answer" class="qa-toggle-btn">
+<span class="toggle-icon">▼</span>
+</button>
+</div>
+<div class="qa-answer" id="w2-ans-8">
+<div class="qa-answer-inner">
+<span class="qa-ans-label">EXAM ANSWER:</span>
+<p><strong>PTR.</strong></p>
+</div>
+</div>
+</div>
+<div class="qa-card" id="w2-qa-9">
+<div class="qa-header" onclick="toggleW2Qa(9)">
+<div class="qa-num-badge">Q9</div>
+<div class="qa-question">What does AXFR mean?</div>
+<button aria-label="Toggle answer" class="qa-toggle-btn">
+<span class="toggle-icon">▼</span>
+</button>
+</div>
+<div class="qa-answer" id="w2-ans-9">
+<div class="qa-answer-inner">
+<span class="qa-ans-label">EXAM ANSWER:</span>
+<p><strong>DNS Zone Transfer.</strong></p>
+</div>
+</div>
+</div>
+<div class="qa-card" id="w2-qa-10">
+<div class="qa-header" onclick="toggleW2Qa(10)">
+<div class="qa-num-badge">Q10</div>
+<div class="qa-question">Which cache-snooping method is less accurate?</div>
+<button aria-label="Toggle answer" class="qa-toggle-btn">
+<span class="toggle-icon">▼</span>
+</button>
+</div>
+<div class="qa-answer" id="w2-ans-10">
+<div class="qa-answer-inner">
+<span class="qa-ans-label">EXAM ANSWER:</span>
+<p><strong>Recursive.</strong></p>
+</div>
+</div>
+</div>
+<div class="qa-card" id="w2-qa-11">
+<div class="qa-header" onclick="toggleW2Qa(11)">
+<div class="qa-num-badge">Q11</div>
+<div class="qa-question">What does Shodan search for?</div>
+<button aria-label="Toggle answer" class="qa-toggle-btn">
+<span class="toggle-icon">▼</span>
+</button>
+</div>
+<div class="qa-answer" id="w2-ans-11">
+<div class="qa-answer-inner">
+<span class="qa-ans-label">EXAM ANSWER:</span>
+<p><strong>Internet-connected devices and services.</strong></p>
+</div>
+</div>
+</div>
+<div class="qa-card" id="w2-qa-12">
+<div class="qa-header" onclick="toggleW2Qa(12)">
+<div class="qa-num-badge">Q12</div>
+<div class="qa-question">What does lbd detect?</div>
+<button aria-label="Toggle answer" class="qa-toggle-btn">
+<span class="toggle-icon">▼</span>
+</button>
+</div>
+<div class="qa-answer" id="w2-ans-12">
+<div class="qa-answer-inner">
+<span class="qa-ans-label">EXAM ANSWER:</span>
+<p><strong>Load balancers.</strong></p>
+</div>
+</div>
+</div>
+<div class="qa-card" id="w2-qa-13">
+<div class="qa-header" onclick="toggleW2Qa(13)">
+<div class="qa-num-badge">Q13</div>
+<div class="qa-question">What is TheHarvester used for?</div>
+<button aria-label="Toggle answer" class="qa-toggle-btn">
+<span class="toggle-icon">▼</span>
+</button>
+</div>
+<div class="qa-answer" id="w2-ans-13">
+<div class="qa-answer-inner">
+<span class="qa-ans-label">EXAM ANSWER:</span>
+<p><strong>Collecting public email addresses and OSINT.</strong></p>
+</div>
+</div>
+</div>
+<div class="qa-card" id="w2-qa-14">
+<div class="qa-header" onclick="toggleW2Qa(14)">
+<div class="qa-num-badge">Q14</div>
+<div class="qa-question">Which Nmap flag performs SYN scanning?</div>
+<button aria-label="Toggle answer" class="qa-toggle-btn">
+<span class="toggle-icon">▼</span>
+</button>
+</div>
+<div class="qa-answer" id="w2-ans-14">
+<div class="qa-answer-inner">
+<span class="qa-ans-label">EXAM ANSWER:</span>
+<p><strong>-sS.</strong></p>
+</div>
+</div>
+</div>
+<div class="qa-card" id="w2-qa-15">
+<div class="qa-header" onclick="toggleW2Qa(15)">
+<div class="qa-num-badge">Q15</div>
+<div class="qa-question">Which flag performs TCP Connect scanning?</div>
+<button aria-label="Toggle answer" class="qa-toggle-btn">
+<span class="toggle-icon">▼</span>
+</button>
+</div>
+<div class="qa-answer" id="w2-ans-15">
+<div class="qa-answer-inner">
+<span class="qa-ans-label">EXAM ANSWER:</span>
+<p><strong>-sT.</strong></p>
+</div>
+</div>
+</div>
+<div class="qa-card" id="w2-qa-16">
+<div class="qa-header" onclick="toggleW2Qa(16)">
+<div class="qa-num-badge">Q16</div>
+<div class="qa-question">Which flag performs UDP scanning?</div>
+<button aria-label="Toggle answer" class="qa-toggle-btn">
+<span class="toggle-icon">▼</span>
+</button>
+</div>
+<div class="qa-answer" id="w2-ans-16">
+<div class="qa-answer-inner">
+<span class="qa-ans-label">EXAM ANSWER:</span>
+<p><strong>-sU.</strong></p>
+</div>
+</div>
+</div>
+<div class="qa-card" id="w2-qa-17">
+<div class="qa-header" onclick="toggleW2Qa(17)">
+<div class="qa-num-badge">Q17</div>
+<div class="qa-question">Which flag scans all TCP ports?</div>
+<button aria-label="Toggle answer" class="qa-toggle-btn">
+<span class="toggle-icon">▼</span>
+</button>
+</div>
+<div class="qa-answer" id="w2-ans-17">
+<div class="qa-answer-inner">
+<span class="qa-ans-label">EXAM ANSWER:</span>
+<p><strong>-p-.</strong></p>
+</div>
+</div>
+</div>
+<div class="qa-card" id="w2-qa-18">
+<div class="qa-header" onclick="toggleW2Qa(18)">
+<div class="qa-num-badge">Q18</div>
+<div class="qa-question">Which flag detects service versions?</div>
+<button aria-label="Toggle answer" class="qa-toggle-btn">
+<span class="toggle-icon">▼</span>
+</button>
+</div>
+<div class="qa-answer" id="w2-ans-18">
+<div class="qa-answer-inner">
+<span class="qa-ans-label">EXAM ANSWER:</span>
+<p><strong>-sV.</strong></p>
+</div>
+</div>
+</div>
+<div class="qa-card" id="w2-qa-19">
+<div class="qa-header" onclick="toggleW2Qa(19)">
+<div class="qa-num-badge">Q19</div>
+<div class="qa-question">Which flag attempts OS detection?</div>
+<button aria-label="Toggle answer" class="qa-toggle-btn">
+<span class="toggle-icon">▼</span>
+</button>
+</div>
+<div class="qa-answer" id="w2-ans-19">
+<div class="qa-answer-inner">
+<span class="qa-ans-label">EXAM ANSWER:</span>
+<p><strong>-O.</strong></p>
+</div>
+</div>
+</div>
+<div class="qa-card" id="w2-qa-20">
+<div class="qa-header" onclick="toggleW2Qa(20)">
+<div class="qa-num-badge">Q20</div>
+<div class="qa-question">Which flag saves all major output formats?</div>
+<button aria-label="Toggle answer" class="qa-toggle-btn">
+<span class="toggle-icon">▼</span>
+</button>
+</div>
+<div class="qa-answer" id="w2-ans-20">
+<div class="qa-answer-inner">
+<span class="qa-ans-label">EXAM ANSWER:</span>
+<p><strong>-oA.</strong></p>
+</div>
+</div>
+</div>
+<div class="qa-card" id="w2-qa-21">
+<div class="qa-header" onclick="toggleW2Qa(21)">
+<div class="qa-num-badge">Q21</div>
+<div class="qa-question">Which timing template does the lecture recommend?</div>
+<button aria-label="Toggle answer" class="qa-toggle-btn">
+<span class="toggle-icon">▼</span>
+</button>
+</div>
+<div class="qa-answer" id="w2-ans-21">
+<div class="qa-answer-inner">
+<span class="qa-ans-label">EXAM ANSWER:</span>
+<p><strong>-T4.</strong></p>
+</div>
+</div>
+</div>
+<div class="qa-card" id="w2-qa-22">
+<div class="qa-header" onclick="toggleW2Qa(22)">
+<div class="qa-num-badge">Q22</div>
+<div class="qa-question">Which ports are associated with SMB?</div>
+<button aria-label="Toggle answer" class="qa-toggle-btn">
+<span class="toggle-icon">▼</span>
+</button>
+</div>
+<div class="qa-answer" id="w2-ans-22">
+<div class="qa-answer-inner">
+<span class="qa-ans-label">EXAM ANSWER:</span>
+<p><strong>TCP 445 and 139.</strong></p>
+</div>
+</div>
+</div>
+<div class="qa-card" id="w2-qa-23">
+<div class="qa-header" onclick="toggleW2Qa(23)">
+<div class="qa-num-badge">Q23</div>
+<div class="qa-question">Which ports are associated with LDAP / LDAPS?</div>
+<button aria-label="Toggle answer" class="qa-toggle-btn">
+<span class="toggle-icon">▼</span>
+</button>
+</div>
+<div class="qa-answer" id="w2-ans-23">
+<div class="qa-answer-inner">
+<span class="qa-ans-label">EXAM ANSWER:</span>
+<p><strong>389 and 636.</strong></p>
+</div>
+</div>
+</div>
+<div class="qa-card" id="w2-qa-24">
+<div class="qa-header" onclick="toggleW2Qa(24)">
+<div class="qa-num-badge">Q24</div>
+<div class="qa-question">Which port is used by SNMP queries?</div>
+<button aria-label="Toggle answer" class="qa-toggle-btn">
+<span class="toggle-icon">▼</span>
+</button>
+</div>
+<div class="qa-answer" id="w2-ans-24">
+<div class="qa-answer-inner">
+<span class="qa-ans-label">EXAM ANSWER:</span>
+<p><strong>UDP 161.</strong></p>
+</div>
+</div>
+</div>
+<div class="qa-card" id="w2-qa-25">
+<div class="qa-header" onclick="toggleW2Qa(25)">
+<div class="qa-num-badge">Q25</div>
+<div class="qa-question">What is an SMB null session?</div>
+<button aria-label="Toggle answer" class="qa-toggle-btn">
+<span class="toggle-icon">▼</span>
+</button>
+</div>
+<div class="qa-answer" id="w2-ans-25">
+<div class="qa-answer-inner">
+<span class="qa-ans-label">EXAM ANSWER:</span>
+<p><strong>An anonymous SMB connection.</strong></p>
+</div>
+</div>
+</div>
+<div class="qa-card" id="w2-qa-26">
+<div class="qa-header" onclick="toggleW2Qa(26)">
+<div class="qa-num-badge">Q26</div>
+<div class="qa-question">What is LDAP anonymous bind?</div>
+<button aria-label="Toggle answer" class="qa-toggle-btn">
+<span class="toggle-icon">▼</span>
+</button>
+</div>
+<div class="qa-answer" id="w2-ans-26">
+<div class="qa-answer-inner">
+<span class="qa-ans-label">EXAM ANSWER:</span>
+<p><strong>Unauthenticated directory access, if permitted.</strong></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<h3 id="part-7-32-commonly-confused-concepts">32. Commonly confused concepts</h3>
+<div class="table-responsive"><table>
+<thead>
+<tr>
+<th>Concepts</th>
+<th>Difference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>WhatWeb vs Netcraft</td>
+<td>WhatWeb actively sends HTTP requests; Netcraft uses an existing</td>
+</tr>
+<tr>
+<td></td>
+<td>information database.</td>
+</tr>
+<tr>
+<td>-sS vs -sT</td>
+<td>SYN is half-open; Connect completes the TCP handshake.</td>
+</tr>
+<tr>
+<td>-O vs -sV</td>
+<td>-O attempts OS detection; -sV detects service versions.</td>
+</tr>
+<tr>
+<td>-T4 vs -T5</td>
+<td>T4 is a faster practical balance; T5 is extremely aggressive and</td>
+</tr>
+<tr>
+<td></td>
+<td>may reduce reliability.</td>
+</tr>
+<tr>
+<td>Forward vs reverse DNS</td>
+<td>Hostname to IP versus IP to hostname.</td>
+</tr>
+<tr>
+<td>SMB vs LDAP</td>
+<td>Shared resources / Windows information versus directory / identity</td>
+</tr>
+<tr>
+<td></td>
+<td>information.</td>
+</tr>
+<tr>
+<td>Onesixtyone vs Snmpenum</td>
+<td>Tests community strings versus enumerates SNMP data using a</td>
+</tr>
+<tr>
+<td></td>
+<td>known valid string.</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="part-7-33-practical-lab-checklist">33. Practical lab checklist</h3>
+
+<div class="exam-checklist-widget">
+<div class="chk-header">
+<div class="chk-title-group">
+<div class="chk-badge">KALI LAB MASTERY CHECKLIST</div>
+<h3 id="part-7-8-practical-lab-competencies">8 Practical Lab Competencies</h3>
+</div>
+<div class="chk-progress-box">
+<div class="chk-progress-text"><span id="w2ChkScore">0</span> / 8 Mastered</div>
+<div class="chk-progress-track">
+<div class="chk-progress-fill" id="w2ChkFill" style="width: 0%;"></div>
+</div>
+</div>
+</div>
+<div class="chk-list">
+<div class="checklist-item" id="w2-chk-item-1" onclick="toggleW2Checklist(1)">
+<div class="chk-box-wrap">
+<input id="w2-chk-1" onchange="updateW2ChecklistProgress()" onclick="event.stopPropagation()" type="checkbox"/>
+</div>
+<div class="chk-num">01</div>
+<div class="chk-text"><p>Perform WHOIS lookups and Google Dorking.</p></div>
+</div>
+<div class="checklist-item" id="w2-chk-item-2" onclick="toggleW2Checklist(2)">
+<div class="chk-box-wrap">
+<input id="w2-chk-2" onchange="updateW2ChecklistProgress()" onclick="event.stopPropagation()" type="checkbox"/>
+</div>
+<div class="chk-num">02</div>
+<div class="chk-text"><p>Collect publicly available emails using TheHarvester.</p></div>
+</div>
+<div class="checklist-item" id="w2-chk-item-3" onclick="toggleW2Checklist(3)">
+<div class="chk-box-wrap">
+<input id="w2-chk-3" onchange="updateW2ChecklistProgress()" onclick="event.stopPropagation()" type="checkbox"/>
+</div>
+<div class="chk-num">03</div>
+<div class="chk-text"><p>Perform forward and reverse DNS lookups using dig.</p></div>
+</div>
+<div class="checklist-item" id="w2-chk-item-4" onclick="toggleW2Checklist(4)">
+<div class="chk-box-wrap">
+<input id="w2-chk-4" onchange="updateW2ChecklistProgress()" onclick="event.stopPropagation()" type="checkbox"/>
+</div>
+<div class="chk-num">04</div>
+<div class="chk-text"><p>Discover in-scope subdomains using Fierce.</p></div>
+</div>
+<div class="checklist-item" id="w2-chk-item-5" onclick="toggleW2Checklist(5)">
+<div class="chk-box-wrap">
+<input id="w2-chk-5" onchange="updateW2ChecklistProgress()" onclick="event.stopPropagation()" type="checkbox"/>
+</div>
+<div class="chk-num">05</div>
+<div class="chk-text"><p>Run Nmap scans for host discovery, ports, service versions and OS detection.</p></div>
+</div>
+<div class="checklist-item" id="w2-chk-item-6" onclick="toggleW2Checklist(6)">
+<div class="chk-box-wrap">
+<input id="w2-chk-6" onchange="updateW2ChecklistProgress()" onclick="event.stopPropagation()" type="checkbox"/>
+</div>
+<div class="chk-num">06</div>
+<div class="chk-text"><p>Enumerate SMB using enum4linux in the authorised lab.</p></div>
+</div>
+<div class="checklist-item" id="w2-chk-item-7" onclick="toggleW2Checklist(7)">
+<div class="chk-box-wrap">
+<input id="w2-chk-7" onchange="updateW2ChecklistProgress()" onclick="event.stopPropagation()" type="checkbox"/>
+</div>
+<div class="chk-num">07</div>
+<div class="chk-text"><p>Investigate SNMP using Onesixtyone and approved enumeration tools.</p></div>
+</div>
+<div class="checklist-item" id="w2-chk-item-8" onclick="toggleW2Checklist(8)">
+<div class="chk-box-wrap">
+<input id="w2-chk-8" onchange="updateW2ChecklistProgress()" onclick="event.stopPropagation()" type="checkbox"/>
+</div>
+<div class="chk-num">08</div>
+<div class="chk-text"><p>Prepare a one-page attack-surface summary with evidence and priorities.</p></div>
+</div>
+</div>
+</div>
+
+<h3 id="part-7-34-final-takeaways">34. Final takeaways</h3>
+<ul>
+<li>
+<p>Reconnaissance: Gather target information; start passively and proceed actively only with authorisation.</p>
+</li>
+<li>
+<p>Fingerprinting and DNS: Identify web technologies, domains, IP addresses, subdomains and DNS configuration issues.</p>
+</li>
+<li>
+<p>Infrastructure discovery: Investigate subdomains, load balancers, proxy architecture and exposed internet devices.</p>
+</li>
+<li>
+<p>Nmap: Discover hosts and ports, identify services and versions, and attempt OS detection.</p>
+</li>
+<li>
+<p>Service enumeration: Use SMB, LDAP and SNMP to understand shared resources, directory identities and network devices.</p>
+</li>
+</ul>
+
+<div class="callout callout-exam">
+<div class="callout-icon">💡</div>
+<div class="callout-body">
+<div class="callout-badge">STUDY PRIORITY &amp; EXAM FOCUS</div>
+<div class="callout-text">Focus especially on Nmap flags and scan behaviour, DNS record types and AXFR, and the differences among SMB, LDAP and SNMP. These areas contain many commands, ports, definitions and comparisons that are useful for practical and exam preparation.</div>
+</div>
+</div>
+
+<h3 id="part-7-end-of-detailed-summary">End of detailed summary</h3>
+
+<div class="callout callout-lesson">
+<div class="callout-icon">📘</div>
+<div class="callout-body">
+<div class="callout-badge">STUDY NOTE &amp; LAB INTEGRITY</div>
+<div class="callout-text">This guide is based on the lecture summary and preserves its terminology, examples and organisation. Commands are illustrative and should be used only within an authorised lab or engagement.</div>
+</div>
+</div>
+
+    </section>
+    
+        </main>
+    </div>
+
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeMobileMenu()"></div>
+
+    <!-- Mobile & Tablet Floating Action Buttons -->
+    <div class="mobile-floating-nav" id="mobileFloatingNav">
+        <button class="floating-btn floating-toc-btn" onclick="toggleMobileMenu()" title="Open Table of Contents">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+                <line x1="8" y1="6" x2="21" y2="6"></line>
+                <line x1="8" y1="12" x2="21" y2="12"></line>
+                <line x1="8" y1="18" x2="21" y2="18"></line>
+                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+            <span>Menu</span>
+        </button>
+        <button class="floating-btn floating-top-btn" id="floatingTopBtn" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })" title="Back to top">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+                <polyline points="18 15 12 9 6 15"></polyline>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Global Search Modal -->
+    <div class="search-modal-backdrop" id="searchModal" onclick="if(event.target === this) closeSearchModal()">
+        <div class="search-modal-dialog">
+            <div class="search-modal-header">
+                <svg class="modal-search-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="globalSearchInput" placeholder="Search reconnaissance topics, Nmap scans, SMB/SNMP commands...">
+                <button class="search-modal-close" onclick="closeSearchModal()">ESC</button>
+            </div>
+            <ul class="search-results-list" id="searchResultsList"></ul>
+        </div>
+    </div>
+
+    <footer class="app-footer">
+        <div class="footer-left">
+            <span>🔍 Reconnaissance & Enumeration Study Guide</span>
+            <span>•</span>
+            <span>CCY4202 Ethical Hacking Week 2</span>
+        </div>
+        <div class="footer-right">
+            <button class="footer-btn" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                <span>Back to Top</span>
+            </button>
+        </div>
+    </footer>
+
+    <script>
+
+// Search index data
+const searchData = [{"title": "1. 1. What is reconnaissance?", "section": "Passive vs Active Information Gathering", "id": "part-1-1-what-is-reconnaissance", "category": "Subsection"}, {"title": "1. 2. Passive information gathering", "section": "Passive vs Active Information Gathering", "id": "part-1-2-passive-information-gathering", "category": "Subsection"}, {"title": "1. WHOIS", "section": "Passive vs Active Information Gathering", "id": "part-1-whois", "category": "Subsection"}, {"title": "1. Website mirroring", "section": "Passive vs Active Information Gathering", "id": "part-1-website-mirroring", "category": "Subsection"}, {"title": "1. Reverse IP lookup", "section": "Passive vs Active Information Gathering", "id": "part-1-reverse-ip-lookup", "category": "Subsection"}, {"title": "1. Google Hacking and GHDB", "section": "Passive vs Active Information Gathering", "id": "part-1-google-hacking-and-ghdb", "category": "Subsection"}, {"title": "1. FOCA and document metadata", "section": "Passive vs Active Information Gathering", "id": "part-1-foca-and-document-metadata", "category": "Subsection"}, {"title": "1. 3. Active information gathering", "section": "Passive vs Active Information Gathering", "id": "part-1-3-active-information-gathering", "category": "Subsection"}, {"title": "1. 4. Reconnaissance decision flow", "section": "Passive vs Active Information Gathering", "id": "part-1-4-reconnaissance-decision-flow", "category": "Subsection"}, {"title": "Part 1: Passive vs Active Information Gathering", "section": "Part 1", "id": "part-1", "category": "Part"}, {"title": "2. 5. Webserver fingerprinting", "section": "Webserver Fingerprinting & DNS Enumeration", "id": "part-2-5-webserver-fingerprinting", "category": "Subsection"}, {"title": "2. Tools: Burp Suite, WhatWeb and Netcraft", "section": "Webserver Fingerprinting & DNS Enumeration", "id": "part-2-tools-burp-suite-whatweb-and-netcraft", "category": "Subsection"}, {"title": "2. 6. DNS fundamentals", "section": "Webserver Fingerprinting & DNS Enumeration", "id": "part-2-6-dns-fundamentals", "category": "Subsection"}, {"title": "2. DNS resolution", "section": "Webserver Fingerprinting & DNS Enumeration", "id": "part-2-dns-resolution", "category": "Subsection"}, {"title": "2. 7. DNS Zone Transfers (AXFR)", "section": "Webserver Fingerprinting & DNS Enumeration", "id": "part-2-7-dns-zone-transfers-axfr", "category": "Subsection"}, {"title": "2. 8. DNS cache snooping", "section": "Webserver Fingerprinting & DNS Enumeration", "id": "part-2-8-dns-cache-snooping", "category": "Subsection"}, {"title": "Part 2: Webserver Fingerprinting & DNS Enumeration", "section": "Part 2", "id": "part-2", "category": "Part"}, {"title": "3. 9. Subdomain discovery", "section": "Subdomains, Load Balancers, CloudFlare & Shodan", "id": "part-3-9-subdomain-discovery", "category": "Subsection"}, {"title": "3. 10. Load balancer detection", "section": "Subdomains, Load Balancers, CloudFlare & Shodan", "id": "part-3-10-load-balancer-detection", "category": "Subsection"}, {"title": "3. 11. CloudFlare and origin-server exposure", "section": "Subdomains, Load Balancers, CloudFlare & Shodan", "id": "part-3-11-cloudflare-and-origin-server-exposure", "category": "Subsection"}, {"title": "3. 12. Shodan", "section": "Subdomains, Load Balancers, CloudFlare & Shodan", "id": "part-3-12-shodan", "category": "Subsection"}, {"title": "3. 13. Email harvesting", "section": "Subdomains, Load Balancers, CloudFlare & Shodan", "id": "part-3-13-email-harvesting", "category": "Subsection"}, {"title": "Part 3: Subdomains, Load Balancers, CloudFlare & Shodan", "section": "Part 3", "id": "part-3", "category": "Part"}, {"title": "4. 14. Introduction to Nmap", "section": "Active Scanning with Nmap", "id": "part-4-14-introduction-to-nmap", "category": "Subsection"}, {"title": "4. 15. Host discovery", "section": "Active Scanning with Nmap", "id": "part-4-15-host-discovery", "category": "Subsection"}, {"title": "4. 16. TCP and UDP scanning", "section": "Active Scanning with Nmap", "id": "part-4-16-tcp-and-udp-scanning", "category": "Subsection"}, {"title": "4. 17. Port targeting", "section": "Active Scanning with Nmap", "id": "part-4-17-port-targeting", "category": "Subsection"}, {"title": "4. 18. Important Nmap flags", "section": "Active Scanning with Nmap", "id": "part-4-18-important-nmap-flags", "category": "Subsection"}, {"title": "4. 19. Nmap output formats", "section": "Active Scanning with Nmap", "id": "part-4-19-nmap-output-formats", "category": "Subsection"}, {"title": "4. 20. Timing templates", "section": "Active Scanning with Nmap", "id": "part-4-20-timing-templates", "category": "Subsection"}, {"title": "4. 21. Stealth and evasion-related flags", "section": "Active Scanning with Nmap", "id": "part-4-21-stealth-and-evasion-related-flags", "category": "Subsection"}, {"title": "4. 22. Worked Nmap command", "section": "Active Scanning with Nmap", "id": "part-4-22-worked-nmap-command", "category": "Subsection"}, {"title": "4. 23. Common Nmap mistakes", "section": "Active Scanning with Nmap", "id": "part-4-23-common-nmap-mistakes", "category": "Subsection"}, {"title": "Part 4: Active Scanning with Nmap", "section": "Part 4", "id": "part-4", "category": "Part"}, {"title": "5. 24. What is service enumeration?", "section": "Service Enumeration: SMB, LDAP & SNMP", "id": "part-5-24-what-is-service-enumeration", "category": "Subsection"}, {"title": "5. 25. SMB enumeration", "section": "Service Enumeration: SMB, LDAP & SNMP", "id": "part-5-25-smb-enumeration", "category": "Subsection"}, {"title": "5. What enumeration may reveal:", "section": "Service Enumeration: SMB, LDAP & SNMP", "id": "part-5-what-enumeration-may-reveal", "category": "Subsection"}, {"title": "5. 26. LDAP enumeration", "section": "Service Enumeration: SMB, LDAP & SNMP", "id": "part-5-26-ldap-enumeration", "category": "Subsection"}, {"title": "5. 27. SNMP enumeration", "section": "Service Enumeration: SMB, LDAP & SNMP", "id": "part-5-27-snmp-enumeration", "category": "Subsection"}, {"title": "5. 28. SMB vs LDAP vs SNMP", "section": "Service Enumeration: SMB, LDAP & SNMP", "id": "part-5-28-smb-vs-ldap-vs-snmp", "category": "Subsection"}, {"title": "Part 5: Service Enumeration: SMB, LDAP & SNMP", "section": "Part 5", "id": "part-5", "category": "Part"}, {"title": "6. 29. Scenario", "section": "Integrated Reconnaissance Scenario", "id": "part-6-29-scenario", "category": "Subsection"}, {"title": "6. Phase 1: Passive reconnaissance", "section": "Integrated Reconnaissance Scenario", "id": "part-6-phase-1-passive-reconnaissance", "category": "Subsection"}, {"title": "6. Phase 2: Active reconnaissance", "section": "Integrated Reconnaissance Scenario", "id": "part-6-phase-2-active-reconnaissance", "category": "Subsection"}, {"title": "6. Phase 3: Service investigation and conclusions", "section": "Integrated Reconnaissance Scenario", "id": "part-6-phase-3-service-investigation-and-conclusions", "category": "Subsection"}, {"title": "6. Suggested one-page attack-surface report", "section": "Integrated Reconnaissance Scenario", "id": "part-6-suggested-one-page-attack-surface-report", "category": "Subsection"}, {"title": "Part 6: Integrated Reconnaissance Scenario", "section": "Part 6", "id": "part-6", "category": "Part"}, {"title": "7. 30. Key terminology", "section": "Exam Revision & Quick Reference", "id": "part-7-30-key-terminology", "category": "Subsection"}, {"title": "7. 31. Exam-style quick questions", "section": "Exam Revision & Quick Reference", "id": "part-7-31-exam-style-quick-questions", "category": "Subsection"}, {"title": "7. 32. Commonly confused concepts", "section": "Exam Revision & Quick Reference", "id": "part-7-32-commonly-confused-concepts", "category": "Subsection"}, {"title": "7. 33. Practical lab checklist", "section": "Exam Revision & Quick Reference", "id": "part-7-33-practical-lab-checklist", "category": "Subsection"}, {"title": "7. 8 Practical Lab Competencies", "section": "Exam Revision & Quick Reference", "id": "part-7-8-practical-lab-competencies", "category": "Subsection"}, {"title": "7. 34. Final takeaways", "section": "Exam Revision & Quick Reference", "id": "part-7-34-final-takeaways", "category": "Subsection"}, {"title": "7. End of detailed summary", "section": "Exam Revision & Quick Reference", "id": "part-7-end-of-detailed-summary", "category": "Subsection"}, {"title": "Part 7: Exam Revision & Quick Reference", "section": "Part 7", "id": "part-7", "category": "Part"}];
+
+// Reading Progress
+window.addEventListener('scroll', () => {
+    const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+    const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    const scrolled = (winScroll / height) * 100;
+    document.getElementById('readingProgressBar').style.width = scrolled + '%';
+    
+    // ScrollSpy
+    updateScrollSpy();
+});
+
+// ScrollSpy Active Link
+function updateScrollSpy() {
+    const sections = document.querySelectorAll('.section-card');
+    let currentId = '';
+    const scrollPos = window.scrollY + 120;
+
+    sections.forEach(sec => {
+        const top = sec.offsetTop;
+        const height = sec.offsetHeight;
+        if (scrollPos >= top && scrollPos < top + height) {
+            currentId = sec.getAttribute('id');
+        }
+    });
+
+    if (currentId) {
+        document.querySelectorAll('.toc-item').forEach(item => {
+            if (item.getAttribute('data-target') === currentId) {
+                item.classList.add('active');
+            } else {
+                item.classList.remove('active');
+            }
+        });
+    }
+}
+
+// Theme Switcher
+function toggleTheme() {
+    const html = document.documentElement;
+    const current = html.getAttribute('data-theme') || 'dark';
+    const next = current === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('pentest_guide_theme', next);
+    updateThemeIcon(next);
+}
+
+function updateThemeIcon(theme) {
+    const btn = document.getElementById('themeToggleBtn');
+    if (!btn) return;
+    if (theme === 'light') {
+        btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>';
+        btn.setAttribute('title', 'Switch to Dark Mode');
+    } else {
+        btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>';
+        btn.setAttribute('title', 'Switch to Light Mode');
+    }
+}
+
+// Initialize Theme
+(function initTheme() {
+    const saved = localStorage.getItem('pentest_guide_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+    window.addEventListener('DOMContentLoaded', () => updateThemeIcon(saved));
+})();
+
+// Copy Command Snippet
+function copyCommand(btn) {
+    const terminal = btn.closest('.terminal-card');
+    const cmdText = terminal.querySelector('.terminal-cmd').innerText.trim();
+    navigator.clipboard.writeText(cmdText).then(() => {
+        const copyText = btn.querySelector('.copy-text');
+        const orig = copyText.innerText;
+        copyText.innerText = 'Copied! ✓';
+        btn.style.color = '#10b981';
+        setTimeout(() => {
+            copyText.innerText = orig;
+            btn.style.color = '';
+        }, 2000);
+    }).catch(err => {
+        console.error('Could not copy text: ', err);
+    });
+}
+
+// Mobile Menu Controls
+function toggleMobileMenu() {
+    const sidebar = document.getElementById('sidebarNav');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    const isOpen = sidebar.classList.toggle('mobile-open');
+    if (backdrop) {
+        if (isOpen) backdrop.classList.add('active');
+        else backdrop.classList.remove('active');
+    }
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+}
+
+function closeMobileMenu() {
+    const sidebar = document.getElementById('sidebarNav');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    if (sidebar) sidebar.classList.remove('mobile-open');
+    if (backdrop) backdrop.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+// Auto-close mobile drawer when any TOC link is clicked
+window.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.toc-link, .toc-sublink').forEach(link => {
+        link.addEventListener('click', () => {
+            if (window.innerWidth <= 1024) {
+                closeMobileMenu();
+            }
+        });
+    });
+});
+
+// Floating Top Button visibility on scroll
+window.addEventListener('scroll', () => {
+    const topBtn = document.getElementById('floatingTopBtn');
+    if (topBtn) {
+        if (window.scrollY > 300) {
+            topBtn.classList.add('visible');
+        } else {
+            topBtn.classList.remove('visible');
+        }
+    }
+});
+
+// Part 7: Quick Questions Toggle
+function toggleW2Qa(num) {
+    const card = document.getElementById('w2-qa-' + num);
+    if (card) {
+        card.classList.toggle('open');
+    }
+}
+
+let allW2QaOpen = false;
+function toggleAllW2Qa() {
+    const cards = document.querySelectorAll('.qa-card');
+    allW2QaOpen = !allW2QaOpen;
+    cards.forEach(c => {
+        if (allW2QaOpen) c.classList.add('open');
+        else c.classList.remove('open');
+    });
+}
+
+// Part 7: Filter Terminology Table
+function filterTerminologyRows() {
+    const input = document.getElementById('termSearchInput');
+    const query = input.value.toLowerCase().trim();
+    const table = document.getElementById('terminologyTable');
+    const clearBtn = document.getElementById('clearTermFilterBtn');
+    const counter = document.getElementById('termVisibleCount');
+    
+    if (clearBtn) {
+        clearBtn.style.display = query ? 'block' : 'none';
+    }
+
+    if (!table) return;
+    const rows = table.querySelectorAll('tbody tr');
+    let visible = 0;
+
+    rows.forEach(r => {
+        const text = r.innerText.toLowerCase();
+        if (!query || text.includes(query)) {
+            r.style.display = '';
+            visible++;
+        } else {
+            r.style.display = 'none';
+        }
+    });
+
+    if (counter) {
+        counter.innerText = `${visible} / ${rows.length} terms visible`;
+    }
+}
+
+function clearTermFilter() {
+    const input = document.getElementById('termSearchInput');
+    if (input) {
+        input.value = '';
+        filterTerminologyRows();
+        input.focus();
+    }
+}
+
+// Part 7: Checklist Mastery Tracking
+function toggleW2Checklist(num) {
+    const chk = document.getElementById('w2-chk-' + num);
+    if (chk) {
+        chk.checked = !chk.checked;
+        updateW2ChecklistProgress();
+    }
+}
+
+function updateW2ChecklistProgress() {
+    const total = 8;
+    let checkedCount = 0;
+    for (let i = 1; i <= total; i++) {
+        const chk = document.getElementById('w2-chk-' + i);
+        const item = document.getElementById('w2-chk-item-' + i);
+        if (chk && chk.checked) {
+            checkedCount++;
+            if (item) item.classList.add('checked');
+        } else if (item) {
+            item.classList.remove('checked');
+        }
+    }
+    
+    const pct = Math.round((checkedCount / total) * 100);
+    const fill = document.getElementById('w2ChkFill');
+    const score = document.getElementById('w2ChkScore');
+    if (fill) fill.style.width = pct + '%';
+    if (score) score.innerText = checkedCount;
+
+    // Save state
+    const state = [];
+    for (let i = 1; i <= total; i++) {
+        const chk = document.getElementById('w2-chk-' + i);
+        state.push(chk && chk.checked ? 1 : 0);
+    }
+    localStorage.setItem('pentest_w2_chk_state', JSON.stringify(state));
+}
+
+(function restoreW2Checklist() {
+    window.addEventListener('DOMContentLoaded', () => {
+        const raw = localStorage.getItem('pentest_w2_chk_state');
+        if (raw) {
+            try {
+                const state = JSON.parse(raw);
+                state.forEach((val, i) => {
+                    const chk = document.getElementById('w2-chk-' + (i + 1));
+                    if (chk) chk.checked = !!val;
+                });
+                updateW2ChecklistProgress();
+            } catch(e) {}
+        }
+    });
+})();
+
+// Global Search Modal
+function openSearchModal() {
+    const modal = document.getElementById('searchModal');
+    modal.classList.add('open');
+    const input = document.getElementById('globalSearchInput');
+    input.value = '';
+    renderSearchResults('');
+    setTimeout(() => input.focus(), 50);
+}
+
+function closeSearchModal() {
+    document.getElementById('searchModal').classList.remove('open');
+}
+
+window.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        openSearchModal();
+    } else if (e.key === 'Escape') {
+        closeSearchModal();
+    }
+});
+
+function renderSearchResults(query) {
+    const list = document.getElementById('searchResultsList');
+    list.innerHTML = '';
+    const q = query.toLowerCase().trim();
+    
+    const matches = searchData.filter(item => {
+        if (!q) return true;
+        return item.title.toLowerCase().includes(q) || item.section.toLowerCase().includes(q);
+    }).slice(0, 10);
+
+    if (matches.length === 0) {
+        list.innerHTML = '<li style="padding: 16px; text-align: center; color: var(--text-muted); font-size: 13px;">No matching sections found</li>';
+        return;
+    }
+
+    matches.forEach(m => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+            <a href="#${m.id}" class="search-result-item" onclick="closeSearchModal()">
+                <div class="result-main">
+                    <span class="result-title">${m.title}</span>
+                    <span class="result-sec">${m.section}</span>
+                </div>
+                <span class="result-badge">${m.category}</span>
+            </a>
+        `;
+        list.appendChild(li);
+    });
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    const input = document.getElementById('globalSearchInput');
+    if (input) {
+        input.addEventListener('input', (e) => renderSearchResults(e.target.value));
+    }
+});
+
+    </script>
+<!-- home-btn -->
+<style>
+.home-fab,.author-tag{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom));z-index:2000;font-family:system-ui,-apple-system,sans-serif;line-height:1}
+.home-fab{left:calc(14px + env(safe-area-inset-left));display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;border-radius:999px;background:#10b981;color:#06251b;font-weight:700;font-size:14px;text-decoration:none;box-shadow:0 6px 18px rgba(0,0,0,.4);-webkit-tap-highlight-color:transparent}
+.home-fab:hover,.home-fab:active{background:#06b6d4}
+.author-tag{right:calc(14px + env(safe-area-inset-right));padding:8px 12px;border-radius:8px;background:rgba(15,23,42,.88);color:#94a3b8;font-weight:600;font-size:12px;max-width:45vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.author-tag b{color:#10b981}
+@media(max-width:600px){
+.home-fab{width:48px;height:48px;min-height:48px;padding:0;justify-content:center;font-size:22px}
+.home-fab span{display:none}
+.author-tag{font-size:11px;padding:6px 10px;bottom:calc(22px + env(safe-area-inset-bottom))}
+}
+@media print{.home-fab,.author-tag{display:none}}
+</style>
+<a class="home-fab" href="index.html" aria-label="Back to Home">&#8962;<span> Home</span></a>
+<div class="author-tag">Author: <b>Zaneso</b></div>
+<!-- /home-btn -->
+</body>
+</html>

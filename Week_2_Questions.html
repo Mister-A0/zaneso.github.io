@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Week 2 - Questions &amp; Exam Mode</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;800&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#090d16;--card:#111827;--hover:#162032;--text:#f8fafc;--muted:#94a3b8;--border:rgba(255,255,255,.1);--ok:#10b981;--bad:#f43f5e;--acc:#06b6d4}
+[data-theme="light"]{--bg:#f8fafc;--card:#fff;--hover:#f1f5f9;--text:#0f172a;--muted:#475569;--border:rgba(0,0,0,.1)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;line-height:1.6;min-height:100vh;overflow-x:hidden}
+header{max-width:900px;margin:0 auto;padding:56px 24px 16px;position:relative}
+.badge{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;padding:4px 12px;border-radius:20px;background:rgba(6,182,212,.15);color:#06b6d4;border:1px solid rgba(6,182,212,.3)}
+h1{font-size:clamp(26px,6vw,38px);font-weight:800;margin:14px 0 8px;line-height:1.2}
+h1 span{background:linear-gradient(135deg,#06b6d4,#10b981);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.sub{color:var(--muted)}
+.top{position:absolute;top:20px;right:24px;display:flex;gap:8px}
+.top button,.top a{width:44px;height:44px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:10px;cursor:pointer;font-size:18px;text-decoration:none;display:flex;align-items:center;justify-content:center}
+.modes{max-width:900px;margin:0 auto;padding:8px 24px;display:flex;gap:10px;flex-wrap:wrap}
+.btn{font:inherit;font-weight:700;font-size:14px;padding:10px 18px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer}
+.btn.on,.btn.primary{background:#06b6d4;color:#04131c;border-color:#06b6d4}
+main{max-width:900px;margin:0 auto;padding:8px 24px 56px}
+h2.part{font-family:'JetBrains Mono',monospace;font-size:13px;color:#06b6d4;text-transform:uppercase;letter-spacing:1px;margin:28px 0 10px}
+.q{background:var(--card);border:1px solid var(--border);border-top:3px solid var(--c,#06b6d4);border-radius:16px;padding:20px;margin-bottom:16px}
+.mcq{--c:#3b82f6}.tf{--c:#a855f7}.sa{--c:#f59e0b}.sc{--c:#06b6d4}.inf{--c:#64748b}
+.meta{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:800;color:var(--c);margin-bottom:8px}
+.qt{font-weight:600;margin-bottom:12px;overflow-wrap:anywhere}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer;background:var(--hover);overflow-wrap:anywhere}
+.opt input{margin-top:5px}
+.opt.right{border-color:var(--ok);background:rgba(16,185,129,.15)}
+.opt.wrong{border-color:var(--bad);background:rgba(244,63,94,.15)}
+.ans{margin-top:12px;padding:12px 14px;border-left:3px solid var(--ok);background:rgba(16,185,129,.08);border-radius:8px;font-size:14px;overflow-wrap:anywhere}
+ul{padding-left:20px;margin-top:6px}li{margin-bottom:6px;overflow-wrap:anywhere}
+.inf p{font-size:14px;margin-bottom:8px;overflow-wrap:anywhere}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border:1px solid var(--border);padding:8px;text-align:left;vertical-align:top}th{background:var(--hover)}
+#result{display:none;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;font-weight:700}
+.hide{display:none!important}
+.timer{font-family:'JetBrains Mono',monospace;color:var(--muted);align-self:center}
+footer{text-align:center;padding:24px 16px;color:var(--muted);font-size:13px;border-top:1px solid var(--border)}
+@media(max-width:600px){header{padding:72px 16px 12px}.modes,main{padding-left:16px;padding-right:16px}.top{top:16px;right:16px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="top"><a href="index.html" aria-label="Home">&#8962;</a><button id="theme" aria-label="Toggle theme">&#9788;</button></div>
+  <span class="badge">Week 2 &middot; CCY4202</span>
+  <h1><span>Week 2</span> Questions</h1>
+  <p class="sub">Study Mode shows every question with its answer. Exam Mode quizzes you on the MCQ and True/False questions.</p>
+</header>
+<div class="modes">
+  <button class="btn on" id="bStudy">Study Mode</button>
+  <button class="btn" id="bExam">Exam Mode (MCQ + T/F)</button>
+  <span class="timer hide" id="timer"></span>
+</div>
+<main id="app"></main>
+<footer>&copy; Zaneso &mdash; Penetration Testing Course Notes</footer>
+<script>
+const D={"Q": [{"part": "Part 1", "type": "mcq", "label": "Q1 \u00b7 MULTIPLE CHOICE", "tag": "MCQ", "q": "Which of the following is BEST classified as passive reconnaissance?", "opts": ["Sending TCP SYN packets to port 80 of the target", "Querying the WHOIS database for the target's registrant email", "Running nmap -sS against the target's web server", "Enumerating SMB shares via a null session"], "ans": 1, "ansText": "\u2713 correct: B \u2014 Querying the WHOIS database for the target's registrant email"}, {"part": "Part 1", "type": "tf", "label": "Q2 \u00b7 TRUE / FALSE", "tag": "T/F", "q": "Website mirroring tools such as HTTrack are considered active reconnaissance because they copy files from the target server.", "ans": false, "ansText": "FALSE \u2014 Mirroring pulls publicly served pages via standard HTTP, the same content a browser would request; it does not probe non-public services. It is therefore passive."}, {"part": "Part 1", "type": "sa", "label": "Q3 \u00b7 SHORT ANSWER", "tag": "SHORT", "q": "In two or three sentences, explain why the Google Hacking Database (GHDB) is considered a passive-recon asset and describe one concrete risk it exposes for the target.", "ansText": "MODEL ANSWER \u2014 GHDB is a curated catalogue of Google search dorks that surface sensitive files \u2014 passwords, email lists, password hashes, exposed admin panels \u2014 without ever sending a packet to the target. Because the indexing is done by Google's own crawlers, the attacker never touches the target. The risk it exposes is publication of files the organisation did not realise were crawlable, e.g., backup archives containing plaintext credentials."}, {"part": "Part 2", "type": "mcq", "label": "Q1 \u00b7 MULTIPLE CHOICE", "tag": "MCQ", "q": "To reverse-DNS-lookup 208.80.152.201 with dig, which query is correct?", "opts": ["dig 208.80.152.201 PTR", "dig 201.152.80.208.in-addr.arpa A", "dig 201.152.80.208.in-addr.arpa PTR", "dig -x 208.80.152.201.in-addr.arpa"], "ans": 2, "ansText": "Correct: C \u2014 dig 201.152.80.208.in-addr.arpa PTR (the PDF does not print an answer key for this question; C is the option marked in the PDF text and the technically correct reverse-lookup query)."}, {"part": "Part 2", "type": "tf", "label": "Q2 \u00b7 TRUE / FALSE", "tag": "T/F", "q": "WhatWeb is a passive footprinting tool because it queries Google instead of contacting the target.", "ans": false, "ansText": "FALSE \u2014 WhatWeb actively sends HTTP requests to the target site and analyses responses with 900+ plugins. It is an active footprinting tool. Netcraft is the passive counterpart."}, {"part": "Part 2", "type": "sa", "label": "Q3 \u00b7 SHORT ANSWER", "tag": "SHORT", "q": "Briefly describe the difference between the nonrecursive and recursive DNS cache snooping methods, and state which is less accurate and why.", "ansText": "The nonrecursive method sets the RD flag to 0 and asks the resolver for a record; if the resolver answers immediately, the record was already cached. The recursive method issues a normal recursive query and compares the returned TTL against the record's authoritative TTL \u2014 a smaller TTL indicates recent caching. The recursive method is less accurate because the comparison is indirect and TTLs are influenced by other caching resolvers upstream."}, {"part": "Part 3", "type": "mcq", "label": "Q1 \u00b7 MULTIPLE CHOICE", "tag": "MCQ", "q": "Which Shodan query finds Cisco IOS devices likely requiring no authentication?", "opts": ["cisco \"no-auth\"", "cisco-ios \"last-modified\"", "cisco default-password", "cisco port:23"], "ans": 1, "ansText": "Correct: B \u2014 cisco-ios \"last-modified\" (the PDF does not print an answer key here; B is the option marked in the PDF text and is the query used in the Integrated Scenario model answer)."}, {"part": "Part 3", "type": "tf", "label": "Q2 \u00b7 TRUE / FALSE", "tag": "T/F", "q": "CloudFlare proxies MX records, so mail headers cannot reveal the origin IP.", "ans": false, "ansText": "FALSE \u2014 CloudFlare does NOT proxy MX records. Registration confirmation emails expose the origin SMTP server IP in the first Received: header."}, {"part": "Part 3", "type": "sa", "label": "Q3 \u00b7 SHORT ANSWER", "tag": "SHORT", "q": "In 1\u20133 sentences, describe how WolframAlpha can aid subdomain discovery and why that matters for the main domain.", "ansText": "WolframAlpha returns high-traffic subdomains associated with a domain, surfacing hosts like mail.example.com or vpn.example.com that the main website does not link to. These neglected subdomains are often less hardened and can be used"}, {"part": "Part 4", "type": "mcq", "label": "Q1 \u00b7 MULTIPLE CHOICE", "tag": "MCQ", "q": "Which Nmap flag performs a SYN (half-open) scan AND requires root privileges?", "opts": ["-sT", "-sS", "-sU", "-sn"], "ans": 1, "ansText": "CORRECT B \u2014 -sS. SYN scans craft raw packets, which requires CAP_NET_RAW (root)."}, {"part": "Part 4", "type": "tf", "label": "Q2 \u00b7 TRUE / FALSE", "tag": "T/F", "q": "The -T5 (insane) timing template is the recommended setting for coursework because it is fastest and therefore most accurate.", "ans": false, "ansText": "ANSWER FALSE \u2014 T5 is so fast that targets often drop packets, producing false negatives. -T4 is the recommended balance of speed and stability."}, {"part": "Part 4", "type": "sa", "label": "Q3 \u00b7 SHORT ANSWER", "tag": "SHORT", "q": "In 2\u20133 sentences, explain what the command nmap -sS -sV -O -p- -T4 -oA scan_results 192.168.1.50 does, flag by flag.", "ansText": "MODEL ANSWER The command performs a SYN half-open scan (-sS), probes each open port for the service version (-sV), attempts OS fingerprinting (-O), scans all 65,535 TCP ports (-p-), uses the aggressive timing template (-T4) for speed, and writes the results in every supported output format to files prefixed scan_results (-oA). The target is 192.168.1.50."}, {"part": "Part 5", "type": "mcq", "label": "Q1 \u00b7 MULTIPLE CHOICE", "tag": "MCQ", "q": "On which port does SNMP run?", "opts": ["TCP 161", "UDP 161", "TCP 162", "UDP 389"], "ans": 1, "ansText": "CORRECT B \u2014 UDP 161."}, {"part": "Part 5", "type": "tf", "label": "Q2 \u00b7 TRUE / FALSE", "tag": "T/F", "q": "SNMP stands for \"Simple Network Mapping Protocol\".", "ans": false, "ansText": "ANSWER FALSE \u2014 SNMP stands for \"Simple Network Management Protocol\". The \"Mapping\" misstatement appears in informal documentation but is incorrect."}, {"part": "Part 5", "type": "sa", "label": "Q3 \u00b7 SHORT ANSWER", "tag": "SHORT", "q": "In 1\u20133 sentences, name the three SNMP enumeration tools covered in Part 5 and state what each does.", "ansText": "MODEL Onesixtyone scans and brute-forces SNMP community strings. Snmpenum (Perl-based) enumerates system information once a community string is known. The SolarWinds toolset is a legitimate network-admin suite that can be repurposed by testers to query the same MIB data from a graphical interface."}], "info": {"Part 3": {"title": "Email Harvesting", "lines": ["Classified as passive reconnaissance \u2014 no direct target engagement occurs.", "TheHarvester (Python tool): Gathers publicly available emails from search engines, PGP key servers, and LinkedIn.", "theHarvester -d example.com -b all", "Cross-referencing \u2014 pipl.com: Cross-reference individual emails using pipl.com, a large people-search engine, to build a social-engineering profile. COMBINED OUTPUT \u2192 spear-phishing target list, org chart inference, credential-stuffing seed list."]}, "Part 5": {"title": "SMB vs LDAP vs SNMP \u2014 Comparison Table", "table": [["Dimension", "SMB", "LDAP", "SNMP"], ["Default port", "TCP 445 (also 139)", "TCP/UDP 389 (636 LDAPS)", "UDP 161"], ["Primary data", "Shares, users, groups", "Directory entries (users, groups, OUs)", "System info, MIB tree, processes"], ["Anonymous access", "Null session to IPC$", "Anonymous bind (if misconfigured)", "Public community string (default)"], ["Common recon tool", "enum4linux, smbclient, rpcclient", "ldapsearch, ldeep, windapsearch", "onesixtyone, snmpenum, snmpwalk"], ["Auth risk", "Hash capture (NTLMv2)", "Plaintext bind creds (simple auth)", "v1/v2c community strings unencrypted"], ["Feeds (later weeks)", "Lateral movement (W4\u20136)", "Privilege escalation (W7\u20139)", "Device config / cred reuse (W11\u201313)"]]}}, "scen": {"text": "A mock target organisation has (1) a public website, (2) an exposed SNMP-enabled router, and (3) employees active on job sites. Design a full reconnaissance plan: which passive steps come first (naming specific tools: WHOIS, TheHarvester, Google dorking), which active steps follow (naming specific Nmap commands with real flags), and what attack-surface conclusions the gathered data supports (e.g., SNMP community-string brute-forcing via Onesixtyone as a follow-on step).", "phases": [["PHASE 1 \u00b7 PASSIVE (NO PACKETS TO TARGET)", ["WHOIS \u2014 whois example.com \u2014 recover registrant email, registrar, name servers; build a social-engineering profile.", "Google dorking via GHDB \u2014 site:example.com filetype:pdf, intitle:\"index of\" \u2014 surface cached documents, exposed directory listings, and indexed admin paths.", "TheHarvester \u2014 theHarvester -d example.com -b all \u2014 harvest employee emails from search engines and PGP key servers; cross-reference on pipl.com.", "Shodan queries \u2014 default-password and cisco-ios \"last-modified\" \u2014 scout perimeter device type without touching it."]], ["PHASE 2 \u00b7 ACTIVE (WITH AUTHORISATION)", ["Host discovery sweep \u2014 nmap -sn 192.168.1.0/24 \u2014 confirm live hosts (the SNMP-enabled router IP).", "Targeted service scan \u2014 nmap -sS -sV -O -p- -T4 -oA router_scan 192.168.1.1 \u2014 SYN scan of all TCP ports, version detection, OS fingerprinting, aggressive timing, all output formats.", "UDP-focused scan for SNMP \u2014 nmap -sU -p 161 --top-ports 50 -T4 192.168.1.1 \u2014 confirm SNMP/UDP 161 is open."]], ["PHASE 3 \u00b7 ATTACK-SURFACE CONCLUSIONS", ["Router exposes SNMP/UDP 161 \u2192 run onesixtyone -c communities.txt 192.168.1.1 to brute-force the community string.", "Email list + job-site intel from Phase 1 \u2192 seed a spear-phishing pretext targeting administrators named in job postings.", "If a community string is recovered \u2192 run snmpenum.pl 192.168.1.1 public linux.txt to dump system info, routing tables, and running processes \u2014 feeding Week 4\u20139 exploitation modules.", "OS fingerprint from Nmap feeds target prioritisation for later SMB / LDAP enumeration against adjacent Windows hosts."]]]}};
+const r=document.documentElement,s=localStorage.getItem('theme');
+if(s)r.setAttribute('data-theme',s);
+document.getElementById('theme').onclick=()=>{const n=r.getAttribute('data-theme')==='dark'?'light':'dark';r.setAttribute('data-theme',n);localStorage.setItem('theme',n)};
+const app=document.getElementById('app'),timer=document.getElementById('timer');
+const L='ABCD';let tick=null;
+const esc=t=>t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function head(q){return `<div class="meta"><span>${esc(q.label)}</span><span>${esc(q.tag)}</span></div><div class="qt">${esc(q.q)}</div>`}
+function infoBlock(i){
+  let h=`<div class="q inf"><div class="meta"><span>${esc(i.title)}</span><span>REFERENCE</span></div>`;
+  if(i.lines)h+=i.lines.map(l=>`<p>${esc(l)}</p>`).join('');
+  if(i.table)h+=`<div class="tw"><table>${i.table.map((row,k)=>'<tr>'+row.map(c=>k?`<td>${esc(c)}</td>`:`<th>${esc(c)}</th>`).join('')+'</tr>').join('')}</table></div>`;
+  return h+'</div>';
+}
+function study(){
+  clearInterval(tick);timer.classList.add('hide');
+  let h='',part='';
+  D.Q.forEach(q=>{
+    if(q.part!==part){
+      part=q.part;h+=`<h2 class="part">${part}</h2>`;
+      if(D.info[part])h+=infoBlock(D.info[part]);
+    }
+    h+=`<div class="q ${q.type}">${head(q)}`;
+    if(q.type==='mcq')h+=q.opts.map((o,i)=>`<div class="opt ${i===q.ans?'right':''}"><b>${L[i]}.</b><span>${esc(o)}</span></div>`).join('');
+    h+=`<div class="ans">${esc(q.ansText)}</div></div>`;
+  });
+  h+=`<h2 class="part">Closing · Scenario</h2><div class="q sc"><div class="meta"><span>Integrated Scenario — Design a Recon Plan</span><span>SCENARIO</span></div><div class="qt">${esc(D.scen.text)}</div><div class="ans"><b>MODEL ANSWER (depth expected of a strong student)</b>`;
+  D.scen.phases.forEach(p=>{h+=`<p style="margin-top:10px"><b>${esc(p[0])}</b></p><ul>${p[1].map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`});
+  h+=`</div></div>`;
+  app.innerHTML=h;
+}
+let ex=[];
+function exam(){
+  clearInterval(tick);
+  ex=D.Q.filter(q=>q.type!=='sa');
+  let h=`<div id="result"></div>`;
+  ex.forEach((q,k)=>{
+    h+=`<div class="q ${q.type}" id="e${k}"><div class="meta"><span>Question ${k+1} of ${ex.length}</span><span>${q.type==='mcq'?'Multiple Choice':'True or False'}</span></div><div class="qt">${esc(q.q)}</div>`;
+    const opts=q.type==='mcq'?q.opts.map((o,i)=>[i,L[i]+'. '+o]):[[1,'True'],[0,'False']];
+    h+=opts.map(([v,t])=>`<label class="opt"><input type="radio" name="q${k}" value="${v}"><span>${esc(t)}</span></label>`).join('');
+    h+=`<div class="ans hide"></div></div>`;
+  });
+  h+=`<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" id="sub">Submit Exam</button><button class="btn" id="rst">Restart</button></div>`;
+  app.innerHTML=h;
+  let t=0;timer.classList.remove('hide');timer.textContent='00:00';
+  tick=setInterval(()=>{t++;timer.textContent=String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0')},1000);
+  document.getElementById('rst').onclick=exam;
+  document.getElementById('sub').onclick=()=>{
+    clearInterval(tick);let sc=0;
+    ex.forEach((q,k)=>{
+      const box=document.getElementById('e'+k);
+      const c=box.querySelector('input:checked');
+      const correct=q.type==='mcq'?q.ans:(q.ans?1:0);
+      const val=c?+c.value:null;
+      if(val===correct)sc++;
+      box.querySelectorAll('label.opt').forEach(l=>{
+        const v=+l.querySelector('input').value;
+        if(v===correct)l.classList.add('right');
+        else if(v===val)l.classList.add('wrong');
+        l.querySelector('input').disabled=true;
+      });
+      const a=box.querySelector('.ans');a.classList.remove('hide');
+      a.innerHTML=(val===null?'<b>Not answered.</b> ':val===correct?'<b>Correct.</b> ':'<b>Incorrect.</b> ')+esc(q.ansText);
+    });
+    const res=document.getElementById('result');
+    res.style.display='block';
+    res.textContent=`Score: ${sc} / ${ex.length} (${Math.round(sc/ex.length*100)}%) · Time ${timer.textContent}`;
+    document.getElementById('sub').disabled=true;
+    window.scrollTo({top:0,behavior:'smooth'});
+  };
+}
+const bS=document.getElementById('bStudy'),bE=document.getElementById('bExam');
+bS.onclick=()=>{bS.classList.add('on');bE.classList.remove('on');study()};
+bE.onclick=()=>{bE.classList.add('on');bS.classList.remove('on');exam()};
+study();
+</script>
+</body>
+</html>

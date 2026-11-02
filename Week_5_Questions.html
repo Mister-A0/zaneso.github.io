@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Week 5 - Questions &amp; Exam Mode</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;800&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#090d16;--card:#111827;--hover:#162032;--text:#f8fafc;--muted:#94a3b8;--border:rgba(255,255,255,.1);--ok:#10b981;--bad:#f43f5e}
+[data-theme="light"]{--bg:#f8fafc;--card:#fff;--hover:#f1f5f9;--text:#0f172a;--muted:#475569;--border:rgba(0,0,0,.1)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;line-height:1.6;min-height:100vh;overflow-x:hidden}
+header{max-width:900px;margin:0 auto;padding:56px 24px 16px;position:relative}
+.badge{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;padding:4px 12px;border-radius:20px;background:rgba(244,63,94,.15);color:#f43f5e;border:1px solid rgba(244,63,94,.3)}
+h1{font-size:clamp(26px,6vw,38px);font-weight:800;margin:14px 0 8px;line-height:1.2}
+h1 span{background:linear-gradient(135deg,#f43f5e,#f59e0b);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.sub{color:var(--muted)}
+.top{position:absolute;top:20px;right:24px;display:flex;gap:8px}
+.top button,.top a{width:44px;height:44px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:10px;cursor:pointer;font-size:18px;text-decoration:none;display:flex;align-items:center;justify-content:center}
+.modes{max-width:900px;margin:0 auto;padding:8px 24px;display:flex;gap:10px;flex-wrap:wrap}
+.btn{font:inherit;font-weight:700;font-size:14px;padding:10px 18px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer}
+.btn.on,.btn.primary{background:#f43f5e;color:#fff;border-color:#f43f5e}
+main{max-width:900px;margin:0 auto;padding:8px 24px 56px}
+h2.part{font-family:'JetBrains Mono',monospace;font-size:13px;color:#f43f5e;text-transform:uppercase;letter-spacing:1px;margin:28px 0 10px}
+.q{background:var(--card);border:1px solid var(--border);border-top:3px solid var(--c,#f43f5e);border-radius:16px;padding:20px;margin-bottom:16px}
+.mcq{--c:#3b82f6}.tf{--c:#a855f7}.sa{--c:#f59e0b}.sc{--c:#06b6d4}
+.meta{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:800;color:var(--c);margin-bottom:8px}
+.qt{font-weight:600;margin-bottom:12px;overflow-wrap:anywhere}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer;background:var(--hover)}
+.opt input{margin-top:5px}
+.opt.right{border-color:var(--ok);background:rgba(16,185,129,.15)}
+.opt.wrong{border-color:var(--bad);background:rgba(244,63,94,.15)}
+.ans{margin-top:12px;padding:12px 14px;border-left:3px solid var(--ok);background:rgba(16,185,129,.08);border-radius:8px;font-size:14px}
+.ans p+p,.ans ul{margin-top:8px}.ans ul{padding-left:20px}
+.scn{background:var(--hover);border-radius:10px;padding:14px;margin-bottom:14px;font-size:14px;color:var(--muted)}
+.sub-h{font-weight:800;margin:6px 0}
+#bar{max-width:900px;margin:0 auto;padding:0 24px 8px}
+#result{display:none;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;font-weight:700}
+.hide{display:none!important}
+.timer{font-family:'JetBrains Mono',monospace;color:var(--muted);align-self:center}
+footer{text-align:center;padding:24px 16px;color:var(--muted);font-size:13px;border-top:1px solid var(--border)}
+@media(max-width:600px){header{padding:72px 16px 12px}.modes,main,#bar{padding-left:16px;padding-right:16px}.top{top:16px;right:16px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="top"><a href="index.html" aria-label="Home">&#8962;</a><button id="theme" aria-label="Toggle theme">&#9788;</button></div>
+  <span class="badge">Week 5 &middot; CCY4202</span>
+  <h1><span>Week 5</span> Questions</h1>
+  <p class="sub">Study Mode shows every question with its answer. Exam Mode quizzes you on the MCQ and True/False questions.</p>
+</header>
+<div class="modes">
+  <button class="btn on" id="bStudy">Study Mode</button>
+  <button class="btn" id="bExam">Exam Mode (MCQ + T/F)</button>
+  <span class="timer hide" id="timer"></span>
+</div>
+<div id="bar"></div>
+<main id="app"></main>
+<footer>&copy; Zaneso &mdash; Penetration Testing Course Notes</footer>
+<script>
+const D={"Q": [
+{"part": "Part 1 - XSS Foundations", "n": "Q1", "type": "mcq", "label": "Q1 \u00b7 Multiple Choice (MCQ)", "tag": "SINGLE ANSWER", "q": "Which XSS type executes entirely in the victim's browser, without the payload being stored on the server or reflected back by the server in the response body?[cite: 10]", "opts": ["Persistent (Stored) XSS", "Reflected XSS", "DOM-based XSS", "Server-side XSS"], "ans": 2, "ansText": "Correct answer: C - DOM-based XSS executes in the HTML environment (the DOM) without requiring server-side storage or server-side reflection.[cite: 10]"},
+{"part": "Part 1 - XSS Foundations", "n": "Q2", "type": "tf", "label": "Q2 \u00b7 True or False", "tag": "BINARY", "q": "Walking through the application with Burp Suite interception mode ON is the recommended reconnaissance approach.[cite: 10]", "ans": false, "ansText": "Correct answer: FALSE. Reconnaissance uses interception mode OFF so that requests flow through naturally and are logged in HTTP History for later analysis. Interception ON blocks each request and slows reconnaissance down.[cite: 10]"},
+{"part": "Part 1 - XSS Foundations", "n": "Q3", "type": "sa", "label": "Q3 \u00b7 Short Answer", "tag": "FREE RESPONSE", "q": "In one sentence, what is the defining trait that distinguishes Persistent XSS from Reflected XSS?[cite: 10]", "ansText": "Model answer: Persistent XSS is stored on the server (e.g., in a database) and fires for every visitor who loads the affected page, while Reflected XSS is bundled into a single request URL or form field and only fires when the specific victim submits or clicks that malicious link - Reflected XSS does not persist between sessions.[cite: 10]"},
+{"part": "Part 2 - DOM-Based XSS", "n": "Q1", "type": "mcq", "label": "Q1 \u00b7 Multiple Choice (MCQ)", "tag": "SINGLE ANSWER", "q": "Which HTML element does the DOM XSS payload taught in this lecture use to execute the javascript: URI?[cite: 11]", "opts": ["A direct <script> tag injected via innerHTML", "An <iframe> element whose src attribute is a javascript: URI", "An <img> element with an onerror handler", "An <svg> element with an onload handler"], "ans": 1, "ansText": "Correct answer: B - the iframe's src attribute is set to javascript:alert(xss), which the browser executes when it parses the iframe as a new document context.[cite: 11]"},
+{"part": "Part 2 - DOM-Based XSS", "n": "Q2", "type": "tf", "label": "Q2 \u00b7 True or False", "tag": "BINARY", "q": "The DOM XSS technique using an iframe to execute a javascript: URI is also known in the industry as XFS (Cross-Frame Scripting).[cite: 11]", "ans": true, "ansText": "Correct answer: TRUE. XFS is a recognised alias for this exact technique.[cite: 11]"},
+{"part": "Part 2 - DOM-Based XSS", "n": "Q3", "type": "sa", "label": "Q3 \u00b7 Short Answer", "tag": "FREE RESPONSE", "q": "In 1-2 sentences, why does the search bar represent a viable XSS attack surface even though it is the server that returns the response?[cite: 11]", "ansText": "Model answer: The flaw lies in the absence of input sanitation - the server echoes the user-supplied search term back into the page, and the browser then parses that response and builds the DOM, executing any embedded JavaScript. The attack surface is therefore the DOM that the browser constructs from the server's response, not the server itself.[cite: 11]"},
+{"part": "Part 3 - Persistent (Stored) XSS", "n": "Q1", "type": "mcq", "label": "Q1 \u00b7 Multiple Choice (MCQ)", "tag": "SINGLE ANSWER", "q": "Why does injecting an XSS payload into the True-Client-IP header succeed in producing Persistent (Stored) XSS in Juice Shop?[cite: 12]", "opts": ["The header is reflected in the URL immediately after submission", "The server stores the header value as the logout IP and later renders it on the Last Login IP page without sanitisation", "The browser blocks the header and refuses to send the request", "The header is encrypted end-to-end and cannot carry a payload"], "ans": 1, "ansText": "Correct answer: B - the server stores the header value as part of the logout record and renders it later without sanitisation, satisfying both conditions for stored XSS (persistence + unsanitised rendering).[cite: 12]"},
+{"part": "Part 3 - Persistent (Stored) XSS", "n": "Q2", "type": "tf", "label": "Q2 \u00b7 True or False", "tag": "BINARY", "q": "Persistent XSS injection points are limited to traditional form fields such as comment boxes, blog post bodies, and profile bios.[cite: 12]", "ans": false, "ansText": "Correct answer: FALSE. Any data the server stores and later displays can serve as a Persistent XSS injection point-including HTTP headers (True-Client-IP, X-Forwarded-For, User-Agent), audit log entries, and metadata fields.[cite: 12]"},
+{"part": "Part 3 - Persistent (Stored) XSS", "n": "Q3", "type": "sa", "label": "Q3 \u00b7 Short Answer", "tag": "FREE RESPONSE", "q": "Name the two HTTP headers mentioned in this lecture that can be abused as injection vectors for stored XSS, and briefly explain why they are vulnerable.[cite: 12]", "ansText": "Model answer: True-Client-IP and X-Forwarded-For. Both are de-facto standards for upstream proxies to convey the client's real IP to the server, but because developers assume they contain a benign IP address string, they are typically not sanitised. If the server logs them and later renders them on an admin or user-facing page (such as a Last Login IP page), any injected payload executes in the viewer's browser.[cite: 12]"},
+{"part": "Part 4 - Reflected XSS", "n": "Q1", "type": "mcq", "label": "Q1 \u00b7 Multiple Choice (MCQ)", "tag": "SINGLE ANSWER", "q": "Which property is the defining trait of Reflected XSS, as taught in this lecture?[cite: 13]", "opts": ["The payload is stored in the database and fires for every visitor", "The payload executes inside a server-side script context only", "The payload travels in the same request/response cycle and requires the victim to submit or click the malicious URL", "The payload is executed via a DOM event without any server involvement"], "ans": 2, "ansText": "Correct answer: C - Reflected XSS is defined by its single-request nature: the payload is bundled into the request, reflected back in the response, and never persisted. The victim must submit or click the malicious URL themselves.[cite: 13]"},
+{"part": "Part 4 - Reflected XSS", "n": "Q2", "type": "tf", "label": "Q2 \u00b7 True or False", "tag": "BINARY", "q": "Reflected XSS fires automatically for every visitor to a page, even without that visitor interacting with a malicious URL.[cite: 13]", "ans": false, "ansText": "Correct answer: FALSE. Because Reflected XSS payloads are not stored, they only fire when a specific victim submits or clicks the crafted URI... Other visitors to the same page see no payload.[cite: 13]"},
+{"part": "Part 4 - Reflected XSS", "n": "Q3", "type": "sa", "label": "Q3 \u00b7 Short Answer", "tag": "FREE RESPONSE", "q": "In 1-3 sentences, why must a Reflected XSS attacker typically trick the victim into clicking a link or submitting a form?[cite: 13]", "ansText": "Model answer: Because the payload is not stored on the server - it must travel in the request itself (typically inside a URL parameter such as ?id=<iframe...> or a form field). Without the victim submitting or clicking the crafted URL, the malicious payload is never sent to the server and so is never reflected back to be executed. This is why Reflected XSS exploitation almost always involves phishing, link-shortening, or other social-engineering techniques to deliver the malicious URL.[cite: 13]"},
+{"part": "Part 5 - CSRF", "n": "Q1", "type": "mcq", "label": "Q1 \u00b7 Multiple Choice (MCQ)", "tag": "SINGLE ANSWER", "q": "Which defense most directly prevents a victim's browser from automatically sending their session cookie on a cross-site forged request?[cite: 14]", "opts": ["An anti-CSRF token embedded in the form", "The SameSite cookie attribute (Strict or Lax)", "An Origin/Referer header check", "Re-authentication before sensitive actions"], "ans": 1, "ansText": "Correct answer: B - SameSite Strict or Lax instructs the browser itself NOT to attach the session cookie to cross-site requests, defeating CSRF at the transport layer before the request ever reaches the server.[cite: 14]"},
+{"part": "Part 5 - CSRF", "n": "Q2", "type": "tf", "label": "Q2 \u00b7 True or False", "tag": "BINARY", "q": "HttpOnly cookies prevent CSRF because they stop JavaScript from sending the cookie.[cite: 14]", "ans": false, "ansText": "Correct answer: FALSE. HttpOnly only prevents JavaScript from READING the cookie value (e.g., document.cookie). The browser still SENDS the cookie automatically on cross-site requests-so CSRF still works. HttpOnly is an XSS defense (cookie theft), not a CSRF defense.[cite: 14]"},
+{"part": "Part 5 - CSRF", "n": "Q3", "type": "sa", "label": "Q3 \u00b7 Short Answer", "tag": "FREE RESPONSE", "q": "In one sentence, what is the core difference between XSS and CSRF in terms of what the attacker achieves?[cite: 14]", "ansText": "Model answer: XSS lets an attacker execute script INSIDE the target site's context (read/steal data, deface content, perform actions as the user from within the site itself), while CSRF lets an attacker force the victim's browser to submit a state-changing request to the target site WITHOUT executing any script on the target site at all - the attacker never gains code execution, only request forgery.[cite: 14]"},
+{"part": "Part 6 - Recognition & Routing", "n": "Q1", "type": "mcq", "label": "Q1 \u00b7 Multiple Choice (MCQ)", "tag": "SINGLE ANSWER", "q": "The /ftp/ directory exposure and Poison Null Byte (%2500) bypass seen in Juice Shop belong to which OWASP category, and which future week covers it in depth?[cite: 15]", "opts": ["Broken Access Control - Week 7", "Sensitive Data Exposure - Week 9", "Injection - Week 4", "Broken Authentication - Week 10"], "ans": 1, "ansText": "Correct answer: B - exposed directories and file-type restriction bypasses are classic Sensitive Data Exposure; Week 9 covers this category in depth.[cite: 15]"},
+{"part": "Part 6 - Recognition & Routing", "n": "Q2", "type": "tf", "label": "Q2 \u00b7 True or False", "tag": "BINARY", "q": "Horizontal Privilege Escalation (e.g., viewing another user's shopping basket by changing the /rest/basket/<id> parameter) is covered in depth this week.[cite: 15]", "ans": false, "ansText": "Correct answer: FALSE. Horizontal vs Vertical Privilege Escalation is reserved for Week 7 - Broken Access Control.[cite: 15]"},
+{"part": "Part 6 - Recognition & Routing", "n": "Q3", "type": "sa", "label": "Q3 \u00b7 Short Answer", "tag": "FREE RESPONSE", "q": "Match each Juice Shop observation to its correct future course week: (i) SQLi login bypass with or 1=1--; (ii) brute-force of the Administrator account with SecLists best1050.txt; (iii) exposed /ftp/ directory.[cite: 15]", "ansText": "Model answer: (i) SQLi login bypass \u2192 Week 4 - Injection (already covered, today was a live demo). (ii) Brute-force of Administrator \u2192 Week 7 & Week 10 - Broken Authentication/Password Attacks. (iii) Exposed /ftp/ directory \u2192 Week 9 - Sensitive Data Exposure.[cite: 15]"}
+]};
+const r=document.documentElement,s=localStorage.getItem('theme');
+if(s)r.setAttribute('data-theme',s);
+document.getElementById('theme').onclick=()=>{const n=r.getAttribute('data-theme')==='dark'?'light':'dark';r.setAttribute('data-theme',n);localStorage.setItem('theme',n)};
+const app=document.getElementById('app'),bar=document.getElementById('bar'),timer=document.getElementById('timer');
+const L='ABCD';let tick=null;
+const esc=t=>t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function head(q){return `<div class="meta"><span>${esc(q.label)}</span><span>${esc(q.tag)}</span></div><div class="qt">${esc(q.q)}</div>`}
+function study(){
+  clearInterval(tick);timer.classList.add('hide');bar.innerHTML='';
+  let h='',part='';
+  D.Q.forEach(q=>{
+    if(q.part!==part){part=q.part;h+=`<h2 class="part">${part}</h2>`}
+    h+=`<div class="q ${q.type}">${head(q)}`;
+    if(q.type==='mcq')h+=q.opts.map((o,i)=>`<div class="opt ${i===q.ans?'right':''}"><b>${L[i]}.</b><span>${esc(o)}</span></div>`).join('');
+    h+=`<div class="ans">${esc(q.ansText)}</div></div>`;
+  });
+  if (D.scen && D.scen.qs && D.scen.qs.length > 0) {
+    h+=`<h2 class="part">Integrated Scenario</h2><div class="q sc"><div class="meta"><span>Mock Client Engagement</span><span>~10 min · exam-style</span></div><div class="qt">${esc(D.scen.title)}</div><div class="scn">${esc(D.scen.text)}</div>`;
+    D.scen.qs.forEach(x=>{
+      h+=`<div class="qt"><b>${x[0]} · ${x[1]}</b> — ${esc(x[2])}</div><div class="ans"><div class="sub-h">${esc(x[3])} (${x[4]})</div>`;
+      x[5].forEach(p=>h+=`<p>${esc(p)}</p>`);
+      if(x[6].length)h+=`<ul>${x[6].map(i=>`<li>${esc(i)}</li>`).join('')}</ul>`;
+      if(x[7])h+=`<p>${esc(x[7])}</p>`;
+      h+=`</div>`;
+    });
+    h+=`</div>`;
+  }
+  app.innerHTML=h;
+}
+let ex=[];
+function exam(){
+  clearInterval(tick);
+  ex=D.Q.filter(q=>q.type!=='sa');
+  bar.innerHTML='';
+  let h=`<div id="result"></div>`;
+  ex.forEach((q,k)=>{
+    h+=`<div class="q ${q.type}" id="e${k}"><div class="meta"><span>Question ${k+1} of ${ex.length}</span><span>${q.type==='mcq'?'Multiple Choice':'True or False'}</span></div><div class="qt">${esc(q.q)}</div>`;
+    const opts=q.type==='mcq'?q.opts.map((o,i)=>[i,L[i]+'. '+o]):[[1,'True'],[0,'False']];
+    h+=opts.map(([v,t])=>`<label class="opt"><input type="radio" name="q${k}" value="${v}"><span>${esc(t)}</span></label>`).join('');
+    h+=`<div class="ans hide"></div></div>`;
+  });
+  h+=`<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" id="sub">Submit Exam</button><button class="btn" id="rst">Restart</button></div>`;
+  app.innerHTML=h;
+  let t=0;timer.classList.remove('hide');timer.textContent='00:00';
+  tick=setInterval(()=>{t++;timer.textContent=String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0')},1000);
+  document.getElementById('rst').onclick=exam;
+  document.getElementById('sub').onclick=()=>{
+    clearInterval(tick);let sc=0;
+    ex.forEach((q,k)=>{
+      const box=document.getElementById('e'+k);
+      const c=box.querySelector('input:checked');
+      const correct=q.type==='mcq'?q.ans:(q.ans?1:0);
+      const val=c?+c.value:null;
+      if(val===correct)sc++;
+      box.querySelectorAll('label.opt').forEach(l=>{
+        const v=+l.querySelector('input').value;
+        if(v===correct)l.classList.add('right');
+        else if(v===val)l.classList.add('wrong');
+        l.querySelector('input').disabled=true;
+      });
+      const a=box.querySelector('.ans');a.classList.remove('hide');
+      a.innerHTML=(val===null?'<b>Not answered.</b> ':val===correct?'<b>Correct.</b> ':'<b>Incorrect.</b> ')+esc(q.ansText);
+    });
+    const res=document.getElementById('result');
+    res.style.display='block';
+    res.textContent=`Score: ${sc} / ${ex.length} (${Math.round(sc/ex.length*100)}%) · Time ${timer.textContent}`;
+    document.getElementById('sub').disabled=true;
+    window.scrollTo({top:0,behavior:'smooth'});
+  };
+}
+const bS=document.getElementById('bStudy'),bE=document.getElementById('bExam');
+bS.onclick=()=>{bS.classList.add('on');bE.classList.remove('on');study()};
+bE.onclick=()=>{bE.classList.add('on');bS.classList.remove('on');exam()};
+study();
+</script>
+</body>
+</html>

@@ -1,0 +1,3339 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <title>Week 3: Web Enumeration & OWASP Top 10 — Detailed Lecture Summary</title>
+    <meta name="description" content="Comprehensive Week 3 study guide covering Web Enumeration methodology, OWASP Top 10 risks, exploitation logic, and hands-on OWASP ZAP workflows.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+
+:root {
+    --bg-page: #090d16;
+    --bg-surface: #0f172a;
+    --bg-card: #111827;
+    --bg-card-hover: #162032;
+    --bg-sidebar: #0b1120;
+    --bg-terminal: #070a12;
+    --bg-terminal-header: #111827;
+    
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-card: rgba(255, 255, 255, 0.1);
+    --border-hover: rgba(2, 132, 199, 0.4);
+    
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    
+    --accent-emerald: #10b981;
+    --accent-cyan: #06b6d4;
+    --accent-blue: #0284c7;
+    --accent-purple: #a855f7;
+    --accent-amber: #f59e0b;
+    --accent-orange: #f97316;
+    --accent-rose: #f43f5e;
+
+    --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', Menlo, Consolas, monospace;
+
+    --shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="light"] {
+    --bg-page: #f8fafc;
+    --bg-surface: #ffffff;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f1f5f9;
+    --bg-sidebar: #f1f5f9;
+    --bg-terminal: #0f172a;
+    --bg-terminal-header: #1e293b;
+    
+    --border-subtle: rgba(0, 0, 0, 0.08);
+    --border-card: rgba(0, 0, 0, 0.1);
+    --border-hover: rgba(2, 132, 199, 0.4);
+    
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+
+    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.07);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 80px;
+}
+
+body {
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    line-height: 1.7;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bg-page);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--border-subtle);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-cyan);
+}
+
+#readingProgressBar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan), var(--accent-orange));
+    z-index: 1000;
+    transition: width 0.1s ease-out;
+}
+
+.app-navbar {
+    position: sticky;
+    top: 0;
+    z-index: 900;
+    background: rgba(11, 17, 32, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border-subtle);
+    transition: background-color 0.25s ease;
+}
+[data-theme="light"] .app-navbar {
+    background: rgba(255, 255, 255, 0.88);
+}
+
+.nav-container {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 0 24px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: var(--text-primary);
+}
+
+.brand-icon-shield {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-orange));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 12px rgba(2, 132, 199, 0.3);
+    color: #fff;
+}
+
+.brand-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.brand-title {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+    line-height: 1.2;
+}
+
+.brand-subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.nav-btn:hover {
+    color: var(--text-primary);
+    border-color: var(--accent-cyan);
+    background: var(--bg-card-hover);
+}
+
+.theme-toggle-btn {
+    padding: 8px;
+    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    justify-content: center;
+}
+
+.mobile-menu-btn {
+    display: none;
+    padding: 8px;
+    width: 36px;
+    height: 36px;
+    justify-content: center;
+}
+
+/* Main Layout */
+.app-layout {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 32px 24px;
+    display: grid;
+    grid-template-columns: 290px 1fr;
+    gap: 40px;
+    align-items: start;
+}
+
+/* Sidebar TOC */
+.sidebar-toc {
+    position: sticky;
+    top: 96px;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    background: var(--bg-sidebar);
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-card);
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 14px;
+}
+
+.sidebar-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.sidebar-header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sidebar-close-btn {
+    display: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+    font-size: 14px;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.sidebar-close-btn:hover {
+    color: var(--accent-rose);
+    border-color: var(--accent-rose);
+}
+
+.toc-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 12px;
+    background: rgba(2, 132, 199, 0.15);
+    color: var(--accent-cyan);
+    border: 1px solid rgba(2, 132, 199, 0.25);
+}
+
+.sidebar-jump-box {
+    margin-bottom: 14px;
+}
+
+.sidebar-search-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s ease;
+}
+.sidebar-search-btn:hover {
+    border-color: var(--accent-cyan);
+    color: var(--text-primary);
+}
+
+.sidebar-kbd {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    padding: 2px 5px;
+    border-radius: 4px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+}
+
+.toc-nav {
+    flex: 1;
+}
+
+.toc-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.toc-item {
+    border-radius: 8px;
+    transition: background-color 0.15s ease;
+}
+
+.toc-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.15s ease;
+}
+
+.toc-link:hover {
+    color: var(--text-primary);
+    background: var(--bg-card-hover);
+}
+
+.toc-item.active > .toc-link {
+    color: var(--accent-cyan);
+    background: rgba(6, 182, 212, 0.1);
+    font-weight: 700;
+}
+
+.toc-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.toc-num {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--text-muted);
+    background: var(--bg-card);
+    padding: 2px 5px;
+    border-radius: 4px;
+    border: 1px solid var(--border-subtle);
+}
+
+.toc-text {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.toc-sublist {
+    list-style: none;
+    padding-left: 28px;
+    margin: 4px 0 6px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    border-left: 1px solid var(--border-subtle);
+    margin-left: 16px;
+}
+
+.toc-sublink {
+    text-decoration: none;
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.4;
+    display: block;
+    padding: 3px 6px;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+}
+.toc-sublink:hover {
+    color: var(--accent-cyan);
+}
+
+.sidebar-footer {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.sidebar-study-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-muted);
+}
+.sidebar-study-card a {
+    color: var(--accent-cyan);
+    text-decoration: none;
+    font-weight: 600;
+}
+.sidebar-study-card a:hover {
+    text-decoration: underline;
+}
+.study-card-title {
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+/* Main Content Area */
+.main-content {
+    min-width: 0;
+    max-width: 980px;
+}
+
+/* Hero Section */
+.hero-section {
+    position: relative;
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: 20px;
+    padding: 44px;
+    margin-bottom: 36px;
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+}
+
+.hero-glow {
+    position: absolute;
+    top: -120px;
+    right: -100px;
+    width: 380px;
+    height: 380px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(2, 132, 199, 0.22) 0%, rgba(249, 115, 22, 0.12) 50%, transparent 80%);
+    pointer-events: none;
+}
+
+.hero-badge-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    background: rgba(2, 132, 199, 0.15);
+    color: var(--accent-cyan);
+    border: 1px solid rgba(2, 132, 199, 0.3);
+}
+
+.hero-badge.badge-secondary {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--accent-emerald);
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.hero-badge.badge-lab {
+    background: rgba(249, 115, 22, 0.15);
+    color: var(--accent-orange);
+    border-color: rgba(249, 115, 22, 0.3);
+}
+
+.badge-pulse {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-cyan);
+    box-shadow: 0 0 8px var(--accent-cyan);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.hero-title {
+    font-size: 38px;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 14px;
+    letter-spacing: -0.8px;
+}
+
+.gradient-text {
+    background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-cyan) 50%, var(--accent-orange) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero-subtitle {
+    font-size: 17px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 24px;
+    max-width: 820px;
+}
+
+.topic-tags-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.topic-tag {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+}
+
+.guide-usage-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    background: rgba(2, 132, 199, 0.07);
+    border: 1px solid rgba(2, 132, 199, 0.25);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+}
+
+.guide-usage-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+    line-height: 1;
+    margin-top: 2px;
+}
+
+.guide-usage-title {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: var(--accent-cyan);
+    margin-bottom: 4px;
+}
+
+.guide-usage-content p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.learning-obj-box {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 26px;
+}
+
+.obj-header {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: var(--accent-emerald);
+    margin-bottom: 10px;
+}
+
+.obj-list {
+    margin: 0 0 0 20px;
+    color: var(--text-secondary);
+    font-size: 13.5px;
+}
+.obj-list li {
+    margin-bottom: 6px;
+}
+
+.quick-stats-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    padding: 16px 20px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.stat-number {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--accent-orange);
+    font-family: var(--font-mono);
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-divider {
+    width: 1px;
+    height: 32px;
+    background: var(--border-subtle);
+}
+
+/* Content Cards */
+.content-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: 18px;
+    padding: 36px;
+    margin-bottom: 32px;
+    box-shadow: var(--shadow-card);
+    transition: border-color 0.2s ease;
+}
+
+.content-card:hover {
+    border-color: var(--border-hover);
+}
+
+.section-card-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-bottom: 20px;
+    margin-bottom: 26px;
+    border-bottom: 1px solid var(--border-subtle);
+    position: relative;
+}
+
+.sec-num-badge {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(2, 132, 199, 0.2), rgba(249, 115, 22, 0.15));
+    border: 1px solid rgba(2, 132, 199, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--accent-cyan);
+    flex-shrink: 0;
+}
+
+.sec-title-wrap {
+    flex: 1;
+}
+
+.sec-kicker {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--accent-orange);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.section-heading {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+    color: var(--text-primary);
+    line-height: 1.3;
+}
+
+.anchor-link {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 20px;
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 0.2s ease, color 0.2s ease;
+}
+.section-card-header:hover .anchor-link {
+    opacity: 1;
+}
+.anchor-link:hover {
+    color: var(--accent-cyan);
+}
+
+h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 28px 0 14px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+h3:first-of-type {
+    margin-top: 10px;
+}
+
+p {
+    margin-bottom: 16px;
+    color: var(--text-secondary);
+}
+
+strong {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+em {
+    color: var(--accent-cyan);
+    font-style: italic;
+}
+
+ul, ol {
+    margin: 12px 0 20px 24px;
+    color: var(--text-secondary);
+}
+
+li {
+    margin-bottom: 8px;
+    line-height: 1.6;
+}
+
+li::marker {
+    color: var(--accent-cyan);
+    font-weight: 700;
+}
+
+/* Tables */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    margin: 20px 0 24px 0;
+    border-radius: 12px;
+    border: 1px solid var(--border-subtle);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    -webkit-overflow-scrolling: touch;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    text-align: left;
+}
+
+thead th {
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    font-weight: 700;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.6px;
+    white-space: nowrap;
+}
+
+tbody tr {
+    border-bottom: 1px solid var(--border-subtle);
+    transition: background-color 0.15s ease;
+}
+
+tbody tr:last-child {
+    border-bottom: none;
+}
+
+tbody tr:hover {
+    background: var(--bg-card-hover);
+}
+
+tbody td {
+    padding: 12px 16px;
+    color: var(--text-secondary);
+    vertical-align: top;
+}
+
+tbody td strong {
+    color: var(--text-primary);
+}
+
+/* Badges */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+}
+
+.owasp-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-weight: 800;
+    font-size: 11px;
+    background: rgba(249, 115, 22, 0.15);
+    color: var(--accent-orange);
+    border: 1px solid rgba(249, 115, 22, 0.35);
+}
+
+.step-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-weight: 800;
+    font-size: 11px;
+    background: rgba(2, 132, 199, 0.15);
+    color: var(--accent-cyan);
+    border: 1px solid rgba(2, 132, 199, 0.35);
+}
+
+.badge-free {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-paid {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-xss.stored {
+    background: rgba(244, 63, 94, 0.15);
+    color: #f43f5e;
+    border: 1px solid rgba(244, 63, 94, 0.35);
+}
+.badge-xss.reflected {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.35);
+}
+.badge-xss.dom {
+    background: rgba(6, 182, 212, 0.15);
+    color: #06b6d4;
+    border: 1px solid rgba(6, 182, 212, 0.35);
+}
+
+.badge-os.linux {
+    background: rgba(2, 132, 199, 0.15);
+    color: #38bdf8;
+    border: 1px solid rgba(2, 132, 199, 0.3);
+}
+.badge-os.windows {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+/* Terminal Card */
+.terminal-card {
+    background: var(--bg-terminal);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    margin: 18px 0 22px 0;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.terminal-header {
+    background: var(--bg-terminal-header);
+    padding: 9px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.terminal-dots {
+    display: flex;
+    gap: 6px;
+}
+
+.dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+}
+.dot-red { background: #ef4444; }
+.dot-yellow { background: #f59e0b; }
+.dot-green { background: #10b981; }
+
+.terminal-title {
+    font-size: 12px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.copy-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 600;
+    font-family: var(--font-sans);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.copy-btn:hover {
+    background: rgba(2, 132, 199, 0.15);
+    color: var(--accent-cyan);
+    border-color: rgba(2, 132, 199, 0.3);
+}
+
+.terminal-body {
+    padding: 16px 20px;
+    overflow-x: auto;
+}
+
+.terminal-line {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 13.5px;
+}
+
+.terminal-prompt {
+    color: var(--accent-orange);
+    user-select: none;
+    font-weight: 700;
+}
+
+.terminal-cmd {
+    color: #e2e8f0;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+/* Callout Boxes */
+.callout {
+    display: flex;
+    gap: 16px;
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin: 20px 0;
+    border: 1px solid transparent;
+}
+
+.callout-icon {
+    font-size: 22px;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.callout-body {
+    flex: 1;
+}
+
+.callout-badge {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.callout-text {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+.callout-casestudy {
+    background: rgba(244, 63, 94, 0.08);
+    border-color: rgba(244, 63, 94, 0.3);
+}
+.callout-casestudy .callout-badge { color: var(--accent-rose); }
+
+.callout-lesson {
+    background: rgba(2, 132, 199, 0.08);
+    border-color: rgba(2, 132, 199, 0.3);
+}
+.callout-lesson .callout-badge { color: var(--accent-cyan); }
+
+.callout-safety {
+    background: rgba(245, 158, 11, 0.08);
+    border-color: rgba(245, 158, 11, 0.3);
+}
+.callout-safety .callout-badge { color: var(--accent-amber); }
+
+/* Proxy Architecture Flow Card */
+.proxy-flow-card {
+    background: linear-gradient(135deg, rgba(2, 132, 199, 0.08), rgba(249, 115, 22, 0.08));
+    border: 1px solid rgba(2, 132, 199, 0.3);
+    border-radius: 14px;
+    padding: 24px;
+    margin: 24px 0;
+    text-align: center;
+}
+
+.proxy-flow-badge {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: var(--accent-cyan);
+    margin-bottom: 16px;
+}
+
+.proxy-flow-nodes {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.proxy-flow-node {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 160px;
+}
+
+.proxy-flow-node.proxy-zap {
+    border-color: rgba(249, 115, 22, 0.4);
+    background: rgba(249, 115, 22, 0.06);
+}
+
+.proxy-flow-node.proxy-target {
+    border-color: rgba(16, 185, 129, 0.4);
+    background: rgba(16, 185, 129, 0.06);
+}
+
+.node-icon {
+    font-size: 26px;
+    margin-bottom: 6px;
+}
+
+.node-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.node-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin-top: 4px;
+}
+
+.proxy-arrow {
+    font-size: 20px;
+    color: var(--accent-orange);
+    font-weight: 800;
+}
+
+/* Checklist Widget */
+.exam-checklist-widget {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    padding: 24px;
+    margin: 24px 0;
+}
+
+.chk-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.chk-badge {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--accent-orange);
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.chk-title-group h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.chk-progress-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    min-width: 140px;
+}
+
+.chk-progress-text {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent-orange);
+    font-family: var(--font-mono);
+}
+
+.chk-progress-track {
+    width: 140px;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    overflow: hidden;
+}
+
+.chk-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-orange), var(--accent-emerald));
+    transition: width 0.3s ease;
+}
+
+.chk-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.checklist-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.checklist-item:hover {
+    border-color: rgba(249, 115, 22, 0.3);
+    background: var(--bg-card-hover);
+}
+
+.checklist-item.checked {
+    border-color: rgba(16, 185, 129, 0.4);
+    background: rgba(16, 185, 129, 0.05);
+}
+
+.checklist-item.checked .chk-text {
+    color: var(--text-primary);
+}
+
+.chk-box-wrap input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent-emerald);
+    cursor: pointer;
+    margin-top: 3px;
+}
+
+.chk-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--accent-cyan);
+    margin-top: 2px;
+    white-space: nowrap;
+}
+
+.chk-text {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+}
+
+/* Global Search Modal */
+.search-modal-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(6px);
+    z-index: 1100;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 100px;
+}
+
+.search-modal-backdrop.open {
+    display: flex;
+}
+
+.search-modal-dialog {
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 620px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    overflow: hidden;
+}
+
+.search-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.modal-search-icon {
+    color: var(--accent-cyan);
+}
+
+#globalSearchInput {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 16px;
+    font-family: inherit;
+    outline: none;
+}
+
+.search-modal-close {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    color: var(--text-muted);
+    font-size: 11px;
+    padding: 4px 8px;
+    cursor: pointer;
+}
+
+.search-results-list {
+    max-height: 380px;
+    overflow-y: auto;
+    padding: 8px 12px;
+    list-style: none;
+}
+
+.search-result-item {
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-decoration: none;
+    color: var(--text-secondary);
+    transition: all 0.15s ease;
+}
+.search-result-item:hover, .search-result-item.highlighted {
+    background: var(--bg-surface);
+    color: var(--accent-cyan);
+}
+
+.result-main {
+    display: flex;
+    flex-direction: column;
+}
+.result-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.result-sec {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+.result-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--bg-card-hover);
+    color: var(--accent-orange);
+}
+
+/* Footer */
+.app-footer {
+    max-width: 1440px;
+    margin: 40px auto 0 auto;
+    padding: 30px 24px 60px 24px;
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--text-muted);
+    font-size: 13px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.footer-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.footer-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 6px 12px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    text-decoration: none;
+}
+.footer-btn:hover {
+    color: var(--accent-cyan);
+    border-color: var(--accent-cyan);
+}
+
+/* RESPONSIVE DESIGN FOR TABLET & MOBILE */
+.sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 940;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+.sidebar-backdrop.active {
+    display: block;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.mobile-floating-nav {
+    display: none;
+    position: fixed;
+    bottom: 24px;
+    right: 20px;
+    z-index: 850;
+    align-items: center;
+    gap: 10px;
+}
+
+.floating-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 30px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.floating-btn:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent-orange);
+}
+
+.floating-toc-btn {
+    background: linear-gradient(135deg, rgba(2, 132, 199, 0.95), rgba(249, 115, 22, 0.95));
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 8px 25px rgba(2, 132, 199, 0.35);
+}
+
+.floating-top-btn {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.85);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.floating-top-btn.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: scale(1);
+}
+
+/* TABLET (max-width: 1024px) */
+@media (max-width: 1024px) {
+    .app-layout {
+        grid-template-columns: 1fr;
+        padding: 24px 20px;
+        gap: 24px;
+    }
+
+    .main-content {
+        max-width: 100%;
+    }
+
+    .sidebar-toc {
+        display: flex !important;
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 320px;
+        max-width: 85vw;
+        height: 100vh;
+        max-height: 100vh;
+        z-index: 950;
+        border-radius: 0;
+        border: none;
+        border-right: 1px solid var(--border-subtle);
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 15px 0 40px rgba(0, 0, 0, 0.6);
+        background: var(--bg-sidebar);
+        padding: 20px 18px;
+    }
+
+    .sidebar-toc.mobile-open {
+        transform: translateX(0);
+    }
+
+    .mobile-menu-btn {
+        display: inline-flex;
+    }
+
+    .sidebar-close-btn {
+        display: flex;
+    }
+
+    .mobile-floating-nav {
+        display: flex;
+    }
+
+    .hero-section {
+        padding: 36px 30px;
+    }
+
+    .hero-title {
+        font-size: 32px;
+    }
+
+    .quick-stats-bar {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 12px;
+        padding: 16px;
+    }
+
+    .stat-divider {
+        display: none;
+    }
+
+    .stat-item {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: 10px;
+        padding: 10px;
+    }
+
+    .content-card {
+        padding: 28px 24px;
+    }
+}
+
+/* SMARTPHONE (max-width: 768px) */
+@media (max-width: 768px) {
+    html {
+        scroll-padding-top: 70px;
+    }
+
+    .app-navbar {
+        height: 58px;
+    }
+
+    .nav-container {
+        padding: 0 16px;
+        height: 58px;
+    }
+
+    .brand-icon-shield {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+    }
+    .brand-icon-shield svg {
+        width: 17px;
+        height: 17px;
+    }
+
+    .brand-title {
+        font-size: 14px;
+    }
+
+    .brand-subtitle {
+        display: none;
+    }
+
+    .nav-actions {
+        gap: 8px;
+    }
+
+    .nav-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+    .nav-btn span, .nav-btn kbd {
+        display: none;
+    }
+
+    .app-layout {
+        padding: 16px 12px;
+        gap: 16px;
+    }
+
+    .hero-section {
+        padding: 24px 18px;
+        border-radius: 16px;
+        margin-bottom: 20px;
+    }
+
+    .hero-title {
+        font-size: 26px;
+        line-height: 1.25;
+        margin-bottom: 12px;
+    }
+
+    .hero-subtitle {
+        font-size: 14.5px;
+        line-height: 1.55;
+        margin-bottom: 18px;
+    }
+
+    .topic-tags-grid {
+        gap: 6px;
+        margin-bottom: 18px;
+    }
+
+    .topic-tag {
+        font-size: 11px;
+        padding: 4px 9px;
+        border-radius: 6px;
+    }
+
+    .guide-usage-card {
+        padding: 14px;
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+    .guide-usage-icon {
+        font-size: 20px;
+    }
+    .guide-usage-title {
+        font-size: 11px;
+    }
+    .guide-usage-content p {
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    .learning-obj-box {
+        padding: 14px;
+    }
+    .obj-header {
+        font-size: 11px;
+    }
+    .obj-list {
+        font-size: 12.5px;
+        margin-left: 16px;
+    }
+
+    .quick-stats-bar {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        padding: 10px;
+    }
+    .quick-stats-bar .stat-item:last-child {
+        grid-column: span 2;
+    }
+    .stat-number {
+        font-size: 20px;
+    }
+    .stat-label {
+        font-size: 10px;
+    }
+
+    .content-card {
+        padding: 20px 16px;
+        border-radius: 14px;
+        margin-bottom: 20px;
+    }
+
+    .section-card-header {
+        gap: 12px;
+        padding-bottom: 14px;
+        margin-bottom: 18px;
+    }
+
+    .sec-num-badge {
+        width: 38px;
+        height: 38px;
+        font-size: 15px;
+        border-radius: 10px;
+    }
+
+    .sec-kicker {
+        font-size: 10px;
+    }
+
+    .section-heading {
+        font-size: 19px;
+        line-height: 1.25;
+    }
+
+    .anchor-link {
+        display: none;
+    }
+
+    h3 {
+        font-size: 16.5px;
+        margin: 22px 0 10px 0;
+        line-height: 1.35;
+    }
+
+    p {
+        font-size: 14.5px;
+        line-height: 1.65;
+        margin-bottom: 14px;
+    }
+
+    ul, ol {
+        margin: 10px 0 16px 18px;
+        font-size: 14.5px;
+    }
+
+    li {
+        margin-bottom: 6px;
+    }
+
+    /* Tables */
+    .table-responsive {
+        margin: 14px 0 18px 0;
+        border-radius: 10px;
+    }
+
+    table {
+        font-size: 12.5px;
+    }
+
+    thead th, tbody td {
+        padding: 10px 12px;
+    }
+
+    .badge {
+        font-size: 11px;
+        padding: 2px 7px;
+    }
+
+    /* Terminal */
+    .terminal-card {
+        margin: 14px 0 18px 0;
+        border-radius: 10px;
+    }
+    .terminal-header {
+        padding: 8px 12px;
+    }
+    .terminal-body {
+        padding: 12px 14px;
+    }
+    .terminal-line {
+        font-size: 12.5px;
+    }
+
+    /* Callouts */
+    .callout {
+        padding: 14px;
+        gap: 12px;
+        margin: 16px 0;
+        border-radius: 10px;
+    }
+    .callout-icon {
+        font-size: 18px;
+    }
+    .callout-badge {
+        font-size: 10px;
+    }
+    .callout-text {
+        font-size: 13px;
+        line-height: 1.55;
+    }
+
+    /* Proxy Flow Nodes */
+    .proxy-flow-nodes {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .proxy-arrow {
+        transform: rotate(90deg);
+        margin: 2px 0;
+    }
+    .proxy-flow-node {
+        width: 100%;
+    }
+
+    /* Checklist */
+    .exam-checklist-widget {
+        padding: 16px 14px;
+        border-radius: 12px;
+    }
+    .chk-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 14px;
+        padding-bottom: 12px;
+    }
+    .chk-progress-box {
+        width: 100%;
+        align-items: flex-start;
+    }
+    .chk-progress-track {
+        width: 100%;
+    }
+
+    /* Search Modal Mobile */
+    .search-modal-backdrop {
+        padding-top: 40px;
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+    .search-modal-dialog {
+        border-radius: 14px;
+        max-height: 80vh;
+    }
+
+    .app-footer {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 12px;
+        padding: 24px 16px 80px 16px;
+    }
+}
+
+/* EXTRA SMALL MOBILE (max-width: 480px) */
+@media (max-width: 480px) {
+    .hero-title {
+        font-size: 23px;
+    }
+    .hero-badge-wrap {
+        gap: 6px;
+    }
+    .hero-badge {
+        font-size: 9.5px;
+        padding: 3px 8px;
+    }
+    .content-card {
+        padding: 16px 12px;
+    }
+    .sec-num-badge {
+        width: 34px;
+        height: 34px;
+        font-size: 13px;
+    }
+    .section-heading {
+        font-size: 17.5px;
+    }
+    table {
+        font-size: 12px;
+    }
+    thead th, tbody td {
+        padding: 8px 10px;
+    }
+    .mobile-floating-nav {
+        bottom: 16px;
+        right: 14px;
+    }
+    .floating-btn {
+        padding: 8px 14px;
+        font-size: 12px;
+    }
+}
+
+/* Print Styles */
+@media print {
+    body {
+        background: #ffffff !important;
+        color: #000000 !important;
+    }
+    .app-navbar, .sidebar-toc, .search-modal-backdrop, #readingProgressBar, .nav-actions, .copy-btn, .app-footer, .anchor-link, .mobile-floating-nav {
+        display: none !important;
+    }
+    .app-layout {
+        display: block !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+    }
+    .main-content {
+        max-width: 100% !important;
+    }
+    .content-card {
+        border: 1px solid #ccc !important;
+        box-shadow: none !important;
+        background: #fff !important;
+        page-break-inside: avoid;
+        margin-bottom: 20px !important;
+        padding: 20px !important;
+    }
+    .hero-section {
+        border: 1px solid #ccc !important;
+        background: #fff !important;
+        box-shadow: none !important;
+    }
+    table {
+        border: 1px solid #ddd !important;
+    }
+    th, td {
+        border: 1px solid #ddd !important;
+        color: #000 !important;
+    }
+}
+
+    </style>
+</head>
+<body>
+    <div id="readingProgressBar"></div>
+
+    <nav class="app-navbar">
+        <div class="nav-container">
+            <a href="#" class="nav-brand">
+                <div class="brand-icon-shield">
+                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                        <line x1="8" y1="21" x2="16" y2="21"></line>
+                        <line x1="12" y1="17" x2="12" y2="21"></line>
+                    </svg>
+                </div>
+                <div class="brand-info">
+                    <span class="brand-title">CYBERSEC 101</span>
+                    <span class="brand-subtitle">Week 3 • Web Security</span>
+                </div>
+            </a>
+
+            <div class="nav-actions">
+                <button class="nav-btn" onclick="openSearchModal()" title="Search guide (Ctrl+K)">
+                    <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <span>Search</span>
+                    <kbd class="sidebar-kbd">Ctrl K</kbd>
+                </button>
+                <button class="nav-btn theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Light/Dark Theme">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </button>
+                <button class="nav-btn" onclick="window.print()" title="Print or save as PDF">
+                    <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                    <span>Print</span>
+                </button>
+                <button class="nav-btn mobile-menu-btn" onclick="toggleMobileMenu()" title="Toggle Navigation">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="app-layout">
+        
+<aside class="sidebar-toc" id="sidebarNav">
+    <div class="sidebar-header">
+        <div class="sidebar-title">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+                <line x1="8" y1="6" x2="21" y2="6"></line>
+                <line x1="8" y1="12" x2="21" y2="12"></line>
+                <line x1="8" y1="18" x2="21" y2="18"></line>
+                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+            <span>Navigation</span>
+        </div>
+        <div class="sidebar-header-right">
+            <span class="toc-badge">8 Modules</span>
+            <button class="sidebar-close-btn" onclick="closeMobileMenu()" aria-label="Close navigation">✕</button>
+        </div>
+    </div>
+    <div class="sidebar-jump-box">
+        <button class="sidebar-search-btn" onclick="openSearchModal()">
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <span>Quick search...</span>
+            <kbd class="sidebar-kbd">Ctrl K</kbd>
+        </button>
+    </div>
+    <nav class="toc-nav">
+        <ul class="toc-list">
+            
+    <li class="toc-item" data-target="mod-1">
+        <a href="#mod-1" class="toc-link">
+            <span class="toc-icon">🛡️</span>
+            <span class="toc-num">01</span>
+            <span class="toc-text">Web Enumeration & the OWASP Top 10</span>
+        </a>
+        <ul class="toc-sublist"><li class="toc-subitem"><a href="#mod-1-what-gets-mapped" class="toc-sublink">What gets mapped</a></li></ul>
+    </li>
+    
+    <li class="toc-item" data-target="mod-2">
+        <a href="#mod-2" class="toc-link">
+            <span class="toc-icon">💉</span>
+            <span class="toc-num">02</span>
+            <span class="toc-text">Injection: SQLi & Command Injection</span>
+        </a>
+        <ul class="toc-sublist"><li class="toc-subitem"><a href="#mod-2-sql-injection-conceptual-week-4-deep-dive" class="toc-sublink">SQL Injection (conceptual; Week 4 deep-dive)</a></li><li class="toc-subitem"><a href="#mod-2-command-injection-week-6-deep-dive" class="toc-sublink">Command Injection (Week 6 deep-dive)</a></li><li class="toc-subitem"><a href="#mod-2-escalation-chain" class="toc-sublink">Escalation chain</a></li><li class="toc-subitem"><a href="#mod-2-blind-vs-active" class="toc-sublink">Blind vs. Active</a></li><li class="toc-subitem"><a href="#mod-2-post-confirmation-enumeration" class="toc-sublink">Post-confirmation enumeration</a></li><li class="toc-subitem"><a href="#mod-2-defenses" class="toc-sublink">Defenses</a></li></ul>
+    </li>
+    
+    <li class="toc-item" data-target="mod-3">
+        <a href="#mod-3" class="toc-link">
+            <span class="toc-icon">🔑</span>
+            <span class="toc-num">03</span>
+            <span class="toc-text">Broken Authentication & Sensitive Data Exposure</span>
+        </a>
+        <ul class="toc-sublist"><li class="toc-subitem"><a href="#mod-3-broken-authentication-week-7-deep-dive" class="toc-sublink">Broken Authentication (Week 7 deep-dive)</a></li><li class="toc-subitem"><a href="#mod-3-sensitive-data-exposure-modern-name-cryptographic-failures-week-9" class="toc-sublink">Sensitive Data Exposure (modern name: Cryptographic Failures, Week 9)</a></li></ul>
+    </li>
+    
+    <li class="toc-item" data-target="mod-4">
+        <a href="#mod-4" class="toc-link">
+            <span class="toc-icon">📄</span>
+            <span class="toc-num">04</span>
+            <span class="toc-text">XML External Entity (XXE)</span>
+        </a>
+        <ul class="toc-sublist"><li class="toc-subitem"><a href="#mod-4-xml-dtd-basics" class="toc-sublink">XML & DTD basics</a></li><li class="toc-subitem"><a href="#mod-4-payloads" class="toc-sublink">Payloads</a></li><li class="toc-subitem"><a href="#mod-4-substitution-flow" class="toc-sublink">Substitution flow</a></li><li class="toc-subitem"><a href="#mod-4-impact-categories" class="toc-sublink">Impact categories</a></li><li class="toc-subitem"><a href="#mod-4-two-exploitation-modes" class="toc-sublink">Two exploitation modes</a></li></ul>
+    </li>
+    
+    <li class="toc-item" data-target="mod-5">
+        <a href="#mod-5" class="toc-link">
+            <span class="toc-icon">🔓</span>
+            <span class="toc-num">05</span>
+            <span class="toc-text">Broken Access Control, Security Misconfiguration & XSS</span>
+        </a>
+        <ul class="toc-sublist"><li class="toc-subitem"><a href="#mod-5-broken-access-control-week-7-deep-dive" class="toc-sublink">Broken Access Control (Week 7 deep-dive)</a></li><li class="toc-subitem"><a href="#mod-5-security-misconfiguration-week-9-deep-dive" class="toc-sublink">Security Misconfiguration (Week 9 deep-dive)</a></li><li class="toc-subitem"><a href="#mod-5-cross-site-scripting-week-5-deep-dive-with-csrf" class="toc-sublink">Cross-Site Scripting (Week 5 deep-dive, with CSRF)</a></li></ul>
+    </li>
+    
+    <li class="toc-item" data-target="mod-6">
+        <a href="#mod-6" class="toc-link">
+            <span class="toc-icon">⚡</span>
+            <span class="toc-num">06</span>
+            <span class="toc-text">Insecure Deserialization, Components & OWASP ZAP</span>
+        </a>
+        <ul class="toc-sublist"><li class="toc-subitem"><a href="#mod-6-insecure-deserialization-8" class="toc-sublink">Insecure Deserialization (#8)</a></li><li class="toc-subitem"><a href="#mod-6-components-with-known-vulnerabilities-9" class="toc-sublink">Components with Known Vulnerabilities (#9)</a></li><li class="toc-subitem"><a href="#mod-6-insufficient-logging-monitoring-10" class="toc-sublink">Insufficient Logging & Monitoring (#10)</a></li><li class="toc-subitem"><a href="#mod-6-why-owasp-zap" class="toc-sublink">Why OWASP ZAP?</a></li><li class="toc-subitem"><a href="#mod-6-the-8-step-zap-workflow" class="toc-sublink">The 8-step ZAP workflow</a></li></ul>
+    </li>
+    
+    <li class="toc-item" data-target="mod-7">
+        <a href="#mod-7" class="toc-link">
+            <span class="toc-icon">🎯</span>
+            <span class="toc-num">07</span>
+            <span class="toc-text">Synthesis & Closing Scenario Model Answer</span>
+        </a>
+        <ul class="toc-sublist"><li class="toc-subitem"><a href="#mod-7-common-misconceptions" class="toc-sublink">Common misconceptions</a></li><li class="toc-subitem"><a href="#mod-7-closing-scenario-model-answer" class="toc-sublink">Closing scenario: model answer</a></li><li class="toc-subitem"><a href="#mod-7-common-lab-pitfalls" class="toc-sublink">Common lab pitfalls</a></li></ul>
+    </li>
+    
+    <li class="toc-item" data-target="mod-8">
+        <a href="#mod-8" class="toc-link">
+            <span class="toc-icon">🧪</span>
+            <span class="toc-num">08</span>
+            <span class="toc-text">DVWA Lab Activities & Exam Preparation</span>
+        </a>
+        <ul class="toc-sublist"><li class="toc-subitem"><a href="#mod-8-tutorial-against-the-dvwa-lab-machine" class="toc-sublink">Tutorial (against the DVWA lab machine):</a></li><li class="toc-subitem"><a href="#mod-8-4-core-owasp-zap-lab-competencies" class="toc-sublink">4 Core OWASP ZAP Lab Competencies</a></li></ul>
+    </li>
+    
+        </ul>
+    </nav>
+    <div class="sidebar-footer">
+        <div class="sidebar-study-card">
+            <div class="study-card-title">💡 Exam Quick Link</div>
+            <p>Jump to <a href="#mod-6-the-8-step-zap-workflow">8-Step ZAP Workflow</a> or review the <a href="#mod-7-closing-scenario-model-answer">Closing Scenario Model Answer</a>.</p>
+        </div>
+    </div>
+</aside>
+
+
+        <main class="main-content">
+            
+<header class="hero-section">
+    <div class="hero-glow"></div>
+    <div class="hero-badge-wrap">
+        <span class="hero-badge"><span class="badge-pulse"></span>WEEK 3 STUDY GUIDE & EXAM REVISION</span>
+        <span class="hero-badge badge-secondary">CCY4202 · ETHICAL HACKING</span>
+        <span class="hero-badge badge-lab">OWASP TOP 10 & ZAP</span>
+    </div>
+    <h1 class="hero-title">Web Enumeration & <span class="gradient-text">OWASP Top 10</span></h1>
+    <p class="hero-subtitle">Comprehensive Lecture Summary, Web Reconnaissance Methodology, Vulnerability Exploitation Logic (Injection, XXE, XSS, Deserialization) & OWASP ZAP Lab Workflow</p>
+    
+    <div class="topic-tags-grid">
+        <span class="topic-tag">🌐 Web Enumeration</span>
+        <span class="topic-tag">🛡️ OWASP Top 10</span>
+        <span class="topic-tag">💉 SQLi & Cmd Injection</span>
+        <span class="topic-tag">🔑 Broken Auth & IDOR</span>
+        <span class="topic-tag">📄 XXE External Entity</span>
+        <span class="topic-tag">⚡ XSS Types (Stored/Reflected/DOM)</span>
+        <span class="topic-tag">🔧 OWASP ZAP vs Burp</span>
+        <span class="topic-tag">🎯 DVWA Lab Workflow</span>
+    </div>
+
+    <div class="guide-usage-card">
+        <div class="guide-usage-icon">🔑</div>
+        <div class="guide-usage-content">
+            <div class="guide-usage-title">CORE SECURITY PRINCIPLE</div>
+            <p><strong>Exploitation without enumeration is guessing.</strong> Web enumeration transforms an unknown target into a structured attack surface, revealing where input points exist, what frameworks are running, and which OWASP vulnerabilities are viable.</p>
+        </div>
+    </div>
+
+    <div class="learning-obj-box">
+        <div class="obj-header">🎯 FIVE CORE LEARNING OBJECTIVES</div>
+        <ul class="obj-list">
+            <li><strong>OWASP Top 10 Structure:</strong> Define all 10 risk categories and map them to the semester roadmap.</li>
+            <li><strong>Web Enumeration Methodology:</strong> Map pages, parameters, cookies, hidden endpoints, and technologies.</li>
+            <li><strong>Exploitation Logic:</strong> Understand injection bypasses (' OR '1'='1), command escalation chains, XXE SYSTEM URIs, and XSS impacts.</li>
+            <li><strong>OWASP ZAP Mastery:</strong> Configure local proxy (127.0.0.1:8080), install SSL certs, run Traditional & Ajax spiders, forced browsing, and Fuzzer brute forcing.</li>
+            <li><strong>Tool Selection:</strong> Objectively compare OWASP ZAP against Burp Suite Professional to justify tooling decisions.</li>
+        </ul>
+    </div>
+
+    <div class="quick-stats-bar">
+        <div class="stat-item">
+            <span class="stat-number">8</span>
+            <span class="stat-label">Core Modules</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <span class="stat-number">10</span>
+            <span class="stat-label">OWASP Categories</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <span class="stat-number">6</span>
+            <span class="stat-label">Technical Tables</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <span class="stat-number">8</span>
+            <span class="stat-label">ZAP Workflow Steps</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <span class="stat-number">4</span>
+            <span class="stat-label">Hands-On Lab Tasks</span>
+        </div>
+    </div>
+</header>
+
+
+            
+    <section id="mod-1" class="content-card section-card" data-section-num="1">
+        
+<div class="section-card-header">
+<div class="sec-num-badge">01</div>
+<div class="sec-title-wrap">
+<span class="sec-kicker">MODULE 01</span>
+<h2 class="section-heading" id="mod-1">Web Enumeration &amp; the OWASP Top 10</h2>
+</div>
+<a class="anchor-link" href="#mod-1" title="Direct link to module">#</a>
+</div>
+<p>Web enumeration is the reconnaissance phase applied to a web application. It transforms an unknown target into a structured attack surface. Exploitation without enumeration is guessing: enumeration tells you where to inject, what technology to target, and which OWASP category is even possible.</p>
+<h3 id="mod-1-what-gets-mapped">What gets mapped</h3>
+<ul>
+<li>
+<p>Pages and endpoints: visible and linked</p>
+</li>
+<li>
+<p>Parameters: GET/POST, cookies, headers</p>
+</li>
+<li>
+<p>Hidden directories: found via forced browsing</p>
+</li>
+<li>
+<p>Technologies: server, framework, CMS, JS libraries</p>
+</li>
+<li>
+<p>Input points: forms, search bars, URL params, upload fields</p>
+</li>
+</ul>
+<p>The OWASP Top 10 is a community-driven, risk-prioritized list of the most critical web app security risks. It is not exhaustive, not a legal compliance requirement, and not a scanning tool.</p>
+<div class="table-responsive"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Category</th>
+<th>Course week</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="owasp-badge">A01</span></td>
+<td>Injection</td>
+<td>Week 4 (SQLi) / Week 6 (Cmd)</td>
+</tr>
+<tr>
+<td><span class="owasp-badge">A02</span></td>
+<td>Broken Authentication</td>
+<td>Week 7</td>
+</tr>
+<tr>
+<td><span class="owasp-badge">A03</span></td>
+<td>Sensitive Data Exposure</td>
+<td>Week 9</td>
+</tr>
+<tr>
+<td><span class="owasp-badge">A04</span></td>
+<td>XML External Entity (XXE)</td>
+<td>Week 8</td>
+</tr>
+<tr>
+<td><span class="owasp-badge">A05</span></td>
+<td>Broken Access Control</td>
+<td>Week 7</td>
+</tr>
+<tr>
+<td><span class="owasp-badge">A06</span></td>
+<td>Security Misconfiguration</td>
+<td>Week 9</td>
+</tr>
+<tr>
+<td><span class="owasp-badge">A07</span></td>
+<td>Cross-Site Scripting (XSS)</td>
+<td>Week 5</td>
+</tr>
+<tr>
+<td><span class="owasp-badge">A08</span></td>
+<td>Insecure Deserialization</td>
+<td>Covered this week</td>
+</tr>
+<tr>
+<td><span class="owasp-badge">A09</span></td>
+<td>Components with Known Vulnerabilities</td>
+<td>Week 9</td>
+</tr>
+<tr>
+<td><span class="owasp-badge">A010</span></td>
+<td>Insufficient Logging &amp; Monitoring</td>
+<td>Week 10</td>
+</tr>
+</tbody>
+</table></div>
+    </section>
+    
+    <section id="mod-2" class="content-card section-card" data-section-num="2">
+        
+<div class="section-card-header">
+<div class="sec-num-badge">02</div>
+<div class="sec-title-wrap">
+<span class="sec-kicker">MODULE 02</span>
+<h2 class="section-heading" id="mod-2">Injection: SQLi &amp; Command Injection</h2>
+</div>
+<a class="anchor-link" href="#mod-2" title="Direct link to module">#</a>
+</div>
+<p>Injection flaws occur because user-controlled input is interpreted as actual commands or parameters by the application.</p>
+<h3 id="mod-2-sql-injection-conceptual-week-4-deep-dive">SQL Injection (conceptual; Week 4 deep-dive)</h3>
+<p>Occurs when user-controlled input is passed into SQL queries, letting an attacker manipulate the query outcome.</p>
+
+<div class="terminal-card">
+<div class="terminal-header">
+<div class="terminal-dots">
+<span class="dot dot-red"></span>
+<span class="dot dot-yellow"></span>
+<span class="dot dot-green"></span>
+</div>
+<div class="terminal-title">SQL Query / Payload</div>
+<button class="copy-btn" onclick="copyCommand(this)" title="Copy payload">
+<svg class="copy-icon" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="14">
+<rect height="13" rx="2" ry="2" width="13" x="9" y="9"></rect>
+<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+</svg>
+<span class="copy-text">Copy</span>
+</button>
+</div>
+<div class="terminal-body">
+<div class="terminal-line">
+<span class="terminal-prompt">&gt;</span>
+<span class="terminal-cmd">Payload: ' OR '1'='1
+Template: SELECT * FROM users WHERE username = '$input' AND password = '$pass';
+Result:   SELECT * FROM users WHERE username = '' OR '1'='1' AND password = '...';</span>
+</div>
+</div>
+</div>
+
+<p>Because '1'='1' always evaluates to TRUE, authentication is bypassed.</p>
+<h3 id="mod-2-command-injection-week-6-deep-dive">Command Injection (Week 6 deep-dive)</h3>
+<p>Occurs when server-side code (e.g. PHP) makes a system call on the hosting machine, and an attacker abuses that call to run operating system commands on the server. A simple whoami or file read alone is not catastrophic, but it can escalate to a reverse shell. Some netcat variants lack the -e flag, so bash, python or perl one-liners may be needed.</p>
+<h3 id="mod-2-escalation-chain">Escalation chain</h3>
+<ul>
+<li>
+<p>Recon: find an input point that hits system() / passthru()</p>
+</li>
+<li>
+<p>Confirm: inject ;whoami or &amp;&amp;id</p>
+</li>
+<li>
+<p>Persist: write a webshell or schedule a callback</p>
+</li>
+<li>
+<p>Escalate: push a reverse shell back to the attacker</p>
+</li>
+<li>
+<p>Pivot: internal enumeration and lateral movement</p>
+</li>
+</ul>
+<h3 id="mod-2-blind-vs-active">Blind vs. Active</h3>
+<ul>
+<li>
+<p>Active: output is visible in the response, e.g. PHP passthru(\$command_string) returns output to the browser.</p>
+</li>
+<li>
+<p>Blind: output is NOT returned in the HTML. Confirm via time-based or out-of-band (OOB) techniques.</p>
+</li>
+</ul>
+<h3 id="mod-2-post-confirmation-enumeration">Post-confirmation enumeration</h3>
+<div class="table-responsive"><table>
+<thead>
+<tr>
+<th>OS</th>
+<th>Commands</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="badge badge-os linux">🐧 Linux</span></td>
+<td>whoami / id, uname -a, ip addr (ifconfig), ps aux, netstat -ano</td>
+</tr>
+<tr>
+<td><span class="badge badge-os windows">🪟 Windows</span></td>
+<td>whoami, ver / systeminfo, ipconfig /all, tasklist, netstat -ano</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="mod-2-defenses">Defenses</h3>
+<ul>
+<li>
+<p>Allow-listing (preferred): compare input to known-safe values and reject everything else; this closes unknown edge cases.</p>
+</li>
+<li>
+<p>Stripping dangerous characters: fragile; bypassable via encoding, nesting or novel metacharacters.</p>
+</li>
+<li>
+<p>Use dedicated sanitization libraries rather than hand-rolling.</p>
+</li>
+</ul>
+    </section>
+    
+    <section id="mod-3" class="content-card section-card" data-section-num="3">
+        
+<div class="section-card-header">
+<div class="sec-num-badge">03</div>
+<div class="sec-title-wrap">
+<span class="sec-kicker">MODULE 03</span>
+<h2 class="section-heading" id="mod-3">Broken Authentication &amp; Sensitive Data Exposure</h2>
+</div>
+<a class="anchor-link" href="#mod-3" title="Direct link to module">#</a>
+</div>
+<h3 id="mod-3-broken-authentication-week-7-deep-dive">Broken Authentication (Week 7 deep-dive)</h3>
+<p>HTTP(S) is stateless, so each request is independent. Session cookies track authenticated users across requests; flaws in authentication or session management break the trust model.</p>
+<ul>
+<li>
+<p>Brute-force attacks: repeated guessing of credentials</p>
+</li>
+<li>
+<p>Weak credentials: e.g. "password1", guessable without brute-forcing</p>
+</li>
+<li>
+<p>Weak session cookies: predictable values that let an attacker forge a session</p>
+</li>
+</ul>
+<p>Logic-flaw example (leading space): if user admin exists, re-registering as " admin" (note the leading space) creates a new user that has the same rights as the real admin. This is a developer input-sanitization mistake, distinct from brute-forcing.</p>
+<p>Mitigations: strong password policy, automatic lockout after N failed attempts, and Multi-Factor Authentication (MFA).</p>
+<h3 id="mod-3-sensitive-data-exposure-modern-name-cryptographic-failures-week-9">Sensitive Data Exposure (modern name: Cryptographic Failures, Week 9)</h3>
+<p>A web app "accidentally divulges sensitive data": customer PII, financial data, or technical data such as credentials.</p>
+<ul>
+<li>Flat-file database exploitation: SQLite databases stored under a website's public root can be downloaded directly and queried offline.</li>
+</ul>
+
+<div class="terminal-card">
+<div class="terminal-header">
+<div class="terminal-dots">
+<span class="dot dot-red"></span>
+<span class="dot dot-yellow"></span>
+<span class="dot dot-green"></span>
+</div>
+<div class="terminal-title">SQL Query / Payload</div>
+<button class="copy-btn" onclick="copyCommand(this)" title="Copy payload">
+<svg class="copy-icon" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="14">
+<rect height="13" rx="2" ry="2" width="13" x="9" y="9"></rect>
+<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+</svg>
+<span class="copy-text">Copy</span>
+</button>
+</div>
+<div class="terminal-body">
+<div class="terminal-line">
+<span class="terminal-prompt">&gt;</span>
+<span class="terminal-cmd">SELECT custID, custName, creditCard, password_hash FROM users;
+PRAGMA table_info(customers); -- reveals column names/types</span>
+</div>
+</div>
+</div>
+
+<ul>
+<li>
+<p>Hash cracking: submit the MD5 hash to CrackStation, an online tool backed by a massive wordlist. Example: 5f4dcc3b5aa765d61d8327deb882cf99 cracks to password.</p>
+</li>
+<li>
+<p>Cracked credentials can then be reused for credential-stuffing attacks elsewhere.</p>
+</li>
+</ul>
+    </section>
+    
+    <section id="mod-4" class="content-card section-card" data-section-num="4">
+        
+<div class="section-card-header">
+<div class="sec-num-badge">04</div>
+<div class="sec-title-wrap">
+<span class="sec-kicker">MODULE 04</span>
+<h2 class="section-heading" id="mod-4">XML External Entity (XXE)</h2>
+</div>
+<a class="anchor-link" href="#mod-4" title="Direct link to module">#</a>
+</div>
+<p>XML (eXtensible Markup Language) defines rules for encoding documents in a format that is both human- and machine-readable. Full exploitation depth returns in Week 8 alongside SSRF/SSTI/CORS.</p>
+<h3 id="mod-4-xml-dtd-basics">XML &amp; DTD basics</h3>
+<ul>
+<li>
+<p>The XML prolog is required at the top (declares version and encoding).</p>
+</li>
+<li>
+<p>Every document needs a single ROOT element.</p>
+</li>
+<li>
+<p>XML is case-sensitive: <to> must close with </to>.</p>
+</li>
+<li>
+<p>A DTD (Document Type Definition) declares structure. #PCDATA = parseable character data (text between tags).</p>
+</li>
+<li>
+<p>XXE occurs when a parser resolves external entities (e.g. a SYSTEM URI).</p>
+</li>
+</ul>
+<h3 id="mod-4-payloads">Payloads</h3>
+
+<div class="terminal-card">
+<div class="terminal-header">
+<div class="terminal-dots">
+<span class="dot dot-red"></span>
+<span class="dot dot-yellow"></span>
+<span class="dot dot-green"></span>
+</div>
+<div class="terminal-title">XML External Entity (XXE) Payload</div>
+<button class="copy-btn" onclick="copyCommand(this)" title="Copy payload">
+<svg class="copy-icon" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="14">
+<rect height="13" rx="2" ry="2" width="13" x="9" y="9"></rect>
+<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+</svg>
+<span class="copy-text">Copy</span>
+</button>
+</div>
+<div class="terminal-body">
+<div class="terminal-line">
+<span class="terminal-prompt">&gt;</span>
+<span class="terminal-cmd">&lt;!-- DTD Entity Declaration &amp; Usage --&gt;
+&lt;!DOCTYPE userInfo [ &lt;!ENTITY name "feast"&gt; ]&gt;
+&lt;userInfo&gt;&lt;lastName&gt;&amp;name;&lt;/lastName&gt;&lt;/userInfo&gt;
+&lt;!-- Parsed output: &amp;name; is replaced with "feast" --&gt;
+
+&lt;!-- Malicious SYSTEM Entity (Local File Disclosure) --&gt;
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!DOCTYPE root [ &lt;!ENTITY read SYSTEM "file:///etc/passwd"&gt; ]&gt;
+&lt;root&gt;&amp;read;&lt;/root&gt;
+&lt;!-- Vulnerable parser substitutes &amp;read; with /etc/passwd contents --&gt;</span>
+</div>
+</div>
+</div>
+
+<p>SYSTEM signifies that the entity references an external resource via a URI.</p>
+<h3 id="mod-4-substitution-flow">Substitution flow</h3>
+<p>Attacker sends XML with a malicious DOCTYPE &gt; parser resolves the entity &gt; server reads the file from the filesystem &gt; contents are substituted into the entity &gt; response is returned (in-band) or data is sent to an attacker server (OOB).</p>
+<h3 id="mod-4-impact-categories">Impact categories</h3>
+<ul>
+<li>
+<p>Local file read (LFD / arbitrary file disclosure)</p>
+</li>
+<li>
+<p>Denial of Service (e.g. Billion Laughs attack)</p>
+</li>
+<li>
+<p>Server-Side Request Forgery (SSRF via internal HTTP endpoints)</p>
+</li>
+<li>
+<p>Port scanning of internal infrastructure</p>
+</li>
+<li>
+<p>Remote Code Execution (e.g. via PHP expect:// wrapper)</p>
+</li>
+</ul>
+<h3 id="mod-4-two-exploitation-modes">Two exploitation modes</h3>
+<ul>
+<li>
+<p>In-band (classic): parsed file contents or entity reflections are returned directly in the immediate HTTP response.</p>
+</li>
+<li>
+<p>Out-of-band (blind): no reflection or direct errors; the attacker forces the server to exfiltrate data to an external listener (DNS/HTTP). The immediate HTTP response does not contain the data.</p>
+</li>
+</ul>
+    </section>
+    
+    <section id="mod-5" class="content-card section-card" data-section-num="5">
+        
+<div class="section-card-header">
+<div class="sec-num-badge">05</div>
+<div class="sec-title-wrap">
+<span class="sec-kicker">MODULE 05</span>
+<h2 class="section-heading" id="mod-5">Broken Access Control, Security Misconfiguration &amp; XSS</h2>
+</div>
+<a class="anchor-link" href="#mod-5" title="Direct link to module">#</a>
+</div>
+<h3 id="mod-5-broken-access-control-week-7-deep-dive">Broken Access Control (Week 7 deep-dive)</h3>
+<p>Restricted pages or functions (e.g. admin-only) are reachable by unauthorized users.</p>
+<ul>
+<li>
+<p>Parameter tampering: the attacker modifies a value such as acct=9999 directly and accesses another user's account if ownership isn't verified.</p>
+</li>
+<li>
+<p>Forced browsing: compare /user/dashboard with /admin/user-management. Reachability by an unauthenticated or non-admin user is the flaw.</p>
+</li>
+<li>
+<p>IDOR (Insecure Direct Object Reference): changing /api/v1/accounts/1234/statements to 1235 may expose another customer's data. The parameter itself isn't the flaw; the absent ownership validation is.</p>
+</li>
+</ul>
+<h3 id="mod-5-security-misconfiguration-week-9-deep-dive">Security Misconfiguration (Week 9 deep-dive)</h3>
+<ul>
+<li>
+<p>Poorly configured cloud storage permissions</p>
+</li>
+<li>
+<p>Unnecessary enabled features, services or accounts</p>
+</li>
+<li>
+<p>Default accounts with unchanged passwords</p>
+</li>
+<li>
+<p>Overly detailed error messages</p>
+</li>
+<li>
+<p>Missing security headers or revealing Server: headers</p>
+</li>
+</ul>
+
+<div class="callout callout-casestudy">
+<div class="callout-icon">🚨</div>
+<div class="callout-body">
+<div class="callout-badge">CASE STUDY · DYN / MIRAI BOTNET (OCTOBER 2016)</div>
+<div class="callout-text"><strong>Textbook Security Misconfiguration at Ecosystem Scale:</strong> The Mirai botnet used a list of 63 default username/password pairs to compromise exposed Telnet services on IoT devices and routers, then launched a DDoS flood that took Dyn (a DNS provider) offline. Amazon, Twitter, Netflix, GitHub, Xbox Live and PlayStation Network were disrupted for hours across three attack waves, a textbook misconfiguration failure at ecosystem scale.</div>
+</div>
+</div>
+
+<h3 id="mod-5-cross-site-scripting-week-5-deep-dive-with-csrf">Cross-Site Scripting (Week 5 deep-dive, with CSRF)</h3>
+<div class="table-responsive"><table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="badge badge-xss stored">🔥 Stored (Persistent)</span></td>
+<td>Most dangerous. Payload is persisted in the database (e.g. comment field); every visitor</td>
+</tr>
+<tr>
+<td></td>
+<td>triggers it.</td>
+</tr>
+<tr>
+<td><span class="badge badge-xss reflected">⚡ Reflected</span></td>
+<td>Payload is part of the victim's own request; requires tricking them into clicking a crafted link.</td>
+</tr>
+<tr>
+<td><span class="badge badge-xss dom">🌐 DOM-based</span></td>
+<td>Manipulates the Document Object Model client-side; no server round-trip needed.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Example payload types: a popup (alert("Hello World")), HTML override via document.write, a keylogger script, and a mini port-scanning script. XSS is NOT just popups: it enables session hijacking, keylogging and internal port scanning.</p>
+    </section>
+    
+    <section id="mod-6" class="content-card section-card" data-section-num="6">
+        
+<div class="section-card-header">
+<div class="sec-num-badge">06</div>
+<div class="sec-title-wrap">
+<span class="sec-kicker">MODULE 06</span>
+<h2 class="section-heading" id="mod-6">Insecure Deserialization, Components &amp; OWASP ZAP</h2>
+</div>
+<a class="anchor-link" href="#mod-6" title="Direct link to module">#</a>
+</div>
+<h3 id="mod-6-insecure-deserialization-8">Insecure Deserialization (#8)</h3>
+<p>Low exploitability (case-by-case, no universal tool) but potentially severe (DoS to RCE). Serialization converts complex data into a transmittable format (like drawing a map for a tourist who doesn't share your language); deserialization is the reverse. The flaw occurs when untrusted, attacker-supplied serialized data is deserialized and executed without validation.</p>
+<h3 id="mod-6-components-with-known-vulnerabilities-9">Components with Known Vulnerabilities (#9)</h3>
+<p>Outdated libraries with public CVEs; attackers chain known CVEs against unpatched dependencies. Examples: old Apache Struts (Equifax 2017), EOL log4j 1.x bindings, outdated jQuery/Bootstrap.</p>
+<h3 id="mod-6-insufficient-logging-monitoring-10">Insufficient Logging &amp; Monitoring (#10)</h3>
+<p>Absence of logging for authentication attempts, access-control failures and input-validation failures lets attackers persist undetected. Tie-back: Mirai's initial compromise went undetected on many devices for this reason.</p>
+<h3 id="mod-6-why-owasp-zap">Why OWASP ZAP?</h3>
+<p>ZAP is completely open source and free: no premium version, no paywalled features, no proprietary code.</p>
+<div class="table-responsive"><table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>OWASP ZAP</th>
+<th>Burp Suite (Paid)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Automated web app scan (passive + active)</td>
+<td><span class="badge badge-free">✓ Free</span></td>
+<td><span class="badge badge-paid">🔒 Paid</span></td>
+</tr>
+<tr>
+<td>Web spidering</td>
+<td><span class="badge badge-free">✓ Free</span></td>
+<td><span class="badge badge-paid">🔒 Paid</span></td>
+</tr>
+<tr>
+<td>Intruder-style brute force</td>
+<td><span class="badge badge-free">Free (Unthrottled)</span></td>
+<td><span class="badge badge-paid">🔒 Paid</span></td>
+</tr>
+<tr>
+<td>Auto-intercept while browsing</td>
+<td>Yes</td>
+<td>Manual forwarding</td>
+</tr>
+<tr>
+<td>Login timing attacks</td>
+<td>Not supported</td>
+<td>Supported</td>
+</tr>
+<tr>
+<td>Documentation &amp; community</td>
+<td>Small ("microscopic")</td>
+<td>Large ("titan")</td>
+</tr>
+<tr>
+<td>Price</td>
+<td><span class="badge badge-free">Free &amp; Open Source</span></td>
+<td><span class="badge badge-paid">Commercial</span></td>
+</tr>
+</tbody>
+</table></div>
+
+<div class="callout callout-lesson">
+<div class="callout-icon">⭐</div>
+<div class="callout-body">
+<div class="callout-badge">PRACTITIONER VERDICT</div>
+<div class="callout-text">ZAP should be a go-to tool but should not be your only tool.</div>
+</div>
+</div>
+
+<h3 id="mod-6-the-8-step-zap-workflow">The 8-step ZAP workflow</h3>
+<div class="table-responsive"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Step</th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="step-badge">Step 01</span></td>
+<td>Why ZAP over Burp</td>
+<td>Open source, free, no paywalled features.</td>
+</tr>
+<tr>
+<td><span class="step-badge">Step 02</span></td>
+<td>Install</td>
+<td>Download from zaproxy.org/download (Windows / Mac / Linux).</td>
+</tr>
+<tr>
+<td><span class="step-badge">Step 03</span></td>
+<td>Automated scan</td>
+<td>Click "Automated Scan", enter the target URL; ZAP performs passive + active</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>scanning to build a sitemap and detect vulnerabilities. Traditional Spider: passive,</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>quiet, enumerates links/directories without brute-forcing. Ajax Spider: uses</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>Crawljax and a real browser engine for AJAX-rich sites; requires HtmlUnit (sudo</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>apt install libjenkins-htmlunit-core-js-java), then select HtmlUnit</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>in the dropdown. Both are configurable via Options (Ctrl+Alt+O).</td>
+</tr>
+<tr>
+<td><span class="step-badge">Step 04</span></td>
+<td>Manual scan / proxy</td>
+<td>In ZAP Options set the Local Proxy to 127.0.0.1:8080; add ZAP certificates via</td>
+</tr>
+<tr>
+<td></td>
+<td>setup</td>
+<td>Options &gt; Dynamic SSL Certificates &gt; Save. In Firefox: Preferences &gt; certificates</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>&gt; View Certificates &gt; Import, select the certificate and check both trust boxes;</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>then Preferences &gt; proxy &gt; Manual Proxy Configuration with ZAP's IP/port for</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>HTTP and HTTPS. "Do not skip this step": without it HTTPS interception fails</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>silently.</td>
+</tr>
+<tr>
+<td><span class="step-badge">Step 05</span></td>
+<td>Authenticated scanning</td>
+<td>Log into DVWA with admin/password and set Security Level to Low. Use Inspect Element to find the PHPSESSID cookie; in ZAP's HTTP Sessions tab set that session Active. Re-scan to reach previously hidden pages.</td>
+</tr>
+<tr>
+<td><span class="step-badge">Step 06</span></td>
+<td>Directory brute-force</td>
+<td>ZAP Options &gt; Forced Browse &gt; add a custom wordlist (adjustable threads,</td>
+</tr>
+<tr>
+<td></td>
+<td>(Forced Browse)</td>
+<td>optional recursion). Right-click the site in the Sites tree &gt; Attack &gt; Forced Browse</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>Site &gt; select wordlist &gt; play.</td>
+</tr>
+<tr>
+<td><span class="step-badge">Step 07</span></td>
+<td>Login brute-force via</td>
+<td>On DVWA's Brute Force page submit username admin / password test123 to</td>
+</tr>
+<tr>
+<td></td>
+<td>Fuzzer</td>
+<td>capture the request. Fuzz menu &gt; highlight the password value &gt; Add as Fuzz</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>Location. Use wordlist /usr/share/wordlists/fasttrack.txt. Sort results</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>by "Reflected" state and ignore results under 8 characters (common false</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>positives).</td>
+</tr>
+<tr>
+<td><span class="step-badge">Step 08</span></td>
+<td>Extensions</td>
+<td>Clone Bugcrowd's HUNT. In ZAP: Manage Add-Ons &gt; Marketplace &gt; install</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>"Python Scripting" and "Community Scripts". Enable "Only scan messages in</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>scope" under Passive Scanner, and enable HUNT.py under Scripts &gt; Passive</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>Rules.</td>
+</tr>
+</tbody>
+</table></div>
+
+<div class="proxy-flow-card">
+<div class="proxy-flow-badge">INTERCEPTION PROXY ARCHITECTURE</div>
+<div class="proxy-flow-nodes">
+<div class="proxy-flow-node">
+<span class="node-icon">🦊</span>
+<span class="node-title">Firefox Browser</span>
+<span class="node-desc">Proxy: 127.0.0.1:8080<br/>Trusts ZAP Root CA</span>
+</div>
+<div class="proxy-arrow">➔</div>
+<div class="proxy-flow-node proxy-zap">
+<span class="node-icon">⚡</span>
+<span class="node-title">OWASP ZAP</span>
+<span class="node-desc">Intercepts &amp; Forwards<br/>Re-encrypts HTTPS</span>
+</div>
+<div class="proxy-arrow">➔</div>
+<div class="proxy-flow-node proxy-target">
+<span class="node-icon">🎯</span>
+<span class="node-title">DVWA Target</span>
+<span class="node-desc">Vulnerable Web App<br/>Security Level: Low</span>
+</div>
+</div>
+</div>
+
+    </section>
+    
+    <section id="mod-7" class="content-card section-card" data-section-num="7">
+        
+<div class="section-card-header">
+<div class="sec-num-badge">07</div>
+<div class="sec-title-wrap">
+<span class="sec-kicker">MODULE 07</span>
+<h2 class="section-heading" id="mod-7">Synthesis &amp; Closing Scenario Model Answer</h2>
+</div>
+<a class="anchor-link" href="#mod-7" title="Direct link to module">#</a>
+</div>
+<h3 id="mod-7-common-misconceptions">Common misconceptions</h3>
+<ul>
+<li>
+<p>"OWASP Top 10 is one week's content." In reality it is partly a roadmap: 9 of the 10 categories get dedicated deep-dive weeks (Weeks 4-10).</p>
+</li>
+<li>
+<p>"XSS is just popups." It enables session hijacking, keylogging and internal port scanning; Stored XSS persists in the DB and hits every visitor.</p>
+</li>
+<li>
+<p>"Passive scanning carries zero legal/ethical risk." Even passive scanning generates traffic; always have written authorization (scope, rules of engagement) before scanning any non-owned target.</p>
+</li>
+</ul>
+<h3 id="mod-7-closing-scenario-model-answer">Closing scenario: model answer</h3>
+<div class="table-responsive"><table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>OWASP</th>
+<th>Exploitation</th>
+<th>ZAP feature</th>
+<th>Future</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td>category</td>
+<td></td>
+<td></td>
+<td>week</td>
+</tr>
+<tr>
+<td>Leading-space</td>
+<td>Broken</td>
+<td>Re-register username " admin";</td>
+<td>Fuzzer (probe</td>
+<td>Week 7</td>
+</tr>
+<tr>
+<td>re-registration</td>
+<td>Authentication</td>
+<td>new account gets admin-equivalent</td>
+<td>registration inputs) or</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>(A2)</td>
+<td>rights due to missing sanitization;</td>
+<td>authenticated</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>log in and use admin functions.</td>
+<td>scanning</td>
+<td></td>
+</tr>
+<tr>
+<td>Exposed SQLite</td>
+<td>Sensitive Data</td>
+<td>Download the file, inspect with</td>
+<td>Forced Browse (find</td>
+<td>Week 9</td>
+</tr>
+<tr>
+<td>DB in guessable</td>
+<td>Exposure (A3)</td>
+<td>sqlite3 (PRAGMA table_info,</td>
+<td>the path)</td>
+<td></td>
+</tr>
+<tr>
+<td>directory</td>
+<td></td>
+<td>SELECT), extract hashes, crack via</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>CrackStation.</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Stored XSS in</td>
+<td>Cross-Site</td>
+<td>Submit a script payload as a</td>
+<td>Automated Scan</td>
+<td>Week 5</td>
+</tr>
+<tr>
+<td>comment field</td>
+<td>Scripting (A7)</td>
+<td>comment; it persists and runs for</td>
+<td>(active XSS) +</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>every visitor. Escalate to keylogger</td>
+<td>authenticated</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>script.</td>
+<td>scanning</td>
+<td></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="mod-7-common-lab-pitfalls">Common lab pitfalls</h3>
+<ul>
+<li>
+<p>Skipping the ZAP certificate import step.</p>
+</li>
+<li>
+<p>Confusing the Traditional Spider with the Ajax Spider.</p>
+</li>
+<li>
+<p>Forgetting to set DVWA Security Level to Low before the authenticated-scan walkthrough.</p>
+</li>
+<li>
+<p>Treating Fuzzer results under 8 characters as valid credentials.</p>
+</li>
+<li>
+<p>Treating the OWASP Top 10 as exhaustive.</p>
+</li>
+</ul>
+    </section>
+    
+    <section id="mod-8" class="content-card section-card" data-section-num="8">
+        
+<div class="section-card-header">
+<div class="sec-num-badge">08</div>
+<div class="sec-title-wrap">
+<span class="sec-kicker">MODULE 08</span>
+<h2 class="section-heading" id="mod-8">DVWA Lab Activities &amp; Exam Preparation</h2>
+</div>
+<a class="anchor-link" href="#mod-8" title="Direct link to module">#</a>
+</div>
+<h3 id="mod-8-tutorial-against-the-dvwa-lab-machine">Tutorial (against the DVWA lab machine):</h3>
+
+<div class="exam-checklist-widget">
+<div class="chk-header">
+<div class="chk-title-group">
+<div class="chk-badge">DVWA HANDS-ON LAB CHECKLIST</div>
+<h3 id="mod-8-4-core-owasp-zap-lab-competencies">4 Core OWASP ZAP Lab Competencies</h3>
+</div>
+<div class="chk-progress-box">
+<div class="chk-progress-text"><span id="w3ChkScore">0</span> / 4 Completed</div>
+<div class="chk-progress-track">
+<div class="chk-progress-fill" id="w3ChkFill" style="width: 0%;"></div>
+</div>
+</div>
+</div>
+<div class="chk-list">
+<div class="checklist-item" id="w3-chk-item-1" onclick="toggleW3Checklist(1)">
+<div class="chk-box-wrap">
+<input id="w3-chk-1" onchange="updateW3ChecklistProgress()" onclick="event.stopPropagation()" type="checkbox"/>
+</div>
+<div class="chk-num">Task 01</div>
+<div class="chk-text"><p>Automated Scan (Traditional + Ajax Spider)</p></div>
+</div>
+<div class="checklist-item" id="w3-chk-item-2" onclick="toggleW3Checklist(2)">
+<div class="chk-box-wrap">
+<input id="w3-chk-2" onchange="updateW3ChecklistProgress()" onclick="event.stopPropagation()" type="checkbox"/>
+</div>
+<div class="chk-num">Task 02</div>
+<div class="chk-text"><p>Authenticated Scan (admin/password, Security Low, PHPSESSID active)</p></div>
+</div>
+<div class="checklist-item" id="w3-chk-item-3" onclick="toggleW3Checklist(3)">
+<div class="chk-box-wrap">
+<input id="w3-chk-3" onchange="updateW3ChecklistProgress()" onclick="event.stopPropagation()" type="checkbox"/>
+</div>
+<div class="chk-num">Task 03</div>
+<div class="chk-text"><p>Forced Browse (custom wordlist)</p></div>
+</div>
+<div class="checklist-item" id="w3-chk-item-4" onclick="toggleW3Checklist(4)">
+<div class="chk-box-wrap">
+<input id="w3-chk-4" onchange="updateW3ChecklistProgress()" onclick="event.stopPropagation()" type="checkbox"/>
+</div>
+<div class="chk-num">Task 04</div>
+<div class="chk-text"><p>Fuzzer-based login brute-force (fasttrack.txt)</p></div>
+</div>
+</div>
+</div>
+
+<p>Then produce a findings report mapping each discovery to its OWASP Top 10 category, its future course week (where applicable), and a recommended fix.</p>
+<p>Reading: OWASP Top 10 official document (owasp.org/www-project-top-ten), ZAP user guide (zaproxy.org/docs), TryHackMe "OWASP Top 10" (assigned lab) and "Introduction to OWASP ZAP" (homework). Next week: Week 4, SQL Injection deep-dive.</p>
+
+<div class="callout callout-safety">
+<div class="callout-icon">⚠️</div>
+<div class="callout-body">
+<div class="callout-badge">ETHICAL HACKING &amp; LEGAL REMINDER</div>
+<div class="callout-text">run these techniques only against your own lab machines (e.g. DVWA) or systems you hold written authorization to test.</div>
+</div>
+</div>
+
+    </section>
+    
+        </main>
+    </div>
+
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeMobileMenu()"></div>
+
+    <!-- Mobile & Tablet Floating Action Buttons -->
+    <div class="mobile-floating-nav" id="mobileFloatingNav">
+        <button class="floating-btn floating-toc-btn" onclick="toggleMobileMenu()" title="Open Table of Contents">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+                <line x1="8" y1="6" x2="21" y2="6"></line>
+                <line x1="8" y1="12" x2="21" y2="12"></line>
+                <line x1="8" y1="18" x2="21" y2="18"></line>
+                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+            <span>Menu</span>
+        </button>
+        <button class="floating-btn floating-top-btn" id="floatingTopBtn" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })" title="Back to top">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+                <polyline points="18 15 12 9 6 15"></polyline>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Global Search Modal -->
+    <div class="search-modal-backdrop" id="searchModal" onclick="if(event.target === this) closeSearchModal()">
+        <div class="search-modal-dialog">
+            <div class="search-modal-header">
+                <svg class="modal-search-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="globalSearchInput" placeholder="Search OWASP risks, injection payloads, ZAP workflow...">
+                <button class="search-modal-close" onclick="closeSearchModal()">ESC</button>
+            </div>
+            <ul class="search-results-list" id="searchResultsList"></ul>
+        </div>
+    </div>
+
+    <footer class="app-footer">
+        <div class="footer-left">
+            <span>🛡️ Web Enumeration & OWASP Top 10 Study Guide</span>
+            <span>•</span>
+            <span>CCY4202 Ethical Hacking Week 3</span>
+        </div>
+        <div class="footer-right">
+            <button class="footer-btn" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                <span>Back to Top</span>
+            </button>
+        </div>
+    </footer>
+
+    <script>
+
+// Search index data
+const searchData = [{"title": "1. What gets mapped", "section": "Web Enumeration & the OWASP Top 10", "id": "mod-1-what-gets-mapped", "category": "Topic"}, {"title": "Module 1: Web Enumeration & the OWASP Top 10", "section": "Module 1", "id": "mod-1", "category": "Module"}, {"title": "2. SQL Injection (conceptual; Week 4 deep-dive)", "section": "Injection: SQLi & Command Injection", "id": "mod-2-sql-injection-conceptual-week-4-deep-dive", "category": "Topic"}, {"title": "2. Command Injection (Week 6 deep-dive)", "section": "Injection: SQLi & Command Injection", "id": "mod-2-command-injection-week-6-deep-dive", "category": "Topic"}, {"title": "2. Escalation chain", "section": "Injection: SQLi & Command Injection", "id": "mod-2-escalation-chain", "category": "Topic"}, {"title": "2. Blind vs. Active", "section": "Injection: SQLi & Command Injection", "id": "mod-2-blind-vs-active", "category": "Topic"}, {"title": "2. Post-confirmation enumeration", "section": "Injection: SQLi & Command Injection", "id": "mod-2-post-confirmation-enumeration", "category": "Topic"}, {"title": "2. Defenses", "section": "Injection: SQLi & Command Injection", "id": "mod-2-defenses", "category": "Topic"}, {"title": "Module 2: Injection: SQLi & Command Injection", "section": "Module 2", "id": "mod-2", "category": "Module"}, {"title": "3. Broken Authentication (Week 7 deep-dive)", "section": "Broken Authentication & Sensitive Data Exposure", "id": "mod-3-broken-authentication-week-7-deep-dive", "category": "Topic"}, {"title": "3. Sensitive Data Exposure (modern name: Cryptographic Failures, Week 9)", "section": "Broken Authentication & Sensitive Data Exposure", "id": "mod-3-sensitive-data-exposure-modern-name-cryptographic-failures-week-9", "category": "Topic"}, {"title": "Module 3: Broken Authentication & Sensitive Data Exposure", "section": "Module 3", "id": "mod-3", "category": "Module"}, {"title": "4. XML & DTD basics", "section": "XML External Entity (XXE)", "id": "mod-4-xml-dtd-basics", "category": "Topic"}, {"title": "4. Payloads", "section": "XML External Entity (XXE)", "id": "mod-4-payloads", "category": "Topic"}, {"title": "4. Substitution flow", "section": "XML External Entity (XXE)", "id": "mod-4-substitution-flow", "category": "Topic"}, {"title": "4. Impact categories", "section": "XML External Entity (XXE)", "id": "mod-4-impact-categories", "category": "Topic"}, {"title": "4. Two exploitation modes", "section": "XML External Entity (XXE)", "id": "mod-4-two-exploitation-modes", "category": "Topic"}, {"title": "Module 4: XML External Entity (XXE)", "section": "Module 4", "id": "mod-4", "category": "Module"}, {"title": "5. Broken Access Control (Week 7 deep-dive)", "section": "Broken Access Control, Security Misconfiguration & XSS", "id": "mod-5-broken-access-control-week-7-deep-dive", "category": "Topic"}, {"title": "5. Security Misconfiguration (Week 9 deep-dive)", "section": "Broken Access Control, Security Misconfiguration & XSS", "id": "mod-5-security-misconfiguration-week-9-deep-dive", "category": "Topic"}, {"title": "5. Cross-Site Scripting (Week 5 deep-dive, with CSRF)", "section": "Broken Access Control, Security Misconfiguration & XSS", "id": "mod-5-cross-site-scripting-week-5-deep-dive-with-csrf", "category": "Topic"}, {"title": "Module 5: Broken Access Control, Security Misconfiguration & XSS", "section": "Module 5", "id": "mod-5", "category": "Module"}, {"title": "6. Insecure Deserialization (#8)", "section": "Insecure Deserialization, Components & OWASP ZAP", "id": "mod-6-insecure-deserialization-8", "category": "Topic"}, {"title": "6. Components with Known Vulnerabilities (#9)", "section": "Insecure Deserialization, Components & OWASP ZAP", "id": "mod-6-components-with-known-vulnerabilities-9", "category": "Topic"}, {"title": "6. Insufficient Logging & Monitoring (#10)", "section": "Insecure Deserialization, Components & OWASP ZAP", "id": "mod-6-insufficient-logging-monitoring-10", "category": "Topic"}, {"title": "6. Why OWASP ZAP?", "section": "Insecure Deserialization, Components & OWASP ZAP", "id": "mod-6-why-owasp-zap", "category": "Topic"}, {"title": "6. The 8-step ZAP workflow", "section": "Insecure Deserialization, Components & OWASP ZAP", "id": "mod-6-the-8-step-zap-workflow", "category": "Topic"}, {"title": "Module 6: Insecure Deserialization, Components & OWASP ZAP", "section": "Module 6", "id": "mod-6", "category": "Module"}, {"title": "7. Common misconceptions", "section": "Synthesis & Closing Scenario Model Answer", "id": "mod-7-common-misconceptions", "category": "Topic"}, {"title": "7. Closing scenario: model answer", "section": "Synthesis & Closing Scenario Model Answer", "id": "mod-7-closing-scenario-model-answer", "category": "Topic"}, {"title": "7. Common lab pitfalls", "section": "Synthesis & Closing Scenario Model Answer", "id": "mod-7-common-lab-pitfalls", "category": "Topic"}, {"title": "Module 7: Synthesis & Closing Scenario Model Answer", "section": "Module 7", "id": "mod-7", "category": "Module"}, {"title": "8. Tutorial (against the DVWA lab machine):", "section": "DVWA Lab Activities & Exam Preparation", "id": "mod-8-tutorial-against-the-dvwa-lab-machine", "category": "Topic"}, {"title": "8. 4 Core OWASP ZAP Lab Competencies", "section": "DVWA Lab Activities & Exam Preparation", "id": "mod-8-4-core-owasp-zap-lab-competencies", "category": "Topic"}, {"title": "Module 8: DVWA Lab Activities & Exam Preparation", "section": "Module 8", "id": "mod-8", "category": "Module"}];
+
+// Reading Progress
+window.addEventListener('scroll', () => {
+    const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+    const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    const scrolled = (winScroll / height) * 100;
+    document.getElementById('readingProgressBar').style.width = scrolled + '%';
+    
+    // ScrollSpy
+    updateScrollSpy();
+});
+
+// ScrollSpy Active Link
+function updateScrollSpy() {
+    const sections = document.querySelectorAll('.section-card');
+    let currentId = '';
+    const scrollPos = window.scrollY + 120;
+
+    sections.forEach(sec => {
+        const top = sec.offsetTop;
+        const height = sec.offsetHeight;
+        if (scrollPos >= top && scrollPos < top + height) {
+            currentId = sec.getAttribute('id');
+        }
+    });
+
+    if (currentId) {
+        document.querySelectorAll('.toc-item').forEach(item => {
+            if (item.getAttribute('data-target') === currentId) {
+                item.classList.add('active');
+            } else {
+                item.classList.remove('active');
+            }
+        });
+    }
+}
+
+// Theme Switcher
+function toggleTheme() {
+    const html = document.documentElement;
+    const current = html.getAttribute('data-theme') || 'dark';
+    const next = current === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('pentest_guide_theme', next);
+    updateThemeIcon(next);
+}
+
+function updateThemeIcon(theme) {
+    const btn = document.getElementById('themeToggleBtn');
+    if (!btn) return;
+    if (theme === 'light') {
+        btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>';
+        btn.setAttribute('title', 'Switch to Dark Mode');
+    } else {
+        btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>';
+        btn.setAttribute('title', 'Switch to Light Mode');
+    }
+}
+
+// Initialize Theme
+(function initTheme() {
+    const saved = localStorage.getItem('pentest_guide_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+    window.addEventListener('DOMContentLoaded', () => updateThemeIcon(saved));
+})();
+
+// Copy Command Snippet
+function copyCommand(btn) {
+    const terminal = btn.closest('.terminal-card');
+    const cmdText = terminal.querySelector('.terminal-cmd').innerText.trim();
+    navigator.clipboard.writeText(cmdText).then(() => {
+        const copyText = btn.querySelector('.copy-text');
+        const orig = copyText.innerText;
+        copyText.innerText = 'Copied! ✓';
+        btn.style.color = '#10b981';
+        setTimeout(() => {
+            copyText.innerText = orig;
+            btn.style.color = '';
+        }, 2000);
+    }).catch(err => {
+        console.error('Could not copy text: ', err);
+    });
+}
+
+// Mobile Menu Controls
+function toggleMobileMenu() {
+    const sidebar = document.getElementById('sidebarNav');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    const isOpen = sidebar.classList.toggle('mobile-open');
+    if (backdrop) {
+        if (isOpen) backdrop.classList.add('active');
+        else backdrop.classList.remove('active');
+    }
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+}
+
+function closeMobileMenu() {
+    const sidebar = document.getElementById('sidebarNav');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    if (sidebar) sidebar.classList.remove('mobile-open');
+    if (backdrop) backdrop.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.toc-link, .toc-sublink').forEach(link => {
+        link.addEventListener('click', () => {
+            if (window.innerWidth <= 1024) {
+                closeMobileMenu();
+            }
+        });
+    });
+});
+
+// Floating Top Button visibility on scroll
+window.addEventListener('scroll', () => {
+    const topBtn = document.getElementById('floatingTopBtn');
+    if (topBtn) {
+        if (window.scrollY > 300) {
+            topBtn.classList.add('visible');
+        } else {
+            topBtn.classList.remove('visible');
+        }
+    }
+});
+
+// Module 8: Checklist Mastery Tracking
+function toggleW3Checklist(num) {
+    const chk = document.getElementById('w3-chk-' + num);
+    if (chk) {
+        chk.checked = !chk.checked;
+        updateW3ChecklistProgress();
+    }
+}
+
+function updateW3ChecklistProgress() {
+    const total = 4;
+    let checkedCount = 0;
+    for (let i = 1; i <= total; i++) {
+        const chk = document.getElementById('w3-chk-' + i);
+        const item = document.getElementById('w3-chk-item-' + i);
+        if (chk && chk.checked) {
+            checkedCount++;
+            if (item) item.classList.add('checked');
+        } else if (item) {
+            item.classList.remove('checked');
+        }
+    }
+    
+    const pct = Math.round((checkedCount / total) * 100);
+    const fill = document.getElementById('w3ChkFill');
+    const score = document.getElementById('w3ChkScore');
+    if (fill) fill.style.width = pct + '%';
+    if (score) score.innerText = checkedCount;
+
+    const state = [];
+    for (let i = 1; i <= total; i++) {
+        const chk = document.getElementById('w3-chk-' + i);
+        state.push(chk && chk.checked ? 1 : 0);
+    }
+    localStorage.setItem('pentest_w3_chk_state', JSON.stringify(state));
+}
+
+(function restoreW3Checklist() {
+    window.addEventListener('DOMContentLoaded', () => {
+        const raw = localStorage.getItem('pentest_w3_chk_state');
+        if (raw) {
+            try {
+                const state = JSON.parse(raw);
+                state.forEach((val, i) => {
+                    const chk = document.getElementById('w3-chk-' + (i + 1));
+                    if (chk) chk.checked = !!val;
+                });
+                updateW3ChecklistProgress();
+            } catch(e) {}
+        }
+    });
+})();
+
+// Global Search Modal
+function openSearchModal() {
+    const modal = document.getElementById('searchModal');
+    modal.classList.add('open');
+    const input = document.getElementById('globalSearchInput');
+    input.value = '';
+    renderSearchResults('');
+    setTimeout(() => input.focus(), 50);
+}
+
+function closeSearchModal() {
+    document.getElementById('searchModal').classList.remove('open');
+}
+
+window.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        openSearchModal();
+    } else if (e.key === 'Escape') {
+        closeSearchModal();
+    }
+});
+
+function renderSearchResults(query) {
+    const list = document.getElementById('searchResultsList');
+    list.innerHTML = '';
+    const q = query.toLowerCase().trim();
+    
+    const matches = searchData.filter(item => {
+        if (!q) return true;
+        return item.title.toLowerCase().includes(q) || item.section.toLowerCase().includes(q);
+    }).slice(0, 10);
+
+    if (matches.length === 0) {
+        list.innerHTML = '<li style="padding: 16px; text-align: center; color: var(--text-muted); font-size: 13px;">No matching sections found</li>';
+        return;
+    }
+
+    matches.forEach(m => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+            <a href="#${m.id}" class="search-result-item" onclick="closeSearchModal()">
+                <div class="result-main">
+                    <span class="result-title">${m.title}</span>
+                    <span class="result-sec">${m.section}</span>
+                </div>
+                <span class="result-badge">${m.category}</span>
+            </a>
+        `;
+        list.appendChild(li);
+    });
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    const input = document.getElementById('globalSearchInput');
+    if (input) {
+        input.addEventListener('input', (e) => renderSearchResults(e.target.value));
+    }
+});
+
+    </script>
+<!-- home-btn -->
+<style>
+.home-fab,.author-tag{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom));z-index:2000;font-family:system-ui,-apple-system,sans-serif;line-height:1}
+.home-fab{left:calc(14px + env(safe-area-inset-left));display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;border-radius:999px;background:#10b981;color:#06251b;font-weight:700;font-size:14px;text-decoration:none;box-shadow:0 6px 18px rgba(0,0,0,.4);-webkit-tap-highlight-color:transparent}
+.home-fab:hover,.home-fab:active{background:#06b6d4}
+.author-tag{right:calc(14px + env(safe-area-inset-right));padding:8px 12px;border-radius:8px;background:rgba(15,23,42,.88);color:#94a3b8;font-weight:600;font-size:12px;max-width:45vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.author-tag b{color:#10b981}
+@media(max-width:600px){
+.home-fab{width:48px;height:48px;min-height:48px;padding:0;justify-content:center;font-size:22px}
+.home-fab span{display:none}
+.author-tag{font-size:11px;padding:6px 10px;bottom:calc(22px + env(safe-area-inset-bottom))}
+}
+@media print{.home-fab,.author-tag{display:none}}
+</style>
+<a class="home-fab" href="index.html" aria-label="Back to Home">&#8962;<span> Home</span></a>
+<div class="author-tag">Author: <b>Zaneso</b></div>
+<!-- /home-btn -->
+</body>
+</html>

